@@ -610,6 +610,60 @@
     .sheet-body{padding:0 16px calc(22px + env(safe-area-inset-bottom))}
     .fab{right:16px;width:54px;height:54px}
   }
+
+  /* ================= v4: 구분 색상 · 1탭 상태 세그먼트 · 긴 댓글 접기 ================= */
+  /* 730 = 파랑 / 550 = 초록 / 3년 = 보라 */
+  .b730{--bk-bg:#DBEAFE;--bk-ink:#1D4ED8;--bk-line:#BFDBFE}
+  .b550{--bk-bg:#D1FAE5;--bk-ink:#047857;--bk-line:#A7F3D0}
+  .b3y {--bk-bg:#EDE9FE;--bk-ink:#6D28D9;--bk-line:#DDD6FE}
+
+  .cust .bk,.cd-name .bk,.krow .bk,.c-name .bk{
+    background:var(--bk-bg,#F2F4F6);color:var(--bk-ink,#6B7684);
+    border:1px solid var(--bk-line,transparent);font-weight:800}
+  .cust .bk,.c-name .bk{font-size:11px;padding:1px 6px;border-radius:6px;letter-spacing:-.01em}
+
+  /* 상단 필터 칩 */
+  .fchip.b730,.fchip.b550,.fchip.b3y{background:var(--bk-bg);color:var(--bk-ink);border-color:var(--bk-line);font-weight:800}
+  .fchip.b730:hover,.fchip.b550:hover,.fchip.b3y:hover{border-color:var(--bk-ink)}
+  .fchip.b730.on,.fchip.b550.on,.fchip.b3y.on{
+    background:var(--bk-bg);color:var(--bk-ink);border-color:var(--bk-ink);
+    box-shadow:inset 0 0 0 1px var(--bk-ink)}
+
+  /* 4칸 세그먼트 — 팝업 없이 1탭 */
+  .seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:7px 0 1px}
+  .seg-b{height:34px;min-width:0;padding:0 2px;border-radius:9px;border:1px solid var(--line);
+    background:#fff;color:var(--sub);font-size:12.5px;font-weight:700;letter-spacing:-.03em;
+    display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+    transition:background .12s,border-color .12s,color .12s;position:relative}
+  .seg-b:hover{background:#FAFBFC;border-color:#DFE5EC;color:var(--ink-2)}
+  .seg-b:active{transform:scale(.97)}
+  .seg-b[data-st="미통화"].on{background:var(--no-call-bg);color:var(--no-call-ink);border-color:var(--no-call-line);font-weight:800}
+  .seg-b[data-st="부재"].on{background:var(--absent-bg);color:var(--absent-ink);border-color:var(--absent-line);font-weight:800}
+  .seg-b[data-st="예약"].on{background:#E8F0FE;color:var(--kt-blue);border-color:#A8C7FA;font-weight:800}
+  .seg-b[data-st="완료"].on{background:#E3F5EC;color:var(--done-ink);border-color:#BBE5D2;font-weight:800}
+
+  /* 완료한 고객 줄은 회색 바탕으로 차분하게 */
+  .cust.is-done{background:#F1F3F5;opacity:1}
+  .cust.is-done::before{background:#B0B8C1}
+  .cust.is-done .c-name{color:var(--hint)}
+  .cust.is-done .c-phone{color:var(--hint)}
+  .cust.is-done .c-memo{color:var(--hint)}
+  .cust.is-done .seg-b:not(.on){opacity:.55}
+
+  /* 긴 댓글 접기/펼치기 */
+  .cmt-more{margin:8px 0 2px;background:#F4F8FF;border-color:#D6E4F8;color:var(--blue-deep)}
+
+  /* v4: 고객 상세 시트 안 세그먼트 */
+  .cd-name .bk{font-size:12px;padding:2px 7px;border-radius:7px}
+  .cd-status{display:block;flex:1;min-width:0}
+  .cd-status .seg{margin:0}
+  .cd-status .seg-b{height:36px;font-size:12.5px}
+
+  @media (max-width:430px){
+    .seg{gap:4px;margin:6px 0 0}
+    .seg-b{height:33px;font-size:12px;letter-spacing:-.04em}
+    .cust .bk,.c-name .bk{font-size:10.5px;padding:1px 5px}
+  }
 </style>
 </head>
 <body>
@@ -779,6 +833,7 @@ var ui = {
   custThreads:{},
   replyOpen:null,
   openReplies:{},
+  openCmts:{},
   cmtStatus:{},
   keepMemo:null,
   memoEdit:null,
@@ -866,7 +921,11 @@ function seed(){
     {id:'c-s1', day:t, name:'홍길동', phone:'010-1234-5678', bucket:'730', owner:'김태양', status:'미통화',
      memo:'S26 기변 + 인터넷 결합 상담 놓침 — 저녁 7시 전 재통화',
      comments:[
-       {id:'cc1', author:'이건엽', at:minsAgo(32), text:'7시에 전화드렸는데 부재중이세요.', photos:[], replies:[{id:'cc1r1', author:'김태양', at:minsAgo(28), text:'내일 오전 10시에 다시 걸게요.', photos:[]}]}
+       {id:'cc1', author:'이건엽', at:minsAgo(32), text:'7시에 전화드렸는데 부재중이세요.', photos:[], replies:[{id:'cc1r1', author:'김태양', at:minsAgo(28), text:'내일 오전 10시에 다시 걸게요.', photos:[]}]},
+       {id:'cc2', author:'김설화', at:minsAgo(26), text:'LTE → 5G 슬림 상향 희망하세요. 결합할인은 그대로 유지된다고 안내했어요.', photos:[], replies:[]},
+       {id:'cc3', author:'김태양', at:minsAgo(21), text:'S26 기변 재고 확인 완료. 블랙·화이트 둘 다 있어요.', photos:[], replies:[]},
+       {id:'cc4', author:'이건엽', at:minsAgo(14), text:'문자로 재통화 시간 안내 남겨뒀습니다.', photos:[], replies:[]},
+       {id:'cc5', author:'김태양', at:minsAgo(6), text:'6시 50분에 다시 걸어볼게요. 그때 없으면 내일 오전으로 넘깁니다.', photos:[], replies:[]}
      ]},
     {id:'c-s2', day:t, name:'김민준', phone:'010-2345-6789', bucket:'730', owner:'김설화', status:'부재', tries:2,
      memo:'오후 2시 재통화 약속', comments:[]},
@@ -1096,6 +1155,25 @@ function postMatch(p){
 }
 function byAtDesc(a,b){ return String(b.at||'').localeCompare(String(a.at||'')); }
 
+/* ---------- v4: 구분(730/550/3년) 고유 색상 ---------- */
+var BUCKET_CLS = {'730':'b730','550':'b550','3년':'b3y'};
+function bkCls(b){ return BUCKET_CLS[b] || 'b730'; }
+function bkBadge(b){ return '<span class="bk '+bkCls(b)+'">'+esc(b)+'</span>'; }
+
+/* v4: 댓글이 3개 이상이면 2개만 보이고 나머지는 접기 */
+var CMT_FOLD_AT = 3;
+
+/* v4: 미통화·부재·예약·완료 4칸 세그먼트 (팝업 없이 1탭 전환) */
+function segHTML(c){
+  var h = '<div class="seg" role="group" aria-label="통화 상태 선택">';
+  STATUSES.forEach(function(s){
+    var on = c.status===s;
+    h += '<button type="button" class="seg-b'+(on?' on':'')+'" data-st="'+esc(s)+'"'
+       + ' data-act="status" data-id="'+c.id+'" aria-pressed="'+(on?'true':'false')+'">'+s+'</button>';
+  });
+  return h+'</div>';
+}
+
 function todoBar(){
   var openConsult = state.posts.filter(function(p){ return p.kind==='consult' && !p.done; }).length;
   var t = todayStr();
@@ -1239,9 +1317,17 @@ function threadHTML(item, ctx, open){
   var h = '<div class="thread open">';
   if(!cs.length) h += '<div class="cmts"><div class="empty">아직 댓글이 없어요. 첫 댓글을 남겨보세요.</div></div>';
   else {
+    var fold = cs.length>=CMT_FOLD_AT && !ui.openCmts[item.id];
     h += '<ul class="cmts">';
-    cs.forEach(function(c){ h += cmtHTML(c, item.id, ctx, mode); });
+    cs.forEach(function(c, ci){ if(fold && ci>=2) return; h += cmtHTML(c, item.id, ctx, mode); });
     h += '</ul>';
+    if(cs.length>=CMT_FOLD_AT){
+      h += '<button class="rep-toggle cmt-more" data-act="cmts-toggle" data-key="'+item.id+'" aria-expanded="'+(fold?'false':'true')+'">'
+         + (fold
+             ? '💬 댓글 '+(cs.length-2)+'개 더 보기 <span class="chev">▾</span>'
+             : '댓글 접기 <span class="chev">▴</span>')
+         + '</button>';
+    }
   }
   if(att.length){
     h += '<div class="attach">';
@@ -1412,7 +1498,8 @@ function bandView(){
 
   h += '<div class="filters">';
   FILTERS.forEach(function(f){
-    h += '<button class="fchip '+(ui.filter===f.k?'on':'')+'" data-act="filter" data-f="'+f.k+'">'+f.t+'</button>';
+    var bcls = f.k.indexOf('b:')===0? ' '+bkCls(f.k.slice(2)) : '';
+    h += '<button class="fchip'+bcls+' '+(ui.filter===f.k?'on':'')+'" data-act="filter" data-f="'+f.k+'">'+f.t+'</button>';
   });
   h += '<div class="ftools">'
      +   '<label class="qbox">🔍<input id="q" data-q placeholder="이름·번호" value="'+esc(ui.q)+'" autocomplete="off"></label>'
@@ -1433,7 +1520,7 @@ function dayCard(day){
   var left = all.length - done;
   var isToday = day===todayStr();
   var tag = isToday? '<span class="bk">오늘</span>' : (day===shiftDay(-1)? '<span class="bk">어제</span>':'');
-  var h = '<section class="day">'
+  var h = '<section class="day" data-day="'+day+'">'
         + '<div class="day-head">'
         +   '<div class="dh-date"><b>'+fmtDayLabel(day)+'</b>'+tag+'</div>'
         +   '<div class="dh-done '+(left?'':'all-done')+'">'+(left? '남은 <b>'+left+'</b>' : '모두 완료')+'</div>'
@@ -1449,11 +1536,11 @@ function custRow(c){
   var editing = ui.memoEdit===c.id;
   var ownerOpts = STAFF.map(function(s){ return '<option '+(c.owner===s?'selected':'')+'>'+esc(s)+'</option>'; }).join('')
     + (STAFF.indexOf(c.owner)<0? '<option selected>'+esc(c.owner||'미지정')+'</option>':'');
-  var h = '<div class="cust '+(c.status==='완료'?'is-done':'')+'" data-st="'+esc(c.status)+'">';
-  h += '<div class="c-top"><span class="c-name">'+esc(c.name)+'<span class="bk">'+esc(c.bucket)+'</span></span>'
+  var h = '<div class="cust '+(c.status==='완료'?'is-done':'')+'" data-id="'+c.id+'" data-st="'+esc(c.status)+'">';
+  h += '<div class="c-top"><span class="c-name">'+esc(c.name)+bkBadge(c.bucket)+'</span>'
      +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" title="부재중 킵" aria-label="부재중 킵">📌</button>'
-     +   '<button class="st-chip" data-st="'+esc(c.status)+'" data-act="status-menu" data-id="'+c.id+'" aria-label="통화 상태 변경">'+esc(c.status)+'</button>'
      + '</div>';
+  h += segHTML(c);
   h += '<div class="c-mid">'
      +   (digits(c.phone)
             ? '<a class="c-phone" href="tel:'+digits(c.phone)+'">📞 '+esc(maskPhone(c.phone))+'</a>'
@@ -1505,14 +1592,10 @@ function composerHTML(){
 /* ---------- customer detail sheet ---------- */
 function custSheetHTML(c){
   var h = '<div class="cd-head">'
-        + '<div class="cd-name">'+esc(c.name)+'<span class="bk">'+esc(c.bucket)+'</span></div>'
+        + '<div class="cd-name">'+esc(c.name)+bkBadge(c.bucket)+'</div>'
         + '<a class="cd-phone" href="tel:'+digits(c.phone)+'">'+esc(maskPhone(c.phone)||'연락처 없음')+'</a>'
         + '</div>';
-  h += '<div class="cd-row"><span>상태</span><div class="cd-status">';
-  STATUSES.forEach(function(s){
-    h += '<button class="st-chip" data-st="'+s+'" data-act="status" data-id="'+c.id+'" style="'+(c.status===s?'box-shadow:inset 0 0 0 1.5px currentColor':'')+'">'+s+'</button>';
-  });
-  h += '</div></div>';
+  h += '<div class="cd-row"><span>상태</span><div class="cd-status">'+segHTML(c)+'</div></div>';
   h += '<div class="cd-row"><span>담당</span><div class="cd-owner"><span class="ownerdot" style="--c:'+colorOf(c.owner)+'"></span>'
      + '<select data-act="owner" data-id="'+c.id+'" aria-label="담당자">'
      + STAFF.map(function(s){ return '<option '+(c.owner===s?'selected':'')+'>'+esc(s)+'</option>'; }).join('')
@@ -1541,7 +1624,7 @@ function keepRow(c){
   var editing = ui.keepMemo===c.id;
   var h = '<div class="krow" data-st="'+esc(c.status)+'">'
     + '<div class="k-top"><b class="k-name">'+esc(c.name)+'</b>'
-    +   '<span class="bk">'+esc(c.bucket)+'</span>'
+    +   bkBadge(c.bucket)
     +   '<span class="k-day">'+fmtDayLabel(c.day)+'</span>'
     +   (tries? '<span class="k-tries">부재 '+tries+'회</span>' : '')
     +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" aria-label="킵 고정">📌</button></div>'
@@ -1619,7 +1702,7 @@ function menuHTML(){
   h += '<button class="menu-item" data-act="reset"><span>초기화<small>샘플 데이터로 되돌리기</small></span><span class="arw">↺</span></button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v3</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v4</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -1843,6 +1926,60 @@ function changeStatus(id, st){
   save(); render();
   toast(c.name+' · '+st);
 }
+/* v4: 명단 안 4칸 세그먼트를 누를 때 — 화면 그 자리에서 바로 바꿔 명단 순서가 튀지 않게 */
+function inlineStatus(id, st, el){
+  var c = findCust(id);
+  if(!c || c.status===st) return;
+  var prev = c.status;
+  c.status = st;
+  c.comments = c.comments||[];
+  c.comments.push(sysCmt('통화상태 '+prev+' → '+st));
+  save();
+  var row = el && el.closest? el.closest('.cust') : null;
+  if(!row) row = document.querySelector('.cust[data-id="'+id+'"]');
+  if(row){
+    row.setAttribute('data-st', st);
+    row.classList.toggle('is-done', st==='완료');
+    var bs = row.querySelectorAll('.seg-b');
+    for(var i=0;i<bs.length;i++){
+      var on = bs[i].getAttribute('data-st')===st;
+      bs[i].classList.toggle('on', on);
+      bs[i].setAttribute('aria-pressed', on? 'true':'false');
+    }
+    var cnt = row.querySelector('.c-cmt');
+    if(cnt) cnt.textContent = '💬 '+(c.comments||[]).length;
+  }
+  updateCounts();
+  toast(c.name+' · '+st);
+}
+function updateCounts(){
+  if(!session) return;
+  var list = periodCustomers();
+  var n = {};
+  STATUSES.forEach(function(s){ n[s] = list.filter(function(c){ return c.status===s; }).length; });
+  var stats = document.querySelectorAll('.sstat');
+  for(var i=0;i<stats.length;i++){
+    var s = stats[i].getAttribute('data-st');
+    var b = stats[i].querySelector('b');
+    if(b && n[s]!=null) b.textContent = n[s];
+  }
+  var left = list.filter(function(c){ return c.status!=='완료'; }).length;
+  var t2 = $('t2n'); if(t2) t2.textContent = left? left : '';
+  var kb = document.querySelector('.keepbar .kb-n');
+  if(kb) kb.textContent = keepList().length;
+  var days = document.querySelectorAll('.day[data-day]');
+  for(var j=0;j<days.length;j++){
+    var day = days[j].getAttribute('data-day');
+    var all = state.customers.filter(function(c){ return c.day===day; });
+    var dn = all.filter(function(c){ return c.status==='완료'; }).length;
+    var rest = all.length - dn;
+    var hd = days[j].querySelector('.dh-done');
+    if(hd){
+      hd.innerHTML = rest? '남은 <b>'+rest+'</b>' : '모두 완료';
+      hd.classList.toggle('all-done', !rest);
+    }
+  }
+}
 function saveMemo(id){
   var c = findCust(id);
   if(!c) return;
@@ -1870,6 +2007,7 @@ function resetData(){
   ui.openThreads = {};
   ui.custThreads = {};
   ui.openReplies = {};
+  ui.openCmts = {};
   ui.replyOpen = null;
   ui.drafts = {};
   ui.attach = {};
@@ -1920,6 +2058,11 @@ document.addEventListener('click', function(e){
       var tid = el.getAttribute('data-id');
       if(ui.openThreads[tid]) delete ui.openThreads[tid]; else ui.openThreads[tid]=true;
       render(); break;
+    case 'cmts-toggle':
+      var cmk = el.getAttribute('data-key');
+      if(ui.openCmts[cmk]) delete ui.openCmts[cmk]; else ui.openCmts[cmk] = true;
+      render();
+      break;
     case 'open-post': openSheet({type:'post', id: el.getAttribute('data-id')}); break;
     case 'post-menu': openSheet({type:'postmenu', id: el.getAttribute('data-id')}); break;
     case 'post-done':
@@ -1997,7 +2140,11 @@ document.addEventListener('click', function(e){
       }
       break;
     case 'status-menu': openSheet({type:'status', id: el.getAttribute('data-id')}); break;
-    case 'status': changeStatus(el.getAttribute('data-id'), el.getAttribute('data-st')); break;
+    case 'status':
+      var sEl = el, sId = el.getAttribute('data-id'), sSt = el.getAttribute('data-st');
+      if(sEl.classList.contains('seg-b') && sEl.closest('.cust')) inlineStatus(sId, sSt, sEl);
+      else changeStatus(sId, sSt);
+      break;
     case 'status-pick':
       changeStatus(el.getAttribute('data-id'), el.getAttribute('data-st'));
       closeSheet();
@@ -2123,6 +2270,7 @@ document.addEventListener('submit', function(e){
       item.comments = item.comments||[];
       if(ctx==='cust') applyCustStatus(item, st);
       item.comments.push({id:uid('c'), author:session.staff, at:nowAt(), text:text, st:st, photos:photos.slice(), replies:[]});
+      ui.openCmts[item.id] = true;
       delete ui.drafts[fkey]; delete ui.attach[fkey]; delete ui.cmtStatus[fkey];
       save(); render();
       toast((ctx==='cust'? '통화 기록을 남겼어요' : '댓글을 남겼어요') + (st? ' · '+st : ''));
