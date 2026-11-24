@@ -1,5 +1,5 @@
-/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 (v8) */
-var CACHE = 'kt-band-v8';
+/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 (v8.1) */
+var CACHE = 'kt-band-v8.1';
 var SHELL = [
   './',
   './index.html',

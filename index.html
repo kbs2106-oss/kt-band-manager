@@ -94,6 +94,11 @@
   .brand-text{min-width:0}
   .brand-text h1{font-size:16px;font-weight:700;letter-spacing:-.03em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .topacts{display:flex;align-items:center;gap:6px;flex:none}
+  .aban{display:flex;align-items:center;justify-content:center;gap:6px;height:30px;
+    background:var(--amber-bg);border-top:1px solid #FCD34D;color:var(--amber);
+    font-size:12px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden}
+  .aban span{font-weight:600;color:#8A5A12}
+  @media(max-width:420px){ .aban{font-size:11.5px} .aban span{display:none} }
   .who{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px 0 5px;border-radius:999px;
     border:0;background:#fff;font-size:14px;font-weight:600;color:var(--ink-2)}
   .who:hover{background:var(--gray-bg)}
@@ -1040,6 +1045,7 @@
       <button class="tab" data-act="tab" data-tab="notice"><span>홈 피드</span> <span class="n" id="t1n"></span></button>
       <button class="tab" data-act="tab" data-tab="band"><span>730 · 550 · 3년</span> <span class="n" id="t2n"></span></button>
     </nav>
+    <div class="aban" id="adminBadge" hidden>🔓 관리자 모드 · 화면 캡처 허용 중 <span>10분 뒤 자동 잠금</span></div>
   </header>
 
   <div class="page">
@@ -1079,6 +1085,8 @@
 var KEY = 'kt_band_v1';
 var SKEY = 'kt_band_session_v1';
 var PIN_HASH = '9b86f9ff';           /* 매장 공통 비밀번호 (평문 미기재) */
+var ADMIN_HASH = '3858db8f';         /* 관리자 PIN 4자리 (평문 미기재) — 전용 앱 화면 캡처 허용용 */
+var ADMIN_TTL = 10 * 60 * 1000;      /* 관리자 모드 자동 잠금 (10분) */
 var STAFF = ['김태양','김설화','이건엽','권영한'];
 var SC = {'김태양':'#0B57D0','김설화':'#0F766E','이건엽':'#5B3FC4','권영한':'#B45309'};
 /* v8: 상태는 5종. '미통화'는 아무 칸도 선택하지 않은 기본값이고,
@@ -1155,6 +1163,35 @@ function notifyBridge(title, body){
     }
   }catch(e){}
 }
+/* v8.1(#16813): 전용 앱에 지금 캡처를 허용해도 되는지 알린다.
+   관리자 모드일 때만 true — 직원 화면은 앱이 FLAG_SECURE 로 스크린샷·녹화를 막는다.
+   일반 브라우저(PWA)에는 다리가 없어 아무 일도 하지 않는다. */
+function applyCapture(){
+  try{
+    if(window.KTBandBridge && typeof window.KTBandBridge.setCaptureAllowed === 'function'){
+      window.KTBandBridge.setCaptureAllowed(!!adminOn);
+    }
+  }catch(e){}
+}
+function setAdmin(on, quiet){
+  on = !!on;
+  if(on === adminOn) return;
+  adminOn = on;
+  adminAt = on ? Date.now() : 0;
+  applyCapture();
+  var b = $('adminBadge');
+  if(b) b.hidden = !on;
+  if(sheetSpec && (sheetSpec.type==='menu' || sheetSpec.type==='admin')) renderSheet();
+  if(!quiet) toast(on ? '관리자 모드 · 10분 동안 화면 캡처를 허용합니다' : '관리자 모드 종료 · 화면 캡처를 다시 막았습니다');
+}
+/* 10분이 지나면 스스로 잠근다 */
+function adminTick(){
+  if(adminOn && Date.now() - adminAt > ADMIN_TTL){
+    setAdmin(false, true);
+    toast('관리자 모드가 10분 지나 자동으로 잠겼어요');
+  }
+}
+function isAdmin(){ return adminOn; }
 
 /* ================= state ================= */
 var session = null;
@@ -1186,6 +1223,9 @@ var ui = {
 };
 var sheetSpec = null;
 var toastTimer = null;
+/* v8.1: 관리자 모드 — 이 상태일 때만 전용 앱(KTBandBridge)에 캡처 허용을 알린다. 기본은 차단. */
+var adminOn = false;
+var adminAt = 0;
 
 function loadSession(){
   try{ var raw=localStorage.getItem(SKEY); if(raw){ var s=JSON.parse(raw); if(s && s.staff) return s; } }catch(e){}
@@ -1524,6 +1564,9 @@ function renderSheet(){
   } else if(type==='menu'){
     ttl.textContent = '설정';
     b.innerHTML = menuHTML();
+  } else if(type==='admin'){
+    ttl.textContent = '관리자 모드';
+    b.innerHTML = adminFormHTML();
   }
   b.scrollTop = sc;
 }
@@ -1557,6 +1600,9 @@ function doLogin(){
   if(hash('ktband:'+pin) !== PIN_HASH){ loginErr('비밀번호가 맞지 않아요.'); clearPin(); return; }
   session = {staff:ui.loginStaff, at:nowAt()};
   saveSession(session);
+  /* v8.1: 직원 로그인 상태 = 화면 캡처 차단 (관리자 모드에서만 풀림) */
+  setAdmin(false, true);
+  applyCapture();
   $('loginErr').textContent = '';
   $('login').hidden = true;
   $('app').hidden = false;
@@ -2553,10 +2599,35 @@ function menuHTML(){
   h += '<button class="menu-item" data-act="arch-load"><span>📚 과거 명단<small>'+esc(archStatusText())+'</small></span><span class="arw">'+(arch.loading?'⏳':'↻')+'</span></button>';
   h += '<button class="menu-item" data-act="export"><span>내보내기<small>글·댓글·명단을 JSON 파일로 저장</small></span><span class="arw">⬇</span></button>';
   h += '<button class="menu-item" data-act="reset"><span>초기화<small>실제 밴드 시드(v8)로 되돌리기</small></span><span class="arw">↺</span></button>';
+  h += '<button class="menu-item" data-act="admin">'
+     + (adminOn
+        ? '<span>🔓 관리자 모드 끄기<small>화면 캡처를 다시 막습니다</small></span><span class="arw">잠금</span>'
+        : '<span>🔐 관리자 모드<small>관리자 PIN · 이 화면 캡처 허용 (10분)</small></span><span class="arw">›</span>')
+     + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.1</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
+  return h;
+}
+
+/* v8.1(#16813): 관리자 모드 — 관리자 PIN 을 넣으면 전용 앱이 화면 캡처를 허용한다 */
+function adminFormHTML(){
+  var h = '';
+  if(adminOn){
+    h += '<div class="menu-list">'
+       + '<div class="menu-item static"><span>관리자 모드 사용 중<small>화면 캡처·녹화가 허용됩니다 · 10분 뒤 자동 잠금</small></span><span class="arw">🔓</span></div>'
+       + '</div>'
+       + '<div class="formfoot" style="margin-top:14px"><button class="btn primary" type="button" data-act="admin-off">지금 잠그기</button>'
+       + '<button class="btn ghost" type="button" data-act="close">닫기</button></div>';
+    return h;
+  }
+  h += '<form class="form" data-form="adminpin">'
+     + '<label>관리자 PIN<input name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="숫자 4자리"></label>'
+     + '<p class="hint" style="margin:2px 0 0">관리자 PIN 을 넣으면 이 앱에서만 <b>화면 캡처·녹화가 허용</b>됩니다. '
+     + '10분이 지나면 자동으로 다시 막힙니다 (직원 화면은 항상 막힘).</p>'
+     + '<div class="formfoot"><button class="btn primary" type="submit">관리자 모드 열기</button>'
+     + '<button class="btn ghost" type="button" data-act="close">취소</button></div></form>';
   return h;
 }
 
@@ -2941,6 +3012,7 @@ function exportData(){
 }
 function resetData(){
   if(!confirm('실제 밴드 시드(v8)로 초기화할까요?\n지금까지 적은 글·댓글·명단이 모두 사라집니다. (먼저 내보내기로 백업할 수 있어요)')) return;
+  setAdmin(false, true);
   state = seed();
   custIdxDirty();
   ui.dayShown = 6;
@@ -2957,6 +3029,7 @@ function resetData(){
   toast('실제 밴드 시드로 초기화했어요');
 }
 function logout(){
+  setAdmin(false, true);
   session = null;
   saveSession(null);
   closeSheet();
@@ -2990,9 +3063,11 @@ document.addEventListener('click', function(e){
     case 'tab': setTab(el.getAttribute('data-tab')); break;
     case 'compose': compose(); break;
     case 'menu': openSheet({type:'menu'}); break;
+    case 'admin': openSheet({type:'admin'}); break;
+    case 'admin-off': setAdmin(false); closeSheet(); break;
     case 'close': closeSheet(); break;
     case 'staff-switch':
-      closeSheet(); session=null; saveSession(null);
+      closeSheet(); setAdmin(false, true); session=null; saveSession(null);
       $('app').hidden = true; $('login').hidden = false;
       clearPin(); renderLogin();
       break;
@@ -3276,6 +3351,20 @@ document.addEventListener('submit', function(e){
 
   if(kind==='login'){ doLogin(); return; }
 
+  /* v8.1(#16813): 관리자 PIN — 맞으면 이 앱의 화면 캡처를 10분 동안 허용 */
+  if(kind==='adminpin'){
+    var pin = String(new FormData(f).get('pin')||'').trim();
+    if(!pin){ toast('관리자 PIN 을 넣어 주세요.', true); return; }
+    if(hash('ktband-admin:'+pin) !== ADMIN_HASH){
+      toast('관리자 PIN 이 맞지 않아요.', true);
+      try{ var inp = f.querySelector('input[name="pin"]'); inp.value=''; inp.focus(); }catch(e){}
+      return;
+    }
+    setAdmin(true);
+    closeSheet();
+    return;
+  }
+
   if(kind==='cmt' || kind==='reply'){
     var fd = new FormData(f);
     var text = String(fd.get('text')||'').trim();
@@ -3457,6 +3546,10 @@ function init(){
     var p2 = $('pinInput');
     if(p2) try{ p2.focus({preventScroll:true}); }catch(e){}
   }
+  /* v8.1(#16813): 전용 앱에는 지금이 '직원 화면 = 캡처 차단'임을 먼저 알린다.
+     관리자 PIN 을 넣어 관리자 모드가 되면 setAdmin(true) 가 다시 허용으로 바꾼다. */
+  applyCapture();
+  setInterval(adminTick, 20 * 1000);
   setInterval(function(){ if(session && !document.hidden) ledgerSync(false); }, 5*60*1000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) ledgerSync(false); });
   registerSW();
