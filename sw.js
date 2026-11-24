@@ -1,5 +1,5 @@
-/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 */
-var CACHE = 'kt-band-v7';
+/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 (v8) */
+var CACHE = 'kt-band-v8';
 var SHELL = [
   './',
   './index.html',
@@ -31,6 +31,10 @@ self.addEventListener('fetch', function(e){
   if(req.method !== 'GET') return;
   var url = new URL(req.url);
   if(url.origin !== location.origin) return;
+
+  /* v8: 과거 전체 명단(archive.json, 3.4MB)은 설치 때 미리 받지도, 캐시에 쌓지도 않는다.
+     앱이 IndexedDB에 한 번 넣어 두고 그걸로 조회하므로 네트워크로만 받으면 된다. */
+  if(/\/archive\.json$/.test(url.pathname)) return;
 
   /* 문서는 네트워크 우선(업데이트 즉시 반영), 실패 시 캐시 */
   if(req.mode === 'navigate'){
