@@ -1425,7 +1425,7 @@ function threadHTML(item, ctx, open){
   }
   var ph = ctx==='cust'
     ? '부재중·재통화 예정·상담 내용을 적어주세요'
-    : '1단계 댓글 — 고객 번호·생년월일';
+    : '고객 번호·생년월일 남기기';
   h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'" data-key="'+key+'" data-mode="'+mode+'">'
      + (mode? statusPickHTML(key, mode) : '')
      + '<div class="cbar-row">'
