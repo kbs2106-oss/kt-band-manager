@@ -891,6 +891,50 @@
   .act.cmt-act.static{cursor:default;background:#F4F7FB;color:var(--ink-2)}
   .act.cmt-act.static:hover{background:#F4F7FB;border-color:var(--line)}
   .act.cmt-act.static .cnt{color:var(--blue-deep);font-weight:800}
+
+  /* ---------- v7: 개통장부 연동 ---------- */
+  .ledgerbar{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 12px;padding:10px 12px;
+    border:1px solid #CFE2D6;border-radius:14px;background:#F3FAF6;text-align:left}
+  .ledgerbar:hover{background:#EBF6F0;border-color:#B4DCC7}
+  .ledgerbar .lb-ico{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+    background:#DCEFE5;font-size:16px;line-height:1}
+  .ledgerbar .lb-txt{flex:1;min-width:0;display:block}
+  .ledgerbar .lb-txt b{display:block;font-size:13.5px;font-weight:800;color:#0E6B4E;letter-spacing:-.02em}
+  .ledgerbar .lb-txt small{display:block;font-size:11.5px;font-weight:600;color:#3F7A63;letter-spacing:-.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ledgerbar .lb-btn{flex:none;height:34px;padding:0 12px;border-radius:9px;border:1px solid #9CCDB5;background:#fff;
+    color:#0E6B4E;font-size:12.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+  .ledgerbar .lb-btn:hover{background:#EAF6F0}
+  .ledgerbar.busy{background:#F6F9FF;border-color:#CDDDF5}
+  .ledgerbar.busy .lb-txt b{color:var(--blue-deep)}
+  .ledgerbar.busy .lb-txt small{color:#4B6E9E}
+  .ledgerbar.busy .lb-ico{background:#E4EEFB;animation:lbpulse .9s ease-in-out infinite}
+  .ledgerbar.idle{background:#F7F9FB;border-color:var(--line)}
+  .ledgerbar.idle .lb-txt b{color:var(--ink-2)}
+  .ledgerbar.idle .lb-txt small{color:var(--hint)}
+  .ledgerbar.idle .lb-ico{background:var(--line-soft)}
+  .ledgerbar.idle .lb-btn{border-color:var(--line);color:var(--ink-2)}
+  .ledgerbar.err{background:#FFF6F6;border-color:#F5C9C9}
+  .ledgerbar.err .lb-txt b{color:var(--no-call-ink)}
+  .ledgerbar.err .lb-txt small{color:#9B4A4A}
+  .ledgerbar.err .lb-ico{background:#FBE3E3}
+  .ledgerbar.err .lb-btn{border-color:#EDB9B9;color:var(--no-call-ink)}
+  @keyframes lbpulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .c-link{display:block;margin:3px 0 0}
+  .lk-badge{display:inline-flex;align-items:center;gap:3px;max-width:100%;height:22px;padding:0 8px;border-radius:7px;
+    background:#E7F7EF;color:#0E7C5A;font-size:11.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .lk-badge.off{background:var(--gray-bg);color:var(--sub)}
+  .lk-row{margin:0 14px 4px;font-size:11.5px;font-weight:800;color:#0E7C5A;letter-spacing:-.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cust.is-done .lk-badge{opacity:.95}
+  @media (max-width:430px){
+    .ledgerbar{padding:9px 11px;gap:9px}
+    .ledgerbar .lb-txt b{font-size:13px}
+    .ledgerbar .lb-txt small{font-size:11px}
+    .ledgerbar .lb-btn{height:32px;padding:0 10px;font-size:12px}
+    .lk-row{margin:0 12px 4px}
+  }
 </style>
 </head>
 <body>
@@ -1068,6 +1112,7 @@ var ui = {
   memoEdit:null,
   resvMemo:null,
   loginStaff:'김태양',
+  composing:false,
   phoneOnly:false,
   drafts:{},
   attach:{},
@@ -1233,6 +1278,11 @@ function closeLB(){
 }
 function sheetPanel(){ return document.querySelector('.sheet-panel'); }
 function openSheet(spec){
+  /* v7: 시트를 열면 저장하지 않은 인라인 메모 수정은 버린다 */
+  if(ui.memoEdit || ui.resvMemo || ui.keepMemo){
+    ui.memoEdit = null; ui.resvMemo = null; ui.keepMemo = null;
+    render();
+  }
   sheetSpec = spec;
   ui.replyOpen = null;
   renderSheet();
@@ -1346,8 +1396,10 @@ function doLogin(){
   $('loginErr').textContent = '';
   $('login').hidden = true;
   $('app').hidden = false;
+  ledgerApply();
   render();
   toast(session.staff+'님, 반갑습니다!');
+  ledgerSync(false);
 }
 function pressKey(k){
   var p = $('pinInput');
@@ -1357,6 +1409,281 @@ function pressKey(k){
   p.value = p.value + k;
   updateDots();
   if(p.value.length===4) setTimeout(doLogin, 120);
+}
+
+/* ================= ledger sync ================= */
+/* ================= ledger sync (v7) ================= */
+/* 개통장부(kt-store-manager가 쓰는 공용 Apps Script)와 대조해
+   실개통이 확인된 가망고객·사전예약 예약자를 자동으로 '개통완료'로 바꿉니다.
+
+   · 장부는 읽기만 합니다. deviceId 없이 pin=5001 로 조회하므로 장부의 기기 승인제에 걸리지 않습니다.
+   · 자동 확인은 30분에 한 번, 먼저 ping(작은 응답)으로 건수만 보고
+     건수가 달라졌을 때만 목록(약 5MB)을 받습니다. 6시간이 지나면 건수가 같아도 한 번 새로 받습니다.
+   · 받은 목록은 [전화번호 숫자, 개통일, 담당자] 3칸만 남겨 이 기기에 캐시합니다.
+   · 매칭 기준 : 전화번호 뒤 8자리 일치 + 개통일 >= 가망고객 날짜(당일 포함).
+     [정산이관] 과거 이관 건도 개통일이 그 날짜 이후면 그대로 매칭합니다. */
+var LEDGER_URL = 'https://script.google.com/macros/s/AKfycbz502Kzj6P_p3ku_i-91a4nIKtPKk2xzfpXv5qbJ2XYESroO5BKHpNjIK_fItNirVpaNw/exec';
+var LEDGER_PIN = '5001';
+var LKEY = 'kt_band_ledger_v1';
+var LEDGER_CD = 60 * 1000;              /* '지금 확인' 최소 간격 */
+var LEDGER_TTL = 30 * 60 * 1000;        /* 자동 확인 주기 */
+var LEDGER_FULL = 6 * 60 * 60 * 1000;   /* 이 시간이 지나면 건수가 같아도 목록을 새로 받는다 */
+var LEDGER_TMO = 25000;                 /* 요청 제한 시간 */
+var ledger = {at:0, checked:0, count:0, rows:[], map:null, busy:false, err:'', lastNew:0, lastRun:0};
+
+function ledgerBase(){
+  return LEDGER_URL + (LEDGER_URL.indexOf('?') < 0 ? '?' : '&') + 'pin=' + LEDGER_PIN;
+}
+function ledgerNum(n){
+  var s = String(n == null ? 0 : n), out = '';
+  while(s.length > 3){ out = ',' + s.slice(-3) + out; s = s.slice(0, -3); }
+  return s + out;
+}
+/* 구글 응답은 본문을 못 읽는 경우가 있어 JSONP 로도 받습니다 */
+function ledgerFetchJson(url){
+  return new Promise(function(resolve, reject){
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var tm = setTimeout(function(){ if(ctrl){ try{ ctrl.abort(); }catch(e){} } }, LEDGER_TMO);
+    var opt = {method:'GET', cache:'no-store', redirect:'follow'};
+    if(ctrl) opt.signal = ctrl.signal;
+    fetch(url, opt).then(function(res){
+      return res.text();
+    }).then(function(text){
+      clearTimeout(tm);
+      var d = null;
+      try{ d = JSON.parse(text); }catch(e){ d = null; }
+      if(d) resolve(d);
+      else ledgerJsonp(url).then(resolve, reject);
+    }).catch(function(){
+      clearTimeout(tm);
+      ledgerJsonp(url).then(resolve, reject);
+    });
+  });
+}
+function ledgerJsonp(url){
+  return new Promise(function(resolve, reject){
+    var name = '__ktLedger' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    var s = document.createElement('script');
+    var done = false, tm = null;
+    function clean(){
+      try{ delete window[name]; }catch(e){ window[name] = undefined; }
+      if(s.parentNode) s.parentNode.removeChild(s);
+    }
+    window[name] = function(d){ if(done) return; done = true; clearTimeout(tm); clean(); resolve(d); };
+    s.onerror = function(){ if(done) return; done = true; clearTimeout(tm); clean(); reject(new Error('연결 실패')); };
+    tm = setTimeout(function(){ if(done) return; done = true; clean(); reject(new Error('응답이 없습니다')); }, LEDGER_TMO);
+    s.src = url + '&callback=' + name;
+    document.head.appendChild(s);
+  });
+}
+
+/* ---------- 캐시 ---------- */
+function ledgerLoad(){
+  try{
+    var raw = localStorage.getItem(LKEY);
+    if(!raw) return false;
+    var d = JSON.parse(raw);
+    if(!d || !Array.isArray(d.rows)) return false;
+    ledger.at = +d.at || 0;
+    ledger.checked = +d.checked || ledger.at;
+    ledger.count = +d.count || 0;
+    ledger.rows = d.rows;
+    ledger.map = null;
+    return ledger.rows.length > 0;
+  }catch(e){ return false; }
+}
+function ledgerSave(){
+  try{
+    localStorage.setItem(LKEY, JSON.stringify({at:ledger.at, checked:ledger.checked, count:ledger.count, rows:ledger.rows}));
+    return true;
+  }catch(e){ return false; }
+}
+/* 장부 응답 → [전화번호 숫자, 개통일, 담당자] 만 남긴다 */
+function ledgerCompact(recs){
+  var out = [];
+  for(var i=0;i<recs.length;i++){
+    var r = recs[i] || {};
+    var ph = digits(r['연락처']);
+    if(ph.length < 7) continue;
+    var dt = String(r['개통일'] || '').slice(0, 10);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dt)) dt = '';
+    out.push([ph, dt, String(r['담당자'] || '').slice(0, 10)]);
+  }
+  return out;
+}
+function ledgerIndex(){
+  if(ledger.map) return ledger.map;
+  var m = {};
+  for(var i=0;i<ledger.rows.length;i++){
+    var ph = String(ledger.rows[i][0] || '');
+    if(ph.length < 7) continue;
+    var k = ph.slice(-8);
+    (m[k] || (m[k] = [])).push(i);
+  }
+  ledger.map = m;
+  return m;
+}
+/* 전화번호 뒤 8자리 + 개통일(>= minDay) 로 장부 건을 찾는다 */
+function ledgerFind(phone, minDay){
+  var d = digits(phone);
+  if(d.length < 7) return null;
+  var hit = ledgerIndex()[d.slice(-8)];
+  if(!hit) return null;
+  var best = null;
+  for(var i=0;i<hit.length;i++){
+    var r = ledger.rows[hit[i]];
+    var dt = r && r[1] || '';
+    if(!dt) continue;
+    if(minDay && dt < minDay) continue;
+    if(!best || dt < best.date) best = {date:dt, owner:(r[2] || '')};
+  }
+  return best;
+}
+function ledgerCmt(hit){
+  return {id:uid('s'), author:'장부 연동', at:nowAt(), sys:true,
+          text:'개통장부에서 개통 확인 — ' + hit.date + (hit.owner ? ' · 담당 ' + hit.owner : '') + ' · 자동 개통완료',
+          photos:[], replies:[]};
+}
+/* 캐시/새 목록을 명단·사전예약에 반영. 새로 개통완료로 바꾼 수를 돌려준다. */
+function ledgerApply(){
+  if(!state) return 0;
+  if(!ledger.rows.length) return 0;
+  var n = 0;
+  (state.customers || []).forEach(function(c){
+    if(c.linkOff) return;
+    var hit = ledgerFind(c.phone, c.day);
+    if(!hit) return;
+    if(!c.link || c.link.date !== hit.date || c.link.owner !== hit.owner){
+      c.link = {date:hit.date, owner:hit.owner, at:nowAt()};
+    }
+    if(c.status !== '완료'){
+      c.status = '완료';
+      c.keep = false;
+      c.comments = c.comments || [];
+      c.comments.push(ledgerCmt(hit));
+      n++;
+    }
+  });
+  (state.posts || []).forEach(function(p){
+    (p.reservations || []).forEach(function(r){
+      if(r.linkOff) return;
+      var base = String(r.at || p.at || '').slice(0, 10);
+      var hit = ledgerFind(r.phone, /^\d{4}-\d{2}-\d{2}$/.test(base) ? base : '');
+      if(!hit) return;
+      if(!r.link || r.link.date !== hit.date || r.link.owner !== hit.owner){
+        r.link = {date:hit.date, owner:hit.owner, at:nowAt()};
+      }
+      if(!r.done){ r.done = true; n++; }
+    });
+  });
+  return n;
+}
+
+/* ---------- 장부 요청 ---------- */
+function ledgerPing(){
+  return ledgerFetchJson(ledgerBase() + '&action=ping&t=' + Date.now()).then(function(d){
+    if(!d || d.ok !== true) throw new Error((d && d.error) || '장부 응답 오류');
+    return +d.count || 0;
+  });
+}
+function ledgerPull(){
+  return ledgerFetchJson(ledgerBase() + '&action=list&t=' + Date.now()).then(function(d){
+    if(d && d.pending) throw new Error('기기 승인 대기');
+    if(d && d.blocked) throw new Error('차단된 기기');
+    if(!d || d.ok !== true) throw new Error((d && d.error) || '장부 응답 오류');
+    var recs = Array.isArray(d.records) ? d.records : [];
+    ledger.rows = ledgerCompact(recs);
+    ledger.count = recs.length;
+    ledger.at = Date.now();
+    ledger.checked = ledger.at;
+    ledger.map = null;
+    ledgerSave();
+    return 0;
+  });
+}
+function ledgerCheck(){
+  /* 캐시가 없거나 오래됐으면 목록을, 아니면 건수만 확인 */
+  if(!ledger.rows.length || !ledger.at || (Date.now() - ledger.at) > LEDGER_FULL) return ledgerPull();
+  return ledgerPing().then(function(count){
+    if(ledger.count && count !== ledger.count) return ledgerPull();
+    ledger.checked = Date.now();
+    return 0;
+  });
+}
+function ledgerSync(force){
+  if(!session || ledger.busy) return;
+  var now = Date.now();
+  if(!force){
+    if(ledger.checked && (now - ledger.checked) < LEDGER_TTL) return;
+  } else if(ledger.lastRun && (now - ledger.lastRun) < LEDGER_CD && !ledger.err){
+    toast('방금 확인했어요 · 장부 ' + ledgerNum(ledger.count) + '건');
+    return;
+  }
+  ledger.busy = true;
+  ledger.err = '';
+  ledger.lastNew = 0;
+  ledger.lastRun = now;
+  refreshLedgerUI();
+  (force ? ledgerPull() : ledgerCheck()).then(function(){
+    ledger.busy = false;
+    var added = ledgerApply();
+    ledger.lastNew = added;
+    ledger.checked = Date.now();
+    if(added) save();
+    ledgerSave();
+    refreshLedgerUI();
+    if(added) toast('장부에서 ' + added + '명 개통완료로 자동 반영했어요');
+  }, function(e){
+    ledger.busy = false;
+    ledger.err = (e && e.message) || '연결 실패';
+    refreshLedgerUI();
+    if(force) toast('장부를 확인하지 못했어요 — ' + ledger.err, true);
+  });
+}
+function refreshLedgerUI(){
+  if(!session) return;
+  if($('app').hidden) return;
+  if(sheetSpec) return;   /* 시트에서 입력 중이면 화면을 다시 그리지 않는다 */
+  render();
+}
+function ledgerAgeText(){
+  var t = ledger.checked || ledger.at || 0;
+  if(!t) return '아직 확인 안 함';
+  var m = Math.floor((Date.now() - t) / 60000);
+  if(m < 1) return '방금 확인';
+  if(m < 60) return m + '분 전 확인';
+  var h = Math.floor(m / 60);
+  if(h < 24) return h + '시간 전 확인';
+  return Math.floor(h / 24) + '일 전 확인';
+}
+function ledgerSummary(){
+  if(ledger.busy) return '개통장부와 대조하는 중…';
+  if(ledger.err) return '확인 실패 · ' + ledger.err;
+  if(!ledger.at) return '아직 확인하지 않았어요 · 지금 확인을 눌러주세요';
+  return '장부 ' + ledgerNum(ledger.count) + '건 · ' + ledgerAgeText()
+       + (ledger.lastNew ? ' · 방금 ' + ledger.lastNew + '명 자동 반영' : '');
+}
+function ledgerBar(){
+  var st = ledger.busy ? 'busy' : (ledger.err ? 'err' : (ledger.at ? 'on' : 'idle'));
+  var title = ledger.busy ? '장부 확인 중…' : (ledger.err ? '장부 확인 실패' : '장부 개통 연동');
+  var sub = ledger.busy ? '개통장부와 대조하고 있어요'
+          : (ledger.err ? ledger.err + ' · 지금 확인으로 다시 시도'
+          : (ledger.at ? ledgerNum(ledger.count) + '건 · ' + ledgerAgeText()
+                          + (ledger.lastNew ? ' · 방금 ' + ledger.lastNew + '명 자동 반영' : '')
+                        : '아직 확인하지 않았어요 · 지금 확인을 눌러주세요'));
+  return '<div class="ledgerbar ' + st + '">'
+    + '<span class="lb-ico">' + (ledger.busy ? '⏳' : '🔄') + '</span>'
+    + '<span class="lb-txt"><b>' + esc(title) + '</b><small>' + esc(sub) + '</small></span>'
+    + '<button type="button" class="lb-btn" data-act="ledger-sync">' + (ledger.busy ? '확인 중' : '지금 확인') + '</button>'
+    + '</div>';
+}
+/* 개통일 표기 : 2026-11-24 → 11-24 */
+function ledgerMd(date){ return String(date || '').slice(5, 10) || '—'; }
+function ledgerBadgeHTML(link, auto){
+  if(!link) return '';
+  var when = ledgerMd(link.date) + (link.owner ? ' · ' + link.owner : '');
+  return '<span class="lk-badge' + (auto ? '' : ' off') + '">🔗 '
+    + (auto ? '장부 자동개통완료' : '장부 개통') + ' (' + esc(when) + ')</span>';
 }
 
 /* ================= views ================= */
@@ -1449,9 +1776,9 @@ function noticeView(){
     if(p.pinned && ui.filter==='all') return false;
     return true;
   }).sort(byAtDesc);
-  /* v6: 열려 있는 댓글·고정 공지가 하나라도 있으면 '모두 접기' */
+  /* v7: '모두 접기' 대상은 피드 글의 댓글만 — 고정 공지는 자기 '접기' 버튼으로만 접힌다 */
   var openN = state.posts.filter(function(p){ return !!ui.openThreads[p.id]; }).length;
-  var anyOpen = openN>0 || (pinned.length>0 && ui.pinOpen);
+  var anyOpen = openN>0;
   var h = todoBar();
   if(pinned.length){
     h += '<section class="noticecard '+(ui.pinOpen?'':'closed')+'">'
@@ -1551,6 +1878,10 @@ function reserveBlock(p){
          + '<span class="rc"><label class="chk" title="개통완료"><input type="checkbox" data-act="resv-done" data-pid="'+p.id+'" data-rid="'+r.id+'" '+(r.done?'checked':'')+'><i></i></label></span>'
          + '<span class="rx"><button class="del" data-act="resv-del" data-pid="'+p.id+'" data-rid="'+r.id+'" title="예약 삭제">✕</button></span>'
          + '</div>';
+      if(r.link){
+        h += '<div class="lk-row">🔗 '+(r.done?'장부 자동개통완료':'장부 개통')
+           + ' ('+esc(ledgerMd(r.link.date))+(r.link.owner? ' · '+esc(r.link.owner):'')+')</div>';
+      }
       if(ui.resvMemo===r.id){
         h += '<div class="rmemo-edit"><input id="rmemo_'+r.id+'" data-resvmemo="'+r.id+'" data-pid="'+p.id+'"'
            + ' value="'+esc(r.memo||'')+'" placeholder="메모 한 줄 (예) 오전 10시 재통화" enterkeyhint="done" autocomplete="off">'
@@ -1683,11 +2014,29 @@ function custMatch(c){
   if(ui.filter.indexOf('b:')===0){ if(c.bucket!==ui.filter.slice(2)) return false; }
   else if(ui.filter.indexOf('s:')===0){ if(c.status!==ui.filter.slice(2)) return false; }
   if(ui.q){
-    var q = ui.q.replace(/\s+/g,'').toLowerCase();
-    var hay = (c.name+' '+digits(c.phone)+' '+(c.memo||'')).toLowerCase();
-    if(hay.indexOf(q)<0) return false;
+    var q = ui.q.replace(/[\s-]+/g,'').toLowerCase();
+    var hay = (c.name+' '+digits(c.phone)+' '+(c.memo||'')+' '+custTextOf(c)).toLowerCase();
+    /* v7: 이름·번호·메모·통화 기록·답글까지 검색 (띄어쓰기·하이픈은 무시하고 한 번 더 비교) */
+    if(hay.indexOf(q)<0 && hay.replace(/[\s-]+/g,'').indexOf(q)<0) return false;
   }
   return true;
+}
+/* 고객의 통화 기록(댓글·답글) 글자를 한 줄로 */
+function custTextOf(c){
+  var out = [];
+  (c.comments||[]).forEach(function(x){
+    if(x.text) out.push(x.text);
+    (x.replies||[]).forEach(function(r){ if(r.text) out.push(r.text); });
+  });
+  return out.join(' ');
+}
+/* v7: 검색어를 칠 때는 이 목록 영역만 다시 그린다 — 입력창은 그대로 둡니다(안드로이드 한글 조합) */
+function custListHTML(){
+  var days = [];
+  state.customers.forEach(function(c){ if(days.indexOf(c.day)<0) days.push(c.day); });
+  days.sort().reverse();
+  var cards = days.map(function(d){ return dayCard(d); }).filter(Boolean).join('');
+  return cards || '<div class="emptycard">조건에 맞는 명단이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 고객을 추가해보세요.</div>';
 }
 function periodActive(){ return ui.year!=='all' || ui.month!=='all'; }
 function periodCustomers(){
@@ -1763,11 +2112,8 @@ function bandView(){
   STATUSES.forEach(function(s){ cnt[s] = todays.filter(function(c){return c.status===s;}).length; });
   var done = cnt['완료'], total = todays.length;
 
-  var days = [];
-  state.customers.forEach(function(c){ if(days.indexOf(c.day)<0) days.push(c.day); });
-  days.sort().reverse();
-
-  var h = '<div class="statstrip">';
+  var h = ledgerBar();
+  h += '<div class="statstrip">';
   STATUSES.forEach(function(s){
     var cls = (s==='완료'?'done':'');
     if(s==='미통화' && cnt[s]) cls += ' hot';
@@ -1792,13 +2138,12 @@ function bandView(){
     h += '<button class="fchip'+bcls+' '+(ui.filter===f.k?'on':'')+'" data-act="filter" data-f="'+f.k+'">'+f.t+'</button>';
   });
   h += '<div class="ftools">'
-     +   '<label class="qbox">🔍<input id="q" data-q placeholder="이름·번호" value="'+esc(ui.q)+'" autocomplete="off"></label>'
+     +   '<label class="qbox">🔍<input id="custSearch" data-q placeholder="이름·번호·메모" value="'+esc(ui.q)+'" autocomplete="off" enterkeyhint="search"></label>'
      +   '<button class="maskbtn '+(ui.mask?'on':'')+'" data-act="mask" aria-label="번호 가림">'+(ui.mask?'🔓':'🔒')+'</button>'
      + '</div>';
   h += '</div>';
 
-  var cards = days.map(function(d){ return dayCard(d); }).filter(Boolean).join('');
-  h += '<div class="daylist">'+(cards || '<div class="emptycard">조건에 맞는 명단이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 고객을 추가해보세요.</div>')+'</div>';
+  h += '<div class="daylist" id="custListBody">'+custListHTML()+'</div>';
   return h;
 }
 
@@ -1830,6 +2175,7 @@ function custRow(c){
   h += '<div class="c-top"><span class="c-name">'+esc(c.name)+bkBadge(c.bucket)+'</span>'
      +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" title="부재중 킵" aria-label="부재중 킵">📌</button>'
      + '</div>';
+  if(c.link) h += '<div class="c-link">'+ledgerBadgeHTML(c.link, c.status==='완료' && !c.linkOff)+'</div>';
   h += segHTML(c);
   h += '<div class="c-mid">'
      +   (digits(c.phone)
@@ -1891,6 +2237,7 @@ function custSheetHTML(c){
         + '<div class="cd-name">'+esc(c.name)+bkBadge(c.bucket)+'</div>'
         + '<a class="cd-phone" href="tel:'+digits(c.phone)+'">'+esc(maskPhone(c.phone)||'연락처 없음')+'</a>'
         + '</div>';
+  if(c.link) h += '<div class="c-link" style="margin:0 0 10px">'+ledgerBadgeHTML(c.link, c.status==='완료' && !c.linkOff)+'</div>';
   h += '<div class="cd-row"><span>상태</span><div class="cd-status">'+segHTML(c)+'</div></div>';
   h += '<div class="cd-row"><span>담당</span><div class="cd-owner"><span class="ownerdot" style="--c:'+colorOf(c.owner)+'"></span>'
      + '<select data-act="owner" data-id="'+c.id+'" aria-label="담당자">'
@@ -1994,11 +2341,12 @@ function menuHTML(){
   var h = '<div class="menu-list">';
   h += '<div class="menu-item static"><span>로그인 직원<small>'+esc(session.staff)+' · '+fmtAt(session.at)+'</small></span></div>';
   h += '<button class="menu-item" data-act="staff-switch"><span>직원 전환<small>다른 직원으로 로그인</small></span><span class="arw">›</span></button>';
+  h += '<button class="menu-item" data-act="ledger-sync"><span>🔄 장부 개통 연동<small>'+esc(ledgerSummary())+'</small></span><span class="arw">'+(ledger.busy?'⏳':'↻')+'</span></button>';
   h += '<button class="menu-item" data-act="export"><span>내보내기<small>글·댓글·명단을 JSON 파일로 저장</small></span><span class="arw">⬇</span></button>';
   h += '<button class="menu-item" data-act="reset"><span>초기화<small>샘플 데이터로 되돌리기</small></span><span class="arw">↺</span></button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v6</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v7</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -2140,7 +2488,8 @@ function applyCustStatus(c, st){
   if(!c || !st || c.status===st) return false;
   var prev = c.status;
   c.status = st;
-  c.comments = c.comments||[];
+  if(c.link) c.linkOff = (st !== '완료');
+  c.comments = c.comments || [];
   c.comments.push(sysCmt('통화상태 '+stLabel(prev)+' → '+stLabel(st)));
   return true;
 }
@@ -2167,6 +2516,7 @@ function keepTry(id){
   c.comments = c.comments||[];
   if(prev!=='부재'){
     c.status = '부재';
+    if(c.link) c.linkOff = true;
     c.comments.push(sysCmt('통화상태 '+stLabel(prev)+' → 부재'));
   }
   c.comments.push(sysCmt('부재 통화 '+c.tries+'회차 — 재통화 필요'));
@@ -2183,14 +2533,13 @@ function saveKeepMemo(id){
   toast('메모를 저장했어요');
 }
 
-/* v6: 홈 피드 모두 접기 / 모두 펼치기 */
+/* v6: 홈 피드 모두 접기 / 모두 펼치기 — v7부터 고정 공지는 건드리지 않는다 */
 function collapseAll(){
   ui.openThreads = {};
   ui.openCmts = {};
   ui.openReplies = {};
   ui.custThreads = {};
   ui.replyOpen = null;
-  ui.pinOpen = false;
 }
 function expandAll(){
   state.posts.forEach(function(p){
@@ -2200,7 +2549,6 @@ function expandAll(){
   ui.openCmts = {};
   ui.openReplies = {};
   ui.replyOpen = null;
-  ui.pinOpen = true;
 }
 function setTab(tab){
   if(ui.tab===tab) return;
@@ -2290,6 +2638,7 @@ function changeStatus(id, st){
   if(!c || c.status===st) return;
   var prev = c.status;
   c.status = st;
+  if(c.link) c.linkOff = (st !== '완료');
   c.comments = c.comments||[];
   c.comments.push(sysCmt('통화상태 '+stLabel(prev)+' → '+stLabel(st)));
   save(); render();
@@ -2301,6 +2650,7 @@ function inlineStatus(id, st, el){
   if(!c || c.status===st) return;
   var prev = c.status;
   c.status = st;
+  if(c.link) c.linkOff = (st !== '완료');
   c.comments = c.comments||[];
   c.comments.push(sysCmt('통화상태 '+stLabel(prev)+' → '+stLabel(st)));
   save();
@@ -2317,6 +2667,11 @@ function inlineStatus(id, st, el){
     }
     var cnt = row.querySelector('.c-cmt');
     if(cnt) cnt.textContent = '💬 '+(c.comments||[]).length;
+    var lk = row.querySelector('.lk-badge');
+    if(c.link){
+      var html = ledgerBadgeHTML(c.link, st==='완료' && !c.linkOff);
+      if(lk) lk.outerHTML = html;
+    }
   }
   updateCounts();
   toast(c.name+' · '+stLabel(st));
@@ -2397,7 +2752,20 @@ function logout(){
 }
 
 /* ================= events ================= */
+/* v7: 저장을 누르지 않은 인라인 메모 수정은 버리고 원래 메모로 돌아간다 */
+function cancelInlineEdit(){
+  if(!ui.memoEdit && !ui.resvMemo && !ui.keepMemo) return false;
+  ui.memoEdit = null;
+  ui.resvMemo = null;
+  ui.keepMemo = null;
+  render();
+  return true;
+}
 document.addEventListener('click', function(e){
+  if((ui.memoEdit || ui.resvMemo || ui.keepMemo)
+     && !(e.target.closest && e.target.closest('.c-edit,.rmemo-edit,.k-edit'))){
+    cancelInlineEdit();
+  }
   var el = e.target.closest('[data-act]');
   if(!el) return;
   var act = el.getAttribute('data-act');
@@ -2427,14 +2795,15 @@ document.addEventListener('click', function(e){
     case 'filter':
       var f = el.getAttribute('data-f');
       if(f==='all' && ui.tab==='notice'){
-        /* v6: '전체'를 누르면 고정 공지·댓글까지 한 번에 접기 */
+        /* v6: '전체'를 누르면 글들의 댓글을 한 번에 접기 (고정 공지는 그대로) */
         ui.filter = 'all';
         collapseAll(); render();
-        toast('피드를 모두 접었어요');
+        toast('피드 댓글을 모두 접었어요');
         break;
       }
       ui.filter = (ui.filter===f && f!=='all')? 'all' : f;
       render(); break;
+    case 'ledger-sync': ledgerSync(true); break;
     case 'mask': ui.mask = !ui.mask; render(); toast(ui.mask?'번호를 가렸어요':'번호를 표시해요'); break;
     case 'period-clear':
       ui.year = 'all'; ui.month = 'all'; render();
@@ -2586,14 +2955,45 @@ document.addEventListener('click', function(e){
   }
 });
 
+document.addEventListener('focusout', function(e){
+  var t = e.target;
+  if(!t || !t.getAttribute) return;
+  if(!(t.getAttribute('data-memo') || t.getAttribute('data-resvmemo') || t.getAttribute('data-keepmemo'))) return;
+  setTimeout(function(){
+    if(document.activeElement === t) return;
+    var ae = document.activeElement;
+    if(ae && ae.closest && ae.closest('.c-edit,.rmemo-edit,.k-edit')) return;  /* 저장·취소 버튼으로 이동 */
+    cancelInlineEdit();
+  }, 220);
+});
+
+/* v7: 검색어 입력 — 입력창(#custSearch)은 그대로 두고 목록 영역만 갱신한다(안드로이드 한글 IME 조합 보호) */
+function updateCustList(){
+  var body = $('custListBody');
+  if(!body){ render(); return; }
+  body.innerHTML = custListHTML();
+}
 document.addEventListener('input', function(e){
   var t = e.target;
-  if(t.id==='q'){ ui.q = t.value; render(); return; }
+  if(t.id==='custSearch'){ ui.q = t.value; updateCustList(); return; }
   var dk = t.getAttribute && t.getAttribute('data-draft');
   if(dk){ ui.drafts[dk] = t.value; }
   if(t.name==='text'){
     var frm = t.closest('form[data-form]');
     if(frm) syncFormBtn(frm);
+  }
+});
+/* v7: 한글 조합 중에는 목록 갱신만 하고 입력창은 건드리지 않는다 */
+document.addEventListener('compositionstart', function(e){
+  var t = e.target;
+  if(t && t.id==='custSearch') ui.composing = true;
+});
+document.addEventListener('compositionend', function(e){
+  var t = e.target;
+  if(t && t.id==='custSearch'){
+    ui.composing = false;
+    ui.q = t.value;
+    updateCustList();
   }
 });
 document.addEventListener('change', function(e){
@@ -2630,7 +3030,7 @@ document.addEventListener('change', function(e){
     var p = findPost(t.getAttribute('data-pid'));
     if(p){
       var rid = t.getAttribute('data-rid');
-      (p.reservations||[]).forEach(function(r){ if(r.id===rid) r.done = !!t.checked; });
+      (p.reservations||[]).forEach(function(r){ if(r.id===rid){ r.done = !!t.checked; if(r.link) r.linkOff = !r.done; } });
       save(); render(); toast(t.checked?'개통완료로 체크했어요':'개통 체크를 해제했어요');
     }
     return;
@@ -2703,8 +3103,9 @@ document.addEventListener('submit', function(e){
       comments: []
     };
     state.customers.push(c);
+    var autoDone = ledgerApply();
     save(); closeSheet(); render();
-    toast(name+'님을 명단에 추가했어요');
+    toast(autoDone? name+'님 — 장부에서 개통 확인, 개통완료로 표시했어요' : name+'님을 명단에 추가했어요');
     return;
   }
 
@@ -2721,8 +3122,10 @@ document.addEventListener('submit', function(e){
       model: String(rd.get('model')||'').trim(),
       owner: String(rd.get('owner')||session.staff),
       memo: String(rd.get('memo')||'').trim(),
+      at: nowAt(),
       done: false
     });
+    ledgerApply();
     save();
     sheetSpec = {type:'post', id:post.id};
     render();
@@ -2796,6 +3199,12 @@ function registerSW(){
 function init(){
   session = loadSession();
   state = loadState();
+  ledgerLoad();
+  if(session){
+    /* 저장해 둔 장부 캐시로 먼저 대조 — 네트워크 없이도 바로 반영 */
+    if(ledgerApply()) save();
+    ledger.lastNew = 0;
+  }
   renderLogin();
   if(session){
     $('login').hidden = true;
@@ -2803,12 +3212,15 @@ function init(){
     ui.loginStaff = session.staff;
     render();
     var pi = $('pinInput'); if(pi) try{ pi.blur(); }catch(e){}
+    ledgerSync(false);
   } else {
     $('login').hidden = false;
     $('app').hidden = true;
     var p2 = $('pinInput');
     if(p2) try{ p2.focus({preventScroll:true}); }catch(e){}
   }
+  setInterval(function(){ if(session && !document.hidden) ledgerSync(false); }, 5*60*1000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) ledgerSync(false); });
   registerSW();
 }
 init();
