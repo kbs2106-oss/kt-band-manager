@@ -1426,7 +1426,7 @@ function threadHTML(item, ctx, open){
   }
   var ph = ctx==='cust'
     ? '부재중·재통화 예정·상담 내용을 적어주세요'
-    : '1단계 댓글 — 고객 번호·생년월일(예: 01037795774/970114)이나 상담 내용';
+    : '1단계 댓글 — 고객 번호·생년월일';
   h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'" data-key="'+key+'" data-mode="'+mode+'">'
      + (mode? statusPickHTML(key, mode) : '')
      + '<div class="cbar-row">'
@@ -1471,7 +1471,7 @@ function cmtHTML(c, parentId, ctx, mode){
     /* v5: 대댓글은 직원 진행 보고 — 상태 칩 없이 내용만 */
     h += '<form class="cbar reply" data-form="reply" data-id="'+parentId+'" data-cid="'+c.id+'" data-ctx="'+ctx+'" data-key="'+rk+'" data-mode="">'
        + '<div class="cbar-row">'
-       + '<input name="text" data-draft="'+rk+'" value="'+esc(ui.drafts[rk]||'')+'" placeholder="'+esc(c.author)+'님에게 진행 내용·사진 남기기" autocomplete="off">'
+       + '<input name="text" data-draft="'+rk+'" value="'+esc(ui.drafts[rk]||'')+'" placeholder="'+esc(c.author)+'님에게 진행 내용 남기기" autocomplete="off">'
        + '<button class="send" type="submit"'+(fmtReady(rk,'')?'':' disabled')+'>등록</button>'
        + '<button class="send ghost" type="button" data-act="reply-close">취소</button>'
        + '</div></form>';
