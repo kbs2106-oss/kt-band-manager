@@ -151,7 +151,7 @@
   .pin-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px}
   .pin-head h2{font-size:14px;font-weight:800;letter-spacing:-.03em;color:#7A4700;display:flex;align-items:center;gap:6px}
   .pin-head .pill{background:#FFEFC9;color:#8A5200}
-  .pin-list{margin-top:9px;display:grid;gap:7px}
+  .pin-list{margin-top:9px;display:grid;grid-template-columns:minmax(0,1fr);gap:7px}
   .pinblock.closed .pin-list{display:none}
   .pin-item{width:100%;text-align:left;background:#fff;border:1px solid #F1DFB9;border-radius:13px;padding:10px 11px;
     display:grid;gap:4px;transition:.13s}
@@ -180,7 +180,7 @@
   .tag.today{background:var(--red-bg);color:#9A2A16}
 
   /* ---------- posts ---------- */
-  .feed{display:grid;gap:11px}
+  .feed{display:grid;grid-template-columns:minmax(0,1fr);gap:11px}
   .post{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:13px;box-shadow:var(--shadow)}
   .post.isdone{background:#FCFEFD;border-color:#DFEEE7}
   .post-head{display:flex;align-items:flex-start;gap:9px}
@@ -299,7 +299,7 @@
   @media (max-width:600px){ .qbox{margin-left:0;width:100%} .qbox input{width:100%} }
 
   /* ---------- day cards / customers ---------- */
-  .daylist{display:grid;gap:12px}
+  .daylist{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
   .day{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
   .day-head{display:flex;align-items:center;gap:9px;padding:11px 13px;background:linear-gradient(180deg,#FBFDFF,#F6FAFF);
     border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -438,6 +438,7 @@
     background:#fff;border:1px dashed var(--line-strong);border-radius:14px}
 
   @media (max-width:430px){
+    .viewhead .vactions .btn[data-act="compose"]{display:none}
     .topbar-inner{padding:8px 13px 6px;gap:7px}
     .brand-mark{width:33px;height:33px;border-radius:10px;font-size:13.5px}
     .brand-text h1{font-size:13.5px}
@@ -532,9 +533,9 @@
       </div>
     </div>
     <nav class="tabbar" id="tabbar">
-      <button class="tab" data-act="tab" data-tab="notice">📌 공지 · 상담놓침 <span class="n" id="t1n"></span></button>
-      <button class="tab t2" data-act="tab" data-tab="band">📅 730 · 550 · 3년 <span class="n" id="t2n"></span></button>
-      <button class="tab" data-act="tab" data-tab="write">📸 글쓰기 / 사진 <span class="n" id="t3n"></span></button>
+      <button class="tab" data-act="tab" data-tab="notice"><span>📌 공지 · 상담놓침</span> <span class="n" id="t1n"></span></button>
+      <button class="tab t2" data-act="tab" data-tab="band"><span>📅 730·550·3년</span> <span class="n" id="t2n"></span></button>
+      <button class="tab" data-act="tab" data-tab="write"><span>📸 글쓰기</span><span class="hide-xs"> / 사진</span> <span class="n" id="t3n"></span></button>
     </nav>
   </header>
 
