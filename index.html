@@ -664,6 +664,64 @@
     .seg-b{height:33px;font-size:12px;letter-spacing:-.04em}
     .cust .bk,.c-name .bk{font-size:10.5px;padding:1px 5px}
   }
+
+  /* ================= v5: 댓글별 상태 · 사전예약 공지 작성 · 예약자 메모 ================= */
+
+  /* 1단계 댓글 = 고객 정보 + 4칸 1탭 상태 */
+  .cmt .cseg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:9px 0 2px;max-width:460px}
+  .cseg-b{height:30px;min-width:0;padding:0 2px;border-radius:8px;border:1px solid var(--line);background:#fff;
+    color:var(--sub);font-size:11.5px;font-weight:700;letter-spacing:-.04em;
+    display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+    transition:background .12s,border-color .12s,color .12s}
+  .cseg-b:hover{background:#FAFBFC;border-color:#DFE5EC;color:var(--ink-2)}
+  .cseg-b:active{transform:scale(.97)}
+  .cseg-b[data-st="미통화"].on{background:var(--no-call-bg);color:var(--no-call-ink);border-color:var(--no-call-line);font-weight:800}
+  .cseg-b[data-st="부재"].on{background:var(--absent-bg);color:var(--absent-ink);border-color:var(--absent-line);font-weight:800}
+  .cseg-b[data-st="예약"].on{background:#E8F0FE;color:var(--kt-blue);border-color:#A8C7FA;font-weight:800}
+  .cseg-b[data-st="완료"].on{background:#E3F5EC;color:var(--done-ink);border-color:#BBE5D2;font-weight:800}
+
+  /* 완료한 댓글 블록은 차분한 회색으로 마감 */
+  .cmt.cmt-done{background:#F1F3F5;opacity:.78;border-radius:11px;padding:11px 12px;margin:5px 0;border-bottom-color:transparent}
+  .cmt.cmt-done .cmt-head b,.cmt.cmt-done p{color:var(--hint)}
+  .cmt.cmt-done .cseg-b:not(.on){opacity:.5}
+  .cmt.cmt-done .rep-toggle,.cmt.cmt-done .replybtn{opacity:.75}
+  .cmt.cmt-done .replies{border-left-color:#DCE1E6}
+  .cmt.cmt-done .replies li{color:var(--hint)}
+
+  /* 사전예약 공지 작성 배너 */
+  .resvbanner{display:flex;flex-direction:column;gap:4px;padding:12px 14px;margin-bottom:14px;border-radius:12px;
+    background:#E8F3FF;border:1px solid #CFE2FB}
+  .resvbanner b{font-size:13px;color:var(--blue-deep);letter-spacing:-.02em}
+  .resvbanner span{font-size:12.5px;line-height:1.6;color:var(--sub)}
+  .resvbanner span b{font-size:12.5px;color:var(--blue-deep)}
+  .cmp-tabs{flex-wrap:wrap;row-gap:6px}
+
+  /* 예약자 행 + 한 줄 메모 */
+  .ritem{border-bottom:1px solid var(--line-soft)}
+  .ritem:last-child{border-bottom:0}
+  .ritem .rrow{border-bottom:0;padding:10px 14px 2px}
+  .rmemo{display:flex;align-items:center;gap:5px;width:100%;max-width:100%;padding:1px 14px 9px;background:none;border:0;
+    text-align:left;font-size:12.5px;font-weight:600;color:var(--sub);letter-spacing:-.01em;line-height:1.5}
+  .rmemo .rmi{font-size:11px;color:var(--faint);flex:none}
+  .rmemo .rmt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .rmemo.quiet{color:var(--faint);font-weight:500}
+  .rmemo:hover{color:var(--blue-deep)}
+  .rmemo-edit{display:flex;align-items:center;gap:6px;padding:1px 14px 9px}
+  .rmemo-edit input{flex:1;min-width:0;height:34px;border-radius:8px;border:1px solid var(--blue);
+    background:#fff;padding:0 10px;font-size:13px}
+  .rmemo-edit input:focus{outline:none;box-shadow:0 0 0 3px rgba(49,130,246,.12)}
+  .rmemo-edit .mini-ok,.rmemo-edit .mini-x{height:34px;border-radius:8px;font-size:12.5px;padding:0 11px}
+  .rmemo-edit .mini-x{width:34px;padding:0}
+  .rrow .rn .rm-in{display:none}
+  @media (max-width:430px){
+    .cmt .cseg{gap:3px;margin:8px 0 1px}
+    .cseg-b{height:29px;font-size:11px}
+    .cmt.cmt-done{padding:10px 9px}
+    .cmp-tabs{gap:6px}
+    .cmp-tabs .fchip{height:31px;font-size:12.5px;padding:0 11px}
+    .rmemo,.rmemo-edit{padding-left:12px;padding-right:12px}
+    .ritem .rrow{padding-left:12px;padding-right:12px}
+  }
 </style>
 </head>
 <body>
@@ -837,6 +895,7 @@ var ui = {
   cmtStatus:{},
   keepMemo:null,
   memoEdit:null,
+  resvMemo:null,
   loginStaff:'김태양',
   phoneOnly:false,
   drafts:{},
@@ -1019,6 +1078,7 @@ function openSheet(spec){
 }
 function closeSheet(){
   sheetSpec = null;
+  ui.resvMemo = null;
   $('sheet').classList.remove('on');
   $('sheet').setAttribute('aria-hidden','true');
   $('sheetBody').innerHTML = '';
@@ -1163,6 +1223,17 @@ function bkBadge(b){ return '<span class="bk '+bkCls(b)+'">'+esc(b)+'</span>'; }
 /* v4: 댓글이 3개 이상이면 2개만 보이고 나머지는 접기 */
 var CMT_FOLD_AT = 3;
 
+/* v5: 1단계 댓글 = 고객 정보 + 미통화·부재·예약·완료 4칸 1탭 상태 */
+function csegHTML(c, pid){
+  var h = '<div class="cseg" role="group" aria-label="고객 상태 선택">';
+  STATUSES.forEach(function(s){
+    var on = c.st===s;
+    h += '<button type="button" class="cseg-b'+(on?' on':'')+'" data-act="cmt-status" data-pid="'+pid+'" data-cid="'+c.id+'"'
+       + ' data-st="'+esc(s)+'" aria-pressed="'+(on?'true':'false')+'">'+s+'</button>';
+  });
+  return h+'</div>';
+}
+
 /* v4: 미통화·부재·예약·완료 4칸 세그먼트 (팝업 없이 1탭 전환) */
 function segHTML(c){
   var h = '<div class="seg" role="group" aria-label="통화 상태 선택">';
@@ -1192,7 +1263,12 @@ function todoBar(){
 
 function noticeView(){
   var pinned = state.posts.filter(function(p){ return p.pinned; }).sort(byAtDesc);
-  var feed = state.posts.filter(function(p){ return !p.pinned && postMatch(p); }).sort(byAtDesc);
+  /* v5: 구분 필터(사전예약·상담놓침·매장 공지)를 고르면 고정 공지도 그 목록에 함께 보여줍니다 */
+  var feed = state.posts.filter(function(p){
+    if(!postMatch(p)) return false;
+    if(p.pinned && ui.filter==='all') return false;
+    return true;
+  }).sort(byAtDesc);
   var h = todoBar();
   if(pinned.length){
     h += '<section class="noticecard '+(ui.pinOpen?'':'closed')+'">'
@@ -1262,13 +1338,14 @@ function photoGrid(ps, size){
 function reserveBlock(p){
   var rs = p.reservations||[];
   var done = rs.filter(function(r){return r.done;}).length;
-  var h = '<div class="resv"><div class="resv-head"><b>S26 사전예약 명단</b>'
+  var h = '<div class="resv"><div class="resv-head"><b>사전예약 명단</b>'
         + '<span class="pill">'+done+'/'+rs.length+' 개통</span></div><div class="rtable">';
   if(!rs.length){
-    h += '<div class="day-empty">아직 접수된 예약이 없어요. 아래 <b>예약 추가</b>로 첫 예약을 받아보세요.</div>';
+    h += '<div class="day-empty">아직 접수된 예약이 없어요. 아래 <b>＋ 예약 추가</b>로 첫 예약을 받아보세요.</div>';
   } else {
     h += '<div class="rrow rhead"><span class="rn">고객</span><span class="rp">연락처</span><span class="rm">희망기종</span><span class="ro">담당</span><span class="rc">개통</span><span class="rx"></span></div>';
     rs.forEach(function(r){
+      h += '<div class="ritem">';
       h += '<div class="rrow '+(r.done?'done':'')+'">'
          + '<span class="rn">'+esc(r.name)+'<span class="rm-in">'+esc(r.model||'')+'</span></span>'
          + '<span class="rp"><a href="tel:'+digits(r.phone)+'">'+esc(ui.mask?maskPhone(r.phone):r.phone)+'</a></span>'
@@ -1277,16 +1354,27 @@ function reserveBlock(p){
          + '<span class="rc"><label class="chk" title="개통 완료"><input type="checkbox" data-act="resv-done" data-pid="'+p.id+'" data-rid="'+r.id+'" '+(r.done?'checked':'')+'><i></i></label></span>'
          + '<span class="rx"><button class="del" data-act="resv-del" data-pid="'+p.id+'" data-rid="'+r.id+'" title="예약 삭제">✕</button></span>'
          + '</div>';
+      if(ui.resvMemo===r.id){
+        h += '<div class="rmemo-edit"><input id="rmemo_'+r.id+'" data-resvmemo="'+r.id+'" data-pid="'+p.id+'"'
+           + ' value="'+esc(r.memo||'')+'" placeholder="메모 한 줄 (예) 오전 10시 재통화" enterkeyhint="done" autocomplete="off">'
+           + '<button class="mini-ok" data-act="resv-memo-save" data-pid="'+p.id+'" data-rid="'+r.id+'">저장</button>'
+           + '<button class="mini-x" data-act="resv-memo-cancel" aria-label="취소">✕</button></div>';
+      } else {
+        h += '<button class="rmemo '+(r.memo?'':'quiet')+'" data-act="resv-memo" data-pid="'+p.id+'" data-rid="'+r.id+'"'
+           + ' aria-label="'+esc((r.name||'예약자')+' 메모 수정')+'">'
+           + '<span class="rmi">📝</span><span class="rmt">'+esc(r.memo||'메모 한 줄 추가')+'</span></button>';
+      }
+      h += '</div>';
     });
   }
-  h += '</div><div class="resv-foot"><button class="btn ghost sm" data-act="resv-add" data-id="'+p.id+'">＋ 예약 추가</button></div></div>';
+  h += '</div><div class="resv-foot"><button class="btn ghost sm" data-act="resv-add" data-id="'+p.id+'">＋ 예약자 추가</button></div></div>';
   return h;
 }
 
+/* v5: 글 댓글(1단계)은 고객 상태 선택 가능 · 대댓글은 상태 없이 진행 내용만 */
 function cmtModeOf(item, ctx){
   if(ctx==='cust') return 'req';
-  if(item && (item.kind==='consult' || item.reserve)) return 'opt';
-  return '';
+  return 'opt';
 }
 function fmtReady(key, mode){
   var text = String(ui.drafts[key]||'').trim();
@@ -1336,10 +1424,13 @@ function threadHTML(item, ctx, open){
     });
     h += '</div>';
   }
+  var ph = ctx==='cust'
+    ? '부재중·재통화 예정·상담 내용을 적어주세요'
+    : '1단계 댓글 — 고객 번호·생년월일(예: 01037795774/970114)이나 상담 내용';
   h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'" data-key="'+key+'" data-mode="'+mode+'">'
      + (mode? statusPickHTML(key, mode) : '')
      + '<div class="cbar-row">'
-     + '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'" placeholder="'+(ctx==='cust'?'부재중·재통화 예정·상담 내용을 적어주세요':'댓글이나 통화 결과 남기기')+'" autocomplete="off">'
+     + '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'" placeholder="'+ph+'" autocomplete="off">'
      + '<label class="icobtn" title="사진 첨부">📷<input type="file" accept="image/*" data-photo="cmt" data-key="'+key+'" hidden></label>'
      + '<button class="send" type="submit"'+(fmtReady(key,mode)?'':' disabled')+'>등록</button>'
      + '</div></form>';
@@ -1349,15 +1440,17 @@ function threadHTML(item, ctx, open){
 
 function cmtHTML(c, parentId, ctx, mode){
   var reps = c.replies||[];
+  var isPost = ctx==='post' && !c.sys;   /* v5: 글의 1단계 댓글만 상태 관리 */
   var rOpen = ui.replyOpen===c.id;
   var rExp = !!ui.openReplies[c.id];
-  var h = '<li class="cmt '+(c.sys?'sys':'')+'">'
+  var h = '<li class="cmt '+(c.sys?'sys':'')+(isPost && c.st==='완료'?' cmt-done':'')+'">'
         + '<div class="cmt-head"><span class="av xs" style="--c:'+colorOf(c.author)+'">'+esc(initial(c.author))+'</span>'
         + '<b>'+esc(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
-        + (c.st? '<span class="cst" data-st="'+esc(c.st)+'">'+esc(c.st)+'</span>' : '')
+        + (!isPost && c.st? '<span class="cst" data-st="'+esc(c.st)+'">'+esc(c.st)+'</span>' : '')
         + (c.sys?'':'<button class="replybtn" data-act="reply-open" data-cid="'+c.id+'">답글</button>')+'</div>';
   if(c.text) h += '<p>'+esc(c.text)+'</p>';
   h += photoGrid(c.photos, 'sm');
+  if(isPost) h += csegHTML(c, parentId);
   if(reps.length){
     h += '<button class="rep-toggle" data-act="rep-toggle" data-cid="'+c.id+'" aria-expanded="'+(rExp?'true':'false')+'">'
        + (rExp? '답글 접기 <span class="chev">▴</span>' : '답글 '+reps.length+'개 보기 <span class="chev">▾</span>')
@@ -1375,11 +1468,11 @@ function cmtHTML(c, parentId, ctx, mode){
   }
   if(rOpen){
     var rk = 'rp:'+c.id;
-    h += '<form class="cbar reply" data-form="reply" data-id="'+parentId+'" data-cid="'+c.id+'" data-ctx="'+ctx+'" data-key="'+rk+'" data-mode="'+mode+'">'
-       + (mode? statusPickHTML(rk, mode) : '')
+    /* v5: 대댓글은 직원 진행 보고 — 상태 칩 없이 내용만 */
+    h += '<form class="cbar reply" data-form="reply" data-id="'+parentId+'" data-cid="'+c.id+'" data-ctx="'+ctx+'" data-key="'+rk+'" data-mode="">'
        + '<div class="cbar-row">'
-       + '<input name="text" data-draft="'+rk+'" value="'+esc(ui.drafts[rk]||'')+'" placeholder="'+esc(c.author)+'님에게 답글 남기기" autocomplete="off">'
-       + '<button class="send" type="submit"'+(fmtReady(rk,mode)?'':' disabled')+'>등록</button>'
+       + '<input name="text" data-draft="'+rk+'" value="'+esc(ui.drafts[rk]||'')+'" placeholder="'+esc(c.author)+'님에게 진행 내용·사진 남기기" autocomplete="off">'
+       + '<button class="send" type="submit"'+(fmtReady(rk,'')?'':' disabled')+'>등록</button>'
        + '<button class="send ghost" type="button" data-act="reply-close">취소</button>'
        + '</div></form>';
   }
@@ -1565,14 +1658,20 @@ function custRow(c){
 /* ---------- composer ---------- */
 function composerHTML(){
   var cm = ui.composer;
+  var isRes = cm.kind==='reserve';
   var photos = cm.photos||[];
+  var ph = isRes
+    ? '사전예약 안내 문구를 적어주세요.\n예) S26 사전예약 접수 중 — 이름·연락처·희망기종만 남겨주세요. 예약금 없이 접수합니다.'
+    : (cm.kind==='notice' ? '매장 공지 내용을 적어주세요.\n예) 이번 주 토요일 정상 영업합니다.'
+                          : '상담 내용·전달사항을 적어주세요.\n사진을 붙이면 더 빨라요.');
   var h = '<div class="cmp-tabs">'
-        +   [['consult','상담놓침'],['notice','매장 공지'],['memo','메모']].map(function(k){
+        +   [['consult','상담놓침'],['notice','매장 공지'],['reserve','사전예약 공지'],['memo','메모']].map(function(k){
               return '<button class="fchip '+(cm.kind===k[0]?'on':'')+'" data-act="cmp-kind" data-k="'+k[0]+'">'+k[1]+'</button>';
             }).join('')
         + '</div>'
-        + '<input class="inp inp-title" id="cTitle" data-draft="cmp:title" value="'+esc(ui.drafts['cmp:title']||'')+'" placeholder="제목 (선택)">'
-        + '<textarea class="inp" id="cBody" data-draft="cmp:body" rows="7" placeholder="상담 내용·전달사항을 적어주세요.\n사진을 붙이면 더 빨라요.">'+esc(ui.drafts['cmp:body']||'')+'</textarea>'
+        + (isRes? '<div class="resvbanner"><b>📢 사전예약 공지</b><span>등록하면 <b>상단 고정 공지</b> + <b>사전예약 탭</b>에 바로 뜹니다. 예약자는 글 안에서 <b>＋ 예약자 추가</b>로 받고 <b>개통 체크</b>로 관리하세요.</span></div>' : '')
+        + '<input class="inp inp-title" id="cTitle" data-draft="cmp:title" value="'+esc(ui.drafts['cmp:title']||'')+'" placeholder="'+(isRes?'제목 (선택) — 예) S26 사전예약 접수 중':'제목 (선택)')+'">'
+        + '<textarea class="inp" id="cBody" data-draft="cmp:body" rows="7" placeholder="'+ph+'">'+esc(ui.drafts['cmp:body']||'')+'</textarea>'
         + '<div class="cmp-photos">'
         +   photos.map(function(p,i){ return '<span class="athumb"><img src="'+esc(p.src)+'" alt=""><button data-act="cmp-photo-del" data-i="'+i+'" aria-label="삭제">×</button></span>'; }).join('')
         + '</div>'
@@ -1582,9 +1681,9 @@ function composerHTML(){
         +     '<label class="btn ghost sm">🖼 앨범<input type="file" accept="image/*" data-photo="composer" hidden></label>'
         +   '</div>'
         +   '<span class="grow"></span>'
-        +   '<label class="switch"><input type="checkbox" id="cPin" '+(cm.pin?'checked':'')+'> 공지로 고정</label>'
+        +   '<label class="switch"><input type="checkbox" id="cPin" '+(cm.pin?'checked':'')+'> '+(isRes?'상단 고정 공지':'공지로 고정')+'</label>'
         + '</div>'
-        + '<button class="btn primary lg cmp-submit" data-act="submit-post">등록</button>'
+        + '<button class="btn primary lg cmp-submit" data-act="submit-post">'+(isRes?'사전예약 공지 등록':'등록')+'</button>'
         + '<p class="hint" style="margin-top:10px">사진은 자동으로 줄여서 이 기기에 저장합니다. 직원 전체가 함께 봅니다.</p>';
   return h;
 }
@@ -1702,7 +1801,7 @@ function menuHTML(){
   h += '<button class="menu-item" data-act="reset"><span>초기화<small>샘플 데이터로 되돌리기</small></span><span class="arw">↺</span></button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v4</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v5</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -1728,7 +1827,8 @@ function resvForm(pid){
     + '<label>연락처<input name="phone" inputmode="tel" placeholder="010-1234-5678" autocomplete="off"></label>'
     + '<label>희망기종<input name="model" placeholder="예) S26 / S26 울트라" autocomplete="off"></label>'
     + '<label>담당자<select name="owner">'+STAFF.map(function(s){return '<option '+(session.staff===s?'selected':'')+'>'+esc(s)+'</option>';}).join('')+'</select></label>'
-    + '<div class="formfoot"><button class="btn primary" type="submit">예약 추가</button>'
+    + '<label>메모 한 줄<input name="memo" placeholder="예) 오전 10시 재통화 · 색상 블랙 희망" autocomplete="off"></label>'
+    + '<div class="formfoot"><button class="btn primary" type="submit">예약자 추가</button>'
     + '<button class="btn ghost" type="button" data-act="close">취소</button></div></form>';
 }
 
@@ -1899,12 +1999,18 @@ function submitPost(){
   var title = (ui.drafts['cmp:title']||'').trim();
   var body = (ui.drafts['cmp:body']||'').trim();
   var photos = ui.composer.photos||[];
-  if(!body && !photos.length && !title){ toast('내용을 입력하거나 사진을 붙여주세요.', true); return; }
+  var isRes = ui.composer.kind==='reserve';
+  if(!body && !photos.length && !title){ toast(isRes? '사전예약 안내 문구를 적어주세요.' : '내용을 입력하거나 사진을 붙여주세요.', true); return; }
   var p = {
-    id: uid('p'), kind: ui.composer.kind||'consult', pinned: !!ui.composer.pin,
+    id: uid('p'), kind: isRes? 'reserve' : (ui.composer.kind||'consult'), pinned: !!ui.composer.pin,
     title: title, body: body, author: session.staff, at: nowAt(), done:false,
     photos: photos.slice(), comments: []
   };
+  if(isRes){
+    p.reserve = true;
+    p.reservations = [];
+    if(!title) p.title = '사전예약 접수 명단';
+  }
   state.posts.push(p);
   ui.drafts['cmp:title'] = '';
   ui.drafts['cmp:body'] = '';
@@ -1914,7 +2020,53 @@ function submitPost(){
   closeSheet();
   render();
   window.scrollTo({top:0, behavior:'smooth'});
-  toast(p.pinned? '공지로 등록했어요' : '글을 등록했어요');
+  if(isRes){
+    openSheet({type:'post', id:p.id});
+    toast(p.pinned? '사전예약 공지를 상단 고정으로 올렸어요 — 예약자를 바로 추가하세요' : '사전예약 공지를 올렸어요 — 예약자를 바로 추가하세요');
+  } else {
+    toast(p.pinned? '공지로 등록했어요' : '글을 등록했어요');
+  }
+}
+/* v5: 1단계 댓글(고객) 상태를 1탭으로 — 완료면 그 댓글 블록을 회색으로 마감 */
+function setCmtStatus(pid, cid, st, el){
+  var p = findPost(pid);
+  if(!p) return;
+  var c = null;
+  (p.comments||[]).forEach(function(x){ if(x.id===cid) c = x; });
+  if(!c || c.st===st) return;
+  c.st = st; c.stBy = session.staff; c.stAt = nowAt();
+  save();
+  var li = el && el.closest? el.closest('.cmt') : null;
+  if(li){
+    li.classList.toggle('cmt-done', st==='완료');
+    var bs = li.querySelectorAll('.cseg-b');
+    for(var i=0;i<bs.length;i++){
+      var on = bs[i].getAttribute('data-st')===st;
+      bs[i].classList.toggle('on', on);
+      bs[i].setAttribute('aria-pressed', on? 'true':'false');
+    }
+  }
+  toast('댓글 상태 · '+st);
+}
+/* v5: 사전예약 예약자 한 줄 메모 */
+function saveResvMemo(pid, rid){
+  var p = findPost(pid);
+  if(!p){ toast('공지를 찾지 못했어요.', true); return; }
+  var r = (p.reservations||[]).filter(function(x){ return x.id===rid; })[0];
+  if(!r){ toast('예약자를 찾지 못했어요.', true); return; }
+  var el = $('rmemo_'+rid);
+  if(el) r.memo = String(el.value||'').trim();
+  ui.resvMemo = null;
+  save(); render();
+  toast(r.memo? '메모를 저장했어요' : '메모를 지웠어요');
+}
+function openResvMemo(pid, rid){
+  ui.resvMemo = rid;
+  render();
+  setTimeout(function(){
+    var el = $('rmemo_'+rid);
+    if(el) try{ el.focus({preventScroll:true}); el.setSelectionRange(el.value.length, el.value.length); }catch(e){}
+  }, 70);
 }
 function changeStatus(id, st){
   var c = findCust(id);
@@ -2012,6 +2164,7 @@ function resetData(){
   ui.drafts = {};
   ui.attach = {};
   ui.memoEdit = null;
+  ui.resvMemo = null;
   save(); closeSheet(); render();
   toast('샘플 데이터로 초기화했어요');
 }
@@ -2177,7 +2330,19 @@ document.addEventListener('click', function(e){
       render(); break;
     case 'cmp-photo-del':
       ui.composer.photos.splice(+el.getAttribute('data-i'),1); render(); break;
-    case 'cmp-kind': ui.composer.kind = el.getAttribute('data-k'); render(); break;
+    case 'cmp-kind':
+      var nk = el.getAttribute('data-k');
+      if(ui.composer.kind!==nk){
+        ui.composer.kind = nk;
+        ui.composer.pin = (nk==='reserve');   /* 사전예약 공지는 기본 상단 고정 */
+      }
+      render(); break;
+    case 'cmt-status':
+      setCmtStatus(el.getAttribute('data-pid'), el.getAttribute('data-cid'), el.getAttribute('data-st'), el);
+      break;
+    case 'resv-memo': openResvMemo(el.getAttribute('data-pid'), el.getAttribute('data-rid')); break;
+    case 'resv-memo-save': saveResvMemo(el.getAttribute('data-pid'), el.getAttribute('data-rid')); break;
+    case 'resv-memo-cancel': ui.resvMemo = null; render(); break;
     case 'submit-post': submitPost(); break;
     case 'staff':
       ui.loginStaff = el.getAttribute('data-name');
@@ -2323,6 +2488,7 @@ document.addEventListener('submit', function(e){
       phone: String(rd.get('phone')||'').trim(),
       model: String(rd.get('model')||'').trim(),
       owner: String(rd.get('owner')||session.staff),
+      memo: String(rd.get('memo')||'').trim(),
       done: false
     });
     save();
@@ -2349,6 +2515,7 @@ document.addEventListener('submit', function(e){
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape'){
     if($('lightbox').classList.contains('on')){ closeLB(); }
+    else if(ui.resvMemo){ ui.resvMemo = null; render(); }
     else if(ui.memoEdit){ ui.memoEdit = null; render(); }
     else if(sheetSpec){ closeSheet(); }
     return;
@@ -2357,6 +2524,18 @@ document.addEventListener('keydown', function(e){
     e.preventDefault();
     saveMemo(e.target.getAttribute('data-memo'));
     return;
+  }
+  if(e.target && e.target.getAttribute && e.target.getAttribute('data-resvmemo')){
+    if(e.key==='Enter'){
+      e.preventDefault();
+      saveResvMemo(e.target.getAttribute('data-pid'), e.target.getAttribute('data-resvmemo'));
+      return;
+    }
+    if(e.key==='Escape'){
+      e.preventDefault();
+      ui.resvMemo = null; render();
+      return;
+    }
   }
   if(e.target && e.target.getAttribute && e.target.getAttribute('data-keepmemo') && e.key==='Enter'){
     e.preventDefault();
