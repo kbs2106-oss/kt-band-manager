@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
+<meta name="theme-color" content="#0B57D0">
+<meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.png" sizes="64x64">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="칠금점 밴드">
+<style>
+  :root{
+    --blue-800:#083A8C; --blue-700:#0A45A8; --blue-600:#0B57D0; --blue-500:#2F7BE5; --blue-100:#D9E7FF; --blue-50:#EEF4FF;
+    --ink:#0F172A; --slate-700:#334155; --slate-600:#475569; --slate-500:#64748B; --slate-400:#94A3B8;
+    --line:#E3EAF3; --line-strong:#D2DCEA; --bg:#F4F7FB; --card:#FFFFFF;
+    --green:#0E7C5A; --green-bg:#E6F6EF; --amber:#9A5B00; --amber-bg:#FFF3DC; --red:#B42318; --red-bg:#FDECE9;
+    --violet:#5B3FC4; --violet-bg:#EFEBFF; --teal:#0F766E; --teal-bg:#E6F5F3; --pink:#C2185B; --pink-bg:#FDEBF3;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(15,23,42,.05), 0 12px 28px -22px rgba(15,23,42,.45);
+    --shadow-lg:0 24px 60px -24px rgba(15,23,42,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Segoe UI",Roboto,sans-serif;
+    font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  body.lock{overflow:hidden}
+  [hidden]{display:none !important}
+  h1,h2,h3,p,ul,ol{margin:0}
+  button{font-family:inherit;cursor:pointer}
+  a{color:var(--blue-700);text-decoration:none}
+  input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
+  ::selection{background:#CFE0FF}
+
+  /* ---------- buttons ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 14px;
+    border-radius:11px;border:1px solid var(--line-strong);background:#fff;color:var(--slate-700);
+    font-size:13.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;transition:.14s}
+  .btn:hover{border-color:#B9C9E0;background:#FBFDFF}
+  .btn.primary{background:linear-gradient(180deg,#1A66DE,#0B57D0);border-color:#0B57D0;color:#fff;box-shadow:0 10px 20px -14px rgba(11,87,208,.9)}
+  .btn.primary:hover{background:linear-gradient(180deg,#1E6EE8,#0A4EBC)}
+  .btn.ghost{background:#F7F9FC;border-color:var(--line);color:var(--slate-600)}
+  .btn.sm{height:34px;padding:0 11px;font-size:12.5px;border-radius:9px}
+  .btn.lg{height:50px;font-size:15.5px;border-radius:13px;width:100%}
+  .mini{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:8px;border:1px solid var(--line-strong);
+    background:#fff;color:var(--slate-500);font-size:11.5px;font-weight:700;white-space:nowrap}
+  .mini:hover{border-color:#B9C9E0;color:var(--slate-700)}
+  .mini.on{background:var(--green-bg);border-color:#B7E4D1;color:var(--green)}
+  .linkbtn{background:none;border:0;padding:0;color:var(--blue-700);font-size:12.5px;font-weight:700}
+  .linkbtn:hover{text-decoration:underline}
+  .pill{display:inline-flex;align-items:center;height:21px;padding:0 8px;border-radius:999px;background:var(--blue-50);
+    color:var(--blue-700);font-size:11px;font-weight:800;letter-spacing:-.01em}
+  .hide-xs{display:inline}
+
+  /* ---------- login ---------- */
+  .login{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:18px;overflow:auto;
+    background:radial-gradient(1200px 600px at 50% -10%,#DCE9FF 0%,#F4F7FB 55%,#F4F7FB 100%)}
+  .login-card{width:100%;max-width:392px;background:#fff;border-radius:22px;box-shadow:var(--shadow-lg);overflow:hidden;
+    border:1px solid #E8EFF9}
+  .login-top{padding:26px 22px 20px;text-align:center;background:linear-gradient(160deg,#0B57D0,#083A8C);color:#fff}
+  .lmark{width:52px;height:52px;border-radius:15px;margin:0 auto 12px;display:grid;place-items:center;
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);font-weight:800;font-size:21px;letter-spacing:-.05em}
+  .login-top h1{font-size:17px;font-weight:800;letter-spacing:-.02em}
+  .login-top p{margin-top:3px;font-size:12px;color:#C9DCFA;font-weight:600;letter-spacing:.01em}
+  .login-body{padding:18px 18px 20px}
+  .lbl{display:block;font-size:11.5px;font-weight:800;color:var(--slate-500);letter-spacing:.02em;margin:4px 0 7px}
+  .staff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+  .staff-chip{height:46px;border-radius:12px;border:1px solid var(--line-strong);background:#FBFCFE;font-weight:700;
+    font-size:14px;color:var(--slate-600);display:flex;align-items:center;justify-content:center;gap:7px;transition:.14s}
+  .staff-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--c,#94A3B8)}
+  .staff-chip.on{background:var(--blue-50);border-color:#8FB6F0;color:var(--blue-700);box-shadow:inset 0 0 0 1px #8FB6F0}
+  .pindots{display:flex;justify-content:center;gap:14px;padding:8px 0 12px}
+  .pindots i{width:13px;height:13px;border-radius:50%;background:#E6ECF5;border:1px solid #D8E2F0;transition:.12s}
+  .pindots i.on{background:var(--blue-600);border-color:var(--blue-600);transform:scale(1.08)}
+  .pininput{position:absolute;opacity:0;width:1px;height:1px;border:0;padding:0}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .keypad button{height:50px;border-radius:12px;border:1px solid var(--line);background:#F8FAFD;font-size:19px;font-weight:700;color:var(--slate-700)}
+  .keypad button:active{background:var(--blue-50);border-color:#A9C6F1}
+  .keypad button.fn{font-size:13px;font-weight:800;color:var(--slate-500)}
+  .lerr{min-height:16px;margin-top:9px;text-align:center;font-size:12px;font-weight:700;color:var(--red)}
+  .shake{animation:shake .32s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
+  .login-note{margin-top:10px;text-align:center;font-size:11px;color:var(--slate-400);line-height:1.6}
+
+  /* ---------- topbar ---------- */
+  .topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .topbar-inner{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:9px 16px 7px}
+  .brand{display:flex;align-items:center;gap:9px;min-width:0;flex:1 1 auto}
+  .brand-mark{width:37px;height:37px;border-radius:11px;display:grid;place-items:center;flex:none;color:#fff;font-weight:800;
+    font-size:15px;letter-spacing:-.05em;background:linear-gradient(160deg,#2F7BE5,#083A8C);box-shadow:0 8px 16px -10px rgba(11,87,208,.95)}
+  .brand-text{min-width:0}
+  .brand-text h1{font-size:15px;font-weight:800;letter-spacing:-.03em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand-text p{margin-top:2px;font-size:10.5px;font-weight:700;color:var(--slate-500);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topacts{display:flex;align-items:center;gap:7px;flex:none}
+  .who{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 9px 0 5px;border-radius:999px;border:1px solid var(--line);
+    background:#fff;font-size:12.5px;font-weight:800;color:var(--slate-700)}
+  .who:hover{border-color:#B9C9E0}
+  .av{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--c,#0B57D0);
+    color:#fff;font-weight:800;font-size:13px;letter-spacing:-.02em}
+  .av.xs{width:24px;height:24px;border-radius:8px;font-size:10.5px}
+  .tabbar{max-width:1180px;margin:0 auto;padding:0 16px 9px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
+  .tabbar::-webkit-scrollbar{display:none}
+  .tab{flex:1 1 0;min-width:max-content;height:42px;padding:0 12px;border-radius:11px;border:1px solid var(--line);
+    background:#F7F9FC;color:var(--slate-600);font-size:13px;font-weight:700;letter-spacing:-.02em;
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:.14s}
+  .tab:hover{border-color:#C7D5E8}
+  .tab.on{background:#fff;border-color:#9DBDF0;color:var(--blue-700);box-shadow:0 8px 18px -15px rgba(11,87,208,.9)}
+  .tab .n{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:18px;padding:0 5px;
+    border-radius:999px;background:var(--blue-600);color:#fff;font-size:10.5px;font-weight:800}
+  .tab .n:empty{display:none}
+  .tab.on .n{background:var(--blue-600)}
+  .tab.t2 .n{background:var(--red)}
+  @media (min-width:760px){ .tab{flex:0 0 auto;min-width:168px;padding:0 18px} }
+
+  /* ---------- layout ---------- */
+  .page{max-width:1180px;margin:0 auto;padding:14px 16px 70px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+  @media (min-width:1080px){
+    .page{grid-template-columns:minmax(0,1fr) 312px;gap:20px}
+    .rail{position:sticky;top:112px;display:grid;gap:12px}
+  }
+  @media (max-width:1079px){ .rail{display:none} }
+  main{min-width:0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+  /* ---------- view head ---------- */
+  .viewhead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:11px;flex-wrap:wrap}
+  .viewhead h2{font-size:17px;font-weight:800;letter-spacing:-.03em;display:flex;align-items:center;gap:6px}
+  .viewhead p{margin-top:3px;font-size:12px;color:var(--slate-500);font-weight:600}
+  .vactions{display:flex;gap:6px;align-items:center}
+
+  /* ---------- chips ---------- */
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line-strong);background:#fff;color:var(--slate-600);
+    font-size:12px;font-weight:700;white-space:nowrap}
+  .chip:hover{border-color:#B9C9E0}
+  .chip.on{background:var(--blue-600);border-color:var(--blue-600);color:#fff;box-shadow:0 8px 16px -12px rgba(11,87,208,.95)}
+  .chip .c{opacity:.7;font-weight:800;margin-left:4px;font-size:11px}
+  .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+
+  /* ---------- notice pin block ---------- */
+  .pinblock{background:linear-gradient(180deg,#FFF9EC 0%,#FFFDF8 100%);border:1px solid #F4E2B8;border-radius:18px;
+    padding:12px 12px 13px;margin-bottom:13px;box-shadow:0 12px 26px -24px rgba(154,91,0,.6)}
+  .pin-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px}
+  .pin-head h2{font-size:14px;font-weight:800;letter-spacing:-.03em;color:#7A4700;display:flex;align-items:center;gap:6px}
+  .pin-head .pill{background:#FFEFC9;color:#8A5200}
+  .pin-list{margin-top:9px;display:grid;gap:7px}
+  .pinblock.closed .pin-list{display:none}
+  .pin-item{width:100%;text-align:left;background:#fff;border:1px solid #F1DFB9;border-radius:13px;padding:10px 11px;
+    display:grid;gap:4px;transition:.13s}
+  .pin-item:hover{border-color:#E4C98E;box-shadow:0 10px 20px -20px rgba(154,91,0,.7)}
+  .pi-top{display:flex;align-items:center;gap:6px;min-width:0}
+  .pi-title{font-size:13px;font-weight:800;letter-spacing:-.02em;color:#3B2A10;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .pi-meta{font-size:11.5px;color:#8A7350;font-weight:600;display:flex;gap:6px;flex-wrap:wrap}
+  .pi-right{display:flex;align-items:center;gap:6px;flex:none}
+  .pcount{font-size:10.5px;font-weight:800;color:#8A5200;background:#FFF1D2;border-radius:6px;padding:2px 6px;white-space:nowrap}
+
+  /* ---------- badges ---------- */
+  .badge{display:inline-flex;align-items:center;gap:4px;height:21px;padding:0 7px;border-radius:6px;font-size:10.5px;font-weight:800;letter-spacing:-.01em;flex:none}
+  .b-consult{background:var(--red-bg);color:#9A2A16}
+  .b-notice{background:var(--amber-bg);color:#8A5200}
+  .b-memo{background:var(--teal-bg);color:var(--teal)}
+  .b-reserve{background:var(--pink-bg);color:var(--pink)}
+  .b-done{background:var(--green-bg);color:var(--green)}
+  .pinbadge{font-size:9.5px;font-weight:800;color:#8A5200;background:#FFF1D2;border-radius:5px;padding:1px 5px}
+  .donebadge{font-size:9.5px;font-weight:800;color:var(--green);background:var(--green-bg);border-radius:5px;padding:1px 5px}
+  .bk{display:inline-flex;align-items:center;height:19px;padding:0 6px;border-radius:6px;font-size:10.5px;font-weight:800;flex:none;letter-spacing:-.01em}
+  .bk-730{background:var(--blue-50);color:var(--blue-700)}
+  .bk-550{background:var(--teal-bg);color:var(--teal)}
+  .bk-3y{background:var(--violet-bg);color:var(--violet)}
+  .tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;background:var(--blue-50);
+    color:var(--blue-700);font-size:10.5px;font-weight:800}
+  .tag.today{background:var(--red-bg);color:#9A2A16}
+
+  /* ---------- posts ---------- */
+  .feed{display:grid;gap:11px}
+  .post{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:13px;box-shadow:var(--shadow)}
+  .post.isdone{background:#FCFEFD;border-color:#DFEEE7}
+  .post-head{display:flex;align-items:flex-start;gap:9px}
+  .post-head .who{display:block;flex:1;min-width:0;background:none;border:0;height:auto;padding:0;border-radius:0}
+  .wname{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:800;letter-spacing:-.02em}
+  .wmeta{margin-top:2px;font-size:11.5px;color:var(--slate-500);font-weight:600}
+  .post-title{margin:9px 0 0;font-size:14.5px;font-weight:800;letter-spacing:-.025em;line-height:1.4}
+  .post-body{margin:5px 0 0;font-size:13.5px;line-height:1.62;color:var(--slate-700);white-space:pre-wrap;word-break:break-word}
+  .post-title + .post-body{margin-top:4px}
+  .post-body:empty{display:none}
+  .post-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px}
+
+  .pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:9px}
+  .pgrid.one{grid-template-columns:minmax(0,1fr)}
+  .pgrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pgrid.one .pcell img{aspect-ratio:16/10;max-height:260px}
+  .pcell{position:relative;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#F1F5F9;display:block;width:100%}
+  .pcell img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+  .pgrid.sm .pcell{width:74px;border-radius:8px}
+  .pgrid.sm .pcell img{aspect-ratio:1}
+  .pgrid.sm{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+
+  /* ---------- threads ---------- */
+  .thread{margin-top:9px;border-top:1px solid var(--line)}
+  .cmts{list-style:none;padding:0;margin:0}
+  .cmts li.empty{padding:11px 2px;font-size:12.5px;color:var(--slate-400);font-weight:600}
+  .cmt{padding:9px 0;border-bottom:1px dashed #EDF2F8;position:relative}
+  .cmt:last-child{border-bottom:0}
+  .cmt-head{display:flex;align-items:center;gap:6px;font-size:12px;flex-wrap:wrap}
+  .cmt-head b{font-weight:800;letter-spacing:-.01em}
+  .cmt-head time{color:var(--slate-400);font-size:11px;font-weight:700}
+  .replybtn{margin-left:auto;background:none;border:0;padding:0 2px;font-size:11px;font-weight:800;color:var(--slate-400)}
+  .replybtn:hover{color:var(--blue-700)}
+  .cmt p{margin:3px 0 0 0;font-size:13px;line-height:1.58;white-space:pre-wrap;word-break:break-word;color:var(--slate-700)}
+  .cmt.sys p{color:var(--slate-500);font-size:12px;font-style:normal}
+  .cmt.sys .cmt-head b{color:var(--slate-500)}
+  .replies{list-style:none;margin:5px 0 0;padding:2px 0 0 10px;border-left:2px solid var(--line-strong)}
+  .replies li{font-size:12.5px;line-height:1.55;padding:3px 0;color:var(--slate-700);word-break:break-word}
+  .replies li b{font-weight:800;margin-right:4px}
+  .replies li time{color:var(--slate-400);font-size:10.5px;margin-left:5px;font-weight:700}
+  .rav{color:var(--slate-400);font-weight:800;margin-right:4px}
+  .more{display:block;width:100%;margin:8px 0 0;padding:6px 0;border:1px dashed var(--line-strong);border-radius:9px;
+    background:#FBFCFE;color:var(--slate-500);font-size:11.5px;font-weight:800}
+  .more:hover{color:var(--blue-700);border-color:#B9CFEF}
+
+  .cbar{display:flex;align-items:center;gap:5px;margin-top:8px}
+  .cbar input{flex:1;min-width:0;height:37px;border-radius:10px;border:1px solid var(--line-strong);background:#FBFCFE;
+    padding:0 10px;font-size:13px}
+  .cbar input:focus{outline:none;border-color:#8FB6F0;background:#fff;box-shadow:0 0 0 3px #EAF2FF}
+  .cbar .send{height:37px;padding:0 12px;border-radius:10px;border:1px solid var(--blue-600);background:var(--blue-600);
+    color:#fff;font-size:12.5px;font-weight:800;flex:none}
+  .cbar .send.ghost{background:#fff;color:var(--slate-500);border-color:var(--line-strong)}
+  .cbar.reply{padding-left:10px}
+  .icobtn{width:37px;height:37px;flex:none;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line-strong);
+    background:#F8FAFD;font-size:15px;cursor:pointer}
+  .icobtn:hover{border-color:#B9C9E0}
+  .attach{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+  .athumb{position:relative;display:block;width:60px;height:60px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+  .athumb img{width:100%;height:100%;object-fit:cover}
+  .athumb button{position:absolute;top:1px;right:1px;width:17px;height:17px;border-radius:50%;border:0;background:rgba(15,23,42,.72);
+    color:#fff;font-size:10px;line-height:1;padding:0}
+
+  /* ---------- reservation table ---------- */
+  .resv{margin-top:10px;border:1px solid #F3D9E5;border-radius:13px;background:#FFFBFD;padding:10px 10px 11px}
+  .resv-head{display:flex;align-items:center;gap:7px;margin-bottom:7px;flex-wrap:wrap}
+  .resv-head b{font-size:12.5px;font-weight:800;color:#8E1B4E;letter-spacing:-.02em}
+  .resv-head .prog{flex:1;min-width:60px;height:6px;border-radius:99px;background:#F7E3EC;overflow:hidden}
+  .resv-head .prog i{display:block;height:100%;background:linear-gradient(90deg,#F0629F,#C2185B);border-radius:99px}
+  .rtable{border-top:1px solid #F3E2EA}
+  .rrow{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.25fr) minmax(0,.9fr) minmax(0,.7fr) 46px 26px;
+    grid-template-areas:"n p m o c x";gap:3px 7px;align-items:center;padding:7px 1px;font-size:12px;border-bottom:1px solid #F7EAF0}
+  .rrow:last-child{border-bottom:0}
+  .rrow.rhead{font-size:10.5px;font-weight:800;color:#A9728D;letter-spacing:.02em;padding:6px 1px}
+  .rrow .rn{grid-area:n;font-weight:800;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rrow .rp{grid-area:p;color:var(--slate-600);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rrow .rp a{color:inherit}
+  .rrow .rm{grid-area:m;color:var(--slate-600);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rrow .ro{grid-area:o;color:var(--slate-500);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rrow .rc{grid-area:c;justify-self:center}
+  .rrow .rx{grid-area:x;justify-self:end}
+  .rm-in{display:none}
+  .rrow.done .rn,.rrow.done .rp,.rrow.done .rm{color:var(--slate-400);text-decoration:line-through;text-decoration-color:#CBD5E1}
+  .rrow .del{background:none;border:0;color:#C7B3BE;font-size:11px;padding:2px}
+  .rrow .del:hover{color:var(--red)}
+  .chk{display:inline-grid;place-items:center;width:22px;height:22px;cursor:pointer}
+  .chk input{position:absolute;opacity:0;width:1px;height:1px}
+  .chk i{width:19px;height:19px;border-radius:6px;border:1.5px solid #DCC2CE;background:#fff;display:block;position:relative}
+  .chk input:checked + i{background:var(--pink);border-color:var(--pink)}
+  .chk input:checked + i::after{content:"";position:absolute;left:6px;top:2px;width:4px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+
+  /* ---------- band: stat strip ---------- */
+  .statstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:0;background:#fff;border:1px solid var(--line);
+    border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:11px}
+  .sstat{padding:9px 11px;border-right:1px solid var(--line);display:grid;gap:1px;min-width:0}
+  .sstat span{font-size:10.5px;font-weight:800;color:var(--slate-500);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sstat b{font-size:19px;font-weight:800;letter-spacing:-.04em;line-height:1.1}
+  .sstat.rate{border-right:0;background:linear-gradient(180deg,#F7FBFF,#F2F7FF);padding-right:14px}
+  .sstat.rate b{color:var(--blue-700)}
+  .sstat.rate small{font-size:11px;font-weight:800;margin-left:1px}
+  .sstat .bar{height:3px;border-radius:99px;background:#EEF2F7;margin-top:3px;overflow:hidden}
+  .sstat .bar i{display:block;height:100%;border-radius:99px}
+  .s-mic .bar i{background:#64748B}.s-busy .bar i{background:#B45309}.s-res .bar i{background:#5B3FC4}.s-done .bar i{background:#0E7C5A}
+  @media (max-width:520px){
+    .statstrip{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .sstat.rate{grid-column:1/-1;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:6px 11px}
+    .sstat.rate b{font-size:15px}
+    .sstat{padding:8px 9px}
+    .sstat b{font-size:17px}
+  }
+
+  /* ---------- filters ---------- */
+  .filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .filters .sep{width:1px;height:18px;background:var(--line-strong);margin:0 2px}
+  .qbox{margin-left:auto;display:flex;align-items:center;gap:5px;height:31px;padding:0 9px;border-radius:9px;border:1px solid var(--line-strong);background:#fff;min-width:0}
+  .qbox input{border:0;outline:none;background:none;font-size:12.5px;width:120px;min-width:0}
+  @media (max-width:600px){ .qbox{margin-left:0;width:100%} .qbox input{width:100%} }
+
+  /* ---------- day cards / customers ---------- */
+  .daylist{display:grid;gap:12px}
+  .day{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .day-head{display:flex;align-items:center;gap:9px;padding:11px 13px;background:linear-gradient(180deg,#FBFDFF,#F6FAFF);
+    border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .dh-date{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:800;letter-spacing:-.03em}
+  .dh-counts{display:flex;gap:4px;flex-wrap:wrap}
+  .dh-prog{flex:1 1 80px;min-width:60px;height:6px;border-radius:99px;background:#E8EEF7;overflow:hidden}
+  .dh-prog i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2F7BE5,#0E7C5A)}
+  .dh-done{font-size:11.5px;font-weight:800;color:var(--slate-500);white-space:nowrap}
+  .cust-list{display:block}
+  .cust{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"main owner" "stat stat" "memo acts";
+    gap:5px 8px;padding:10px 13px;border-top:1px solid #EDF2F8;align-items:center}
+  .cust:first-child{border-top:0}
+  .cust.is-done{background:#FCFEFD}
+  .c-main{grid-area:main;min-width:0}
+  .c-name{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:800;letter-spacing:-.02em;min-width:0}
+  .c-phone{display:inline-block;margin-top:1px;font-size:12px;font-weight:600;color:var(--slate-500);letter-spacing:.01em}
+  .c-phone:hover{color:var(--blue-700)}
+  .c-status{grid-area:stat;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+  .st{height:29px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;color:var(--slate-500);
+    font-size:11.5px;font-weight:800;padding:0 4px;white-space:nowrap;letter-spacing:-.02em}
+  .st:hover{border-color:#C2D2E7;color:var(--slate-700)}
+  .st.on[data-st="미통화"]{background:#475569;border-color:#475569;color:#fff}
+  .st.on[data-st="부재"]{background:#B45309;border-color:#B45309;color:#fff}
+  .st.on[data-st="예약"]{background:#5B3FC4;border-color:#5B3FC4;color:#fff}
+  .st.on[data-st="완료"]{background:#0E7C5A;border-color:#0E7C5A;color:#fff}
+  .c-owner{grid-area:owner;display:flex;align-items:center;gap:4px;justify-self:end;height:29px;padding:0 7px;border:1px solid var(--line);border-radius:8px;background:#FBFCFE}
+  .ownerdot{width:7px;height:7px;border-radius:50%;background:var(--c,#94A3B8);flex:none}
+  .c-owner select{border:0;background:none;font-size:11.5px;font-weight:800;color:var(--slate-600);outline:none;max-width:80px;padding:0}
+  .c-memo{grid-area:memo;font-size:12px;color:var(--slate-600);font-weight:600;line-height:1.45;cursor:text;
+    overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+  @media (min-width:760px){ .c-memo{-webkit-line-clamp:2} }
+  .c-memo.quiet{color:var(--slate-400)}
+  .c-memo:hover{color:var(--blue-700)}
+  .c-acts{grid-area:acts;display:flex;gap:5px;justify-content:flex-end;align-items:center}
+  .c-thread{grid-column:1/-1;margin-top:3px;background:#F9FBFE;border:1px solid var(--line);border-radius:11px;padding:2px 10px 9px}
+  .c-thread .thread{border-top:0;margin-top:0}
+  .c-thread .cbar{margin-top:7px}
+  .cust .c-acts .mini{}
+  .day-foot{padding:8px 13px 10px;border-top:1px dashed var(--line)}
+  @media (min-width:760px){
+    .cust{grid-template-columns:minmax(0,168px) minmax(0,1fr) 96px minmax(0,1.05fr) auto;
+      grid-template-areas:"main stat owner memo acts";gap:4px 12px;padding:10px 14px}
+    .c-status{gap:3px}
+    .st{height:27px;font-size:11px}
+    .c-acts{justify-content:flex-end}
+    .c-thread{margin-top:6px}
+  }
+
+  /* ---------- composer ---------- */
+  .composer{padding:14px;margin-bottom:14px}
+  .cmp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .cmp-head h2{font-size:15.5px;font-weight:800;letter-spacing:-.03em}
+  .cmp-head .who2{font-size:12px;font-weight:700;color:var(--slate-500)}
+  .kindchips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+  .inp,textarea.inp{width:100%;border:1px solid var(--line-strong);border-radius:11px;background:#FBFCFE;padding:10px 11px;font-size:13.5px;line-height:1.6}
+  .inp:focus,textarea.inp:focus{outline:none;border-color:#8FB6F0;background:#fff;box-shadow:0 0 0 3px #EAF2FF}
+  .inp + .inp{margin-top:7px}
+  textarea.inp{resize:none;min-height:96px;display:block}
+  .cmp-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .cmp-photos .athumb{width:72px;height:72px;border-radius:9px}
+  .cmp-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .cmp-actions .grow{flex:1}
+  .switch{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--slate-600);cursor:pointer;white-space:nowrap}
+  .switch input{appearance:none;width:36px;height:21px;border-radius:99px;background:#E2E8F0;position:relative;transition:.16s;margin:0;cursor:pointer}
+  .switch input::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.25);transition:.16s}
+  .switch input:checked{background:var(--blue-600)}
+  .switch input:checked::after{transform:translateX(15px)}
+  .photobtns{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+
+  /* ---------- rail ---------- */
+  .rail-card{padding:13px}
+  .rail-card h3{font-size:12px;font-weight:800;color:var(--slate-500);letter-spacing:.01em;display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:9px}
+  .rstat{display:grid;grid-template-columns:44px 1fr 20px;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:var(--slate-600);padding:2.5px 0}
+  .rstat i{display:block;height:6px;border-radius:99px;background:#EEF2F7;overflow:hidden}
+  .rstat i b{display:block;height:100%;border-radius:99px}
+  .rstat em{font-style:normal;text-align:right;font-weight:800;color:var(--slate-700)}
+  .rprog{display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:12px;font-weight:800;color:var(--slate-500)}
+  .rprog b{font-size:17px;color:var(--blue-700);letter-spacing:-.03em}
+  .rstaff{display:flex;align-items:center;gap:7px;padding:4px 0;font-size:12px}
+  .rstaff .av{width:24px;height:24px;border-radius:8px;font-size:10.5px}
+  .rstaff b{font-weight:800;flex:1;letter-spacing:-.01em}
+  .rstaff span{font-size:11px;font-weight:800;color:var(--slate-400)}
+  .rstaff span b{color:var(--blue-700);font-size:11.5px}
+  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .qgrid .btn{height:36px;font-size:12px;border-radius:9px;justify-content:flex-start;padding:0 10px}
+  .rail-note{font-size:11px;color:var(--slate-400);line-height:1.6;margin-top:8px}
+
+  /* ---------- sheet / modal ---------- */
+  .sheet{position:fixed;inset:0;z-index:60;display:none}
+  .sheet.on{display:block}
+  .sheet-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(2px)}
+  .sheet-panel{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;
+    max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);animation:up .22s ease-out}
+  @keyframes up{from{transform:translateY(16px);opacity:.6}to{transform:none;opacity:1}}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px 10px;border-bottom:1px solid var(--line);flex:none}
+  .sheet-head b{font-size:14.5px;font-weight:800;letter-spacing:-.02em}
+  .sheet-head .x{background:#F5F8FC;border:1px solid var(--line);border-radius:9px;height:30px;padding:0 9px;font-size:11.5px;font-weight:800;color:var(--slate-500)}
+  .sheet-body{padding:12px 15px 20px;overflow:auto;overscroll-behavior:contain}
+  @media (min-width:700px){
+    .sheet-panel{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:560px;max-height:84vh;border-radius:18px;animation:pop .18s ease-out}
+    @keyframes pop{from{transform:translate(-50%,-46%) scale(.98);opacity:.7}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+  }
+  .menu-list{display:grid;gap:7px}
+  .menu-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;
+    padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:13.5px;font-weight:700;color:var(--slate-700)}
+  .menu-item:hover{background:#FBFDFF;border-color:#C7D5E8}
+  .menu-item small{display:block;font-size:11px;font-weight:600;color:var(--slate-400);margin-top:2px}
+  .menu-item .arw{color:var(--slate-300);font-weight:800}
+
+  /* forms */
+  .form{display:grid;gap:11px}
+  .form label{display:grid;gap:5px;font-size:11.5px;font-weight:800;color:var(--slate-500);letter-spacing:.01em}
+  .form input,.form select,.form textarea{height:42px;border-radius:10px;border:1px solid var(--line-strong);background:#FBFCFE;padding:0 11px;font-size:13.5px;font-weight:600}
+  .form textarea{height:auto;padding:10px 11px;resize:none;line-height:1.55}
+  .form input:focus,.form select:focus,.form textarea:focus{outline:none;border-color:#8FB6F0;background:#fff;box-shadow:0 0 0 3px #EAF2FF}
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .formfoot{display:flex;gap:7px;margin-top:3px}
+  .formfoot .btn{flex:1}
+  .hint{font-size:11.5px;color:var(--slate-400);font-weight:600;line-height:1.55}
+
+  /* lightbox */
+  .lightbox{position:fixed;inset:0;z-index:90;display:none;background:rgba(8,15,30,.94);place-items:center;padding:16px}
+  .lightbox.on{display:grid}
+  .lightbox img{max-width:100%;max-height:88vh;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);object-fit:contain}
+  .lightbox .x{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.12);color:#fff;font-size:16px}
+
+  /* toast */
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,14px);z-index:100;max-width:88vw;
+    background:#0F172A;color:#fff;font-size:12.5px;font-weight:700;padding:10px 16px;border-radius:999px;
+    box-shadow:0 18px 40px -18px rgba(15,23,42,.9);opacity:0;pointer-events:none;transition:.2s;text-align:center}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  .toast.err{background:#9A2A16}
+
+  .emptycard{padding:22px 16px;text-align:center;color:var(--slate-400);font-size:12.5px;font-weight:600;
+    background:#fff;border:1px dashed var(--line-strong);border-radius:14px}
+
+  @media (max-width:430px){
+    .topbar-inner{padding:8px 13px 6px;gap:7px}
+    .brand-mark{width:33px;height:33px;border-radius:10px;font-size:13.5px}
+    .brand-text h1{font-size:13.5px}
+    .brand-text p{font-size:9.5px}
+    .tabbar{padding:0 13px 8px;gap:5px}
+    .tab{font-size:11.8px;height:39px;padding:0 8px;gap:4px}
+    .tab .n{min-width:17px;height:16px;font-size:9.5px}
+    .page{padding:11px 12px 64px}
+    .btn.sm{height:31px;font-size:11.5px;padding:0 9px}
+    .hide-xs{display:none}
+    .viewhead h2{font-size:15px}
+    .viewhead p{font-size:11px}
+    .day-head{padding:10px 11px;gap:6px}
+    .dh-date{font-size:13px}
+    .cust{padding:10px 11px}
+    .c-name{font-size:13.5px}
+    .st{font-size:11px;height:28px}
+    .rrow{grid-template-columns:minmax(0,1fr) 28px 24px;grid-template-areas:"n c x" "p o o";gap:2px 8px;font-size:11.5px;padding:8px 1px}
+    .rrow .rm{display:none}
+    .rm-in{display:inline;font-size:10.5px;font-weight:800;color:#8E1B4E;margin-left:5px;letter-spacing:-.01em}
+    .rrow.rhead{display:none}
+    .rrow .ro{justify-self:end;font-size:11px;grid-column:2/-1}
+    .rrow .rc{justify-self:center}
+    .chk{width:26px;height:26px}
+    .rrow .rp{font-size:11.5px}
+    .post{padding:11px}
+    .post-title{font-size:13.5px}
+    .post-body{font-size:13px}
+    .cmt p{font-size:12.5px}
+    .cbar .send{padding:0 10px;font-size:11.5px}
+    .sstat span{font-size:9.8px}
+    .sstat b{font-size:16px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 로그인 ============ -->
+<div id="login" class="login" hidden>
+  <div class="login-card">
+    <div class="login-top">
+      <div class="lmark">kt</div>
+      <h1>충주 KT대리점 칠금점</h1>
+      <p>가망고객 밴드 · 730 · 550 · 3년</p>
+    </div>
+    <div class="login-body">
+      <form data-form="login" id="loginForm">
+        <span class="lbl">직원 선택</span>
+        <div class="staff-grid" id="staffGrid"></div>
+        <span class="lbl">매장 비밀번호</span>
+        <div class="pindots" id="pindots" data-act="pin-focus"><i></i><i></i><i></i><i></i></div>
+        <input id="pinInput" class="pininput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="매장 비밀번호">
+        <div class="keypad" id="keypad">
+          <button type="button" data-act="key" data-k="1">1</button>
+          <button type="button" data-act="key" data-k="2">2</button>
+          <button type="button" data-act="key" data-k="3">3</button>
+          <button type="button" data-act="key" data-k="4">4</button>
+          <button type="button" data-act="key" data-k="5">5</button>
+          <button type="button" data-act="key" data-k="6">6</button>
+          <button type="button" data-act="key" data-k="7">7</button>
+          <button type="button" data-act="key" data-k="8">8</button>
+          <button type="button" data-act="key" data-k="9">9</button>
+          <button type="button" class="fn" data-act="key" data-k="clear">지움</button>
+          <button type="button" data-act="key" data-k="0">0</button>
+          <button type="button" class="fn" data-act="key" data-k="back">⌫</button>
+        </div>
+        <button type="submit" class="btn primary lg">입장</button>
+        <p class="lerr" id="loginErr"></p>
+      </form>
+      <p class="login-note">매장 공통 비밀번호 4자리로 입장합니다.<br>입력한 글·댓글·명단은 이 기기에 저장돼요.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 앱 ============ -->
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">kt</div>
+        <div class="brand-text">
+          <h1>충주 KT대리점 칠금점</h1>
+          <p>가망고객 밴드 · 730 · 550 · 3년</p>
+        </div>
+      </div>
+      <div class="topacts">
+        <button class="btn primary sm" data-act="compose">＋ 글쓰기<span class="hide-xs"> / 사진</span></button>
+        <button class="who" data-act="menu" aria-label="설정 메뉴">
+          <span class="av xs" id="whoAv" style="--c:#0B57D0">김</span>
+          <b id="whoName">김태양</b>
+        </button>
+      </div>
+    </div>
+    <nav class="tabbar" id="tabbar">
+      <button class="tab" data-act="tab" data-tab="notice">📌 공지 · 상담놓침 <span class="n" id="t1n"></span></button>
+      <button class="tab t2" data-act="tab" data-tab="band">📅 730 · 550 · 3년 <span class="n" id="t2n"></span></button>
+      <button class="tab" data-act="tab" data-tab="write">📸 글쓰기 / 사진 <span class="n" id="t3n"></span></button>
+    </nav>
+  </header>
+
+  <div class="page">
+    <main id="main"></main>
+    <aside class="rail" id="rail"></aside>
+  </div>
+
+  <div id="sheet" class="sheet" aria-hidden="true">
+    <div class="sheet-backdrop" data-act="close"></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-head"><b id="sheetTitle">제목</b><button class="x" data-act="close">닫기 ✕</button></div>
+      <div class="sheet-body" id="sheetBody"></div>
+    </div>
+  </div>
+
+  <div id="lightbox" class="lightbox">
+    <button class="x" data-act="close-lb">✕</button>
+    <img id="lbImg" alt="첨부 사진">
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</div>
+
+<noscript><p style="padding:20px;text-align:center">이 앱은 자바스크립트가 필요합니다.</p></noscript>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= constants ================= */
+var KEY = 'kt_band_v1';
+var SKEY = 'kt_band_session_v1';
+var PIN_HASH = '9b86f9ff';           /* 매장 공통 비밀번호 (평문 미기재) */
+var STAFF = ['김태양','김설화','이건엽','권영한'];
+var SC = {'김태양':'#0B57D0','김설화':'#0F766E','이건엽':'#5B3FC4','권영한':'#B45309'};
+var STATUSES = ['미통화','부재','예약','완료'];
+var BUCKETS = ['730','550','3년'];
+var STATUS_CLS = {'미통화':'s-mic','부재':'s-busy','예약':'s-res','완료':'s-done'};
+var STATUS_BAR = {'미통화':'#64748B','부재':'#B45309','예약':'#5B3FC4','완료':'#0E7C5A'};
+var KIND_LABEL = {consult:'상담놓침', notice:'매장 공지', memo:'메모'};
+var FILTERS = [
+  {k:'all', t:'전체'},
+  {k:'b:730', t:'730'},
+  {k:'b:550', t:'550'},
+  {k:'b:3년', t:'3년'},
+  {k:'s:미통화', t:'미통화'},
+  {k:'s:부재', t:'부재'},
+  {k:'s:예약', t:'예약'},
+  {k:'s:완료', t:'완료'}
+];
+
+/* ================= utils ================= */
+function $(id){ return document.getElementById(id); }
+function pad(n){ return (n<10?'0':'')+n; }
+function esc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function uid(p){ return (p||'x')+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function hash(s){ var v=5381,i; for(i=0;i<s.length;i++){ v=((v*33)+s.charCodeAt(i))>>>0; } return ('0000000'+v.toString(16)).slice(-8); }
+function todayStr(d){ d=d||new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function shiftDay(n){ var d=new Date(); d.setDate(d.getDate()+n); return todayStr(d); }
+function nowAt(){ var d=new Date(); return todayStr(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); }
+function minsAgo(m){ var d=new Date(Date.now()-m*60000); return todayStr(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); }
+function atOf(day,hh,mm){ return day+'T'+pad(hh)+':'+pad(mm); }
+function fmtAt(at){
+  if(!at) return '';
+  var day=at.slice(0,10), t=at.slice(11,16);
+  if(day===todayStr()) return '오늘 '+t;
+  if(day===shiftDay(-1)) return '어제 '+t;
+  return day.slice(5,7)+'-'+day.slice(8,10)+' '+t;
+}
+function fmtDayLabel(day){
+  var d=new Date(day+'T00:00:00');
+  var w='일월화수목금토'[d.getDay()];
+  return (+day.slice(5,7))+'월 '+(+day.slice(8,10))+'일 ('+w+')';
+}
+function digits(p){ return String(p||'').replace(/[^0-9]/g,''); }
+function maskPhone(p){
+  var s=String(p||''); var m=s.match(/^(\d{3})-?(\d{3,4})-?(\d{4})$/);
+  if(!m) return s;
+  return m[1]+'-'+(ui.mask?'****':m[2])+'-'+m[3];
+}
+function bucketCls(b){ return b==='3년'?'bk-3y':(b==='550'?'bk-550':'bk-730'); }
+function initial(n){ return String(n||'').slice(0,1); }
+function colorOf(n){ return SC[n]||'#64748B'; }
+function pct(n,total){ return total? Math.round(n/total*100) : 0; }
+
+/* ================= state ================= */
+var session = null;
+var state = null;
+var ui = {
+  tab:'notice',
+  filter:'all',
+  q:'',
+  pinOpen:true,
+  mask:false,
+  openThreads:{},
+  custThreads:{},
+  replyOpen:null,
+  loginStaff:'김태양',
+  phoneOnly:false,
+  drafts:{},
+  attach:{},
+  composer:{kind:'consult', photos:[], pin:false}
+};
+var sheetSpec = null;
+var toastTimer = null;
+
+function loadSession(){
+  try{ var raw=localStorage.getItem(SKEY); if(raw){ var s=JSON.parse(raw); if(s && s.staff) return s; } }catch(e){}
+  return null;
+}
+function saveSession(s){
+  try{ if(s) localStorage.setItem(SKEY, JSON.stringify(s)); else localStorage.removeItem(SKEY); }catch(e){}
+}
+
+/* ================= seed ================= */
+function seed(){
+  var t = todayStr(), y = shiftDay(-1), y2 = shiftDay(-2);
+  var posts = [
+    {
+      id:'p-s26', kind:'notice', reserve:true, pinned:true,
+      title:'S26 사전예약 공지 — 지금 접수 중',
+      body:'S26 시리즈 사전예약 접수합니다.\n· 예약금 없이 이름 · 연락처 · 희망기종만 남겨주세요.\n· 접수 순서대로 개통 연락드립니다.\n· 상담놓침이 오면 아래 표에 먼저 올려주세요.',
+      author:'김태양', at:atOf(y,8,40), done:false, photos:[],
+      reservations:[
+        {id:'r1', name:'최유진', phone:'010-5678-9012', model:'S26', owner:'김태양', done:true},
+        {id:'r2', name:'박지훈', phone:'010-4567-8901', model:'S26 울트라', owner:'김설화', done:false},
+        {id:'r3', name:'정하늘', phone:'010-6789-0123', model:'S26+', owner:'이건엽', done:false},
+        {id:'r4', name:'강도윤', phone:'010-7890-1234', model:'갤럭시 S25', owner:'권영한', done:false}
+      ],
+      comments:[
+        {id:'c1', author:'김설화', at:minsAgo(320), text:'매장 방문 예약 2건 접수했어요. 내일 오전에 연락드릴게요.', photos:[], replies:[
+          {id:'c1r1', author:'김태양', at:minsAgo(300), text:'확인! 10시 넘어서 걸어주세요.', photos:[]}
+        ]},
+        {id:'c2', author:'이건엽', at:minsAgo(180), text:'정하늘 고객님 S26+ 색상은 블랙으로 희망하십니다.', photos:[], replies:[]}
+      ]
+    },
+    {
+      id:'p-notice-nov', kind:'notice', pinned:true,
+      title:'11월 기기변경 시 결합할인 꼭 먼저 체크',
+      body:'인터넷 + TV 결합 고객은 기변 전에 할인 폭을 먼저 확인하세요.\n요금제 상향 시 재계산되니 상담할 때 같이 봐주세요.',
+      author:'김태양', at:atOf(y,18,10), done:false,
+      photos:[{src:'samples/sample-notice.png', name:'매장 공지'}],
+      comments:[
+        {id:'c3', author:'권영한', at:atOf(y,19,2), text:'오늘 두 건 확인했어요. 둘 다 결합 유지가 유리했어요.', photos:[], replies:[]}
+      ]
+    },
+    {
+      id:'p-hong', kind:'consult', pinned:true,
+      title:'상담놓침: 홍길동 010-1234-5678',
+      body:'오전에 S26 기변 + 인터넷 결합 상담하다가 바빠서 못 받음.\n저녁 7시 전 재통화 필요!',
+      author:'김태양', at:minsAgo(48), done:false,
+      photos:[{src:'samples/sample-consult.png', name:'상담 메모'}],
+      comments:[
+        {id:'c4', author:'이건엽', at:minsAgo(32), text:'7시에 전화드렸는데 부재중이세요.', photos:[], replies:[
+          {id:'c4r1', author:'김태양', at:minsAgo(28), text:'내일 오전 10시에 다시 걸게요.', photos:[]}
+        ]},
+        {id:'c5', author:'김설화', at:minsAgo(20), text:'문자 남겨뒀어요. 확인하면 연락 온다고 하셨어요.', photos:[], replies:[]}
+      ]
+    },
+    {
+      id:'p-lee', kind:'consult', pinned:false,
+      title:'상담놓침: 이서연 010-3456-7890',
+      body:'금요일 15시 내방 예약. S26 기변 + 요금제 상향 상담.',
+      author:'이건엽', at:atOf(y,15,25), done:false, photos:[],
+      comments:[
+        {id:'c6', author:'권영한', at:atOf(y,16,4), text:'내방하시면 제가 같이 보겠습니다.', photos:[], replies:[]}
+      ]
+    },
+    {
+      id:'p-memo-today', kind:'memo', pinned:false,
+      title:'',
+      body:'오후 2시 김설화님이 상담 예약 — S26 기변 + 인터넷 결합.\n매장 재고 확인해 두기.',
+      author:'김태양', at:atOf(y,9,10), done:false, photos:[],
+      comments:[]
+    }
+  ];
+
+  var customers = [
+    {id:'c-s1', day:t, name:'홍길동', phone:'010-1234-5678', bucket:'730', owner:'김태양', status:'미통화',
+     memo:'S26 기변 + 인터넷 결합 상담 놓침 — 저녁 7시 전 재통화',
+     comments:[
+       {id:'cc1', author:'이건엽', at:minsAgo(32), text:'7시에 전화드렸는데 부재중이세요.', photos:[], replies:[{id:'cc1r1', author:'김태양', at:minsAgo(28), text:'내일 오전 10시에 다시 걸게요.', photos:[]}]}
+     ]},
+    {id:'c-s2', day:t, name:'김민준', phone:'010-2345-6789', bucket:'730', owner:'김설화', status:'부재',
+     memo:'오후 2시 재통화 약속', comments:[]},
+    {id:'c-s3', day:t, name:'이서연', phone:'010-3456-7890', bucket:'730', owner:'이건엽', status:'예약',
+     memo:'금요일 15시 내방 예약 (S26 기변)', comments:[]},
+    {id:'c-s4', day:t, name:'박지훈', phone:'010-4567-8901', bucket:'550', owner:'권영한', status:'미통화',
+     memo:'5G 요금제 재약정 상담', comments:[]},
+    {id:'c-s5', day:t, name:'최유진', phone:'010-5678-9012', bucket:'550', owner:'김태양', status:'완료',
+     memo:'5G 슬림 → 5G 스탠다드 상향 완료', comments:[]},
+    {id:'c-s6', day:t, name:'정하늘', phone:'010-6789-0123', bucket:'3년', owner:'김설화', status:'부재',
+     memo:'S26+ 사전예약 건 — 오후에 다시 연락', comments:[]},
+    {id:'c-s7', day:t, name:'강도윤', phone:'010-7890-1234', bucket:'3년', owner:'이건엽', status:'미통화',
+     memo:'갤럭시 S25 사전예약 문의', comments:[]},
+
+    {id:'c-y1', day:y, name:'윤서준', phone:'010-8901-2345', bucket:'730', owner:'김태양', status:'완료',
+     memo:'기변 완료 (S26)', comments:[]},
+    {id:'c-y2', day:y, name:'한지우', phone:'010-9012-3456', bucket:'550', owner:'김설화', status:'완료',
+     memo:'재약정 완료', comments:[]},
+    {id:'c-y3', day:y, name:'서지안', phone:'010-1122-3344', bucket:'3년', owner:'권영한', status:'예약',
+     memo:'11-26 11시 방문 예약', comments:[]},
+    {id:'c-y4', day:y, name:'오세훈', phone:'010-2233-4455', bucket:'730', owner:'이건엽', status:'미통화',
+     memo:'부재 2회 — 문자 발송함', comments:[]}
+  ];
+
+  return {v:1, posts:posts, customers:customers};
+}
+
+function loadState(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){
+      var d = JSON.parse(raw);
+      if(d && Array.isArray(d.posts) && Array.isArray(d.customers)) return d;
+    }
+  }catch(e){}
+  var s = seed();
+  try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){}
+  return s;
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){ toast('저장 공간이 부족해요. 사진을 줄이거나 내보내기 후 초기화해 주세요.', true); }
+}
+function findPost(id){ for(var i=0;i<state.posts.length;i++){ if(state.posts[i].id===id) return state.posts[i]; } return null; }
+function findCust(id){ for(var i=0;i<state.customers.length;i++){ if(state.customers[i].id===id) return state.customers[i]; } return null; }
+function sysCmt(text){
+  return {id:uid('s'), author:session?session.staff:'시스템', at:nowAt(), sys:true, text:text, photos:[], replies:[]};
+}
+
+/* ================= toast / lightbox / sheet ================= */
+function toast(msg, isErr){
+  var el = $('toast');
+  el.textContent = msg;
+  el.className = 'toast on' + (isErr?' err':'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.className = 'toast'; }, 2500);
+}
+function openLB(src){
+  if(!src) return;
+  $('lbImg').src = src;
+  $('lightbox').classList.add('on');
+  document.body.classList.add('lock');
+}
+function closeLB(){
+  $('lightbox').classList.remove('on');
+  $('lbImg').removeAttribute('src');
+  if(!sheetSpec) document.body.classList.remove('lock');
+}
+function openSheet(spec){
+  sheetSpec = spec;
+  renderSheet();
+  $('sheet').classList.add('on');
+  $('sheet').setAttribute('aria-hidden','false');
+  document.body.classList.add('lock');
+}
+function closeSheet(){
+  sheetSpec = null;
+  $('sheet').classList.remove('on');
+  $('sheet').setAttribute('aria-hidden','true');
+  $('sheetBody').innerHTML = '';
+  document.body.classList.remove('lock');
+}
+function renderSheet(){
+  if(!sheetSpec) return;
+  var b = $('sheetBody'), ttl = $('sheetTitle');
+  var sc = b.scrollTop;
+  if(sheetSpec.type==='post'){
+    var p = findPost(sheetSpec.id);
+    if(!p){ closeSheet(); return; }
+    ttl.textContent = p.reserve?'사전예약 공지':(KIND_LABEL[p.kind]||'글');
+    b.innerHTML = postCard(p, {sheet:true});
+  } else if(sheetSpec.type==='custadd'){
+    ttl.textContent = '명단 추가';
+    b.innerHTML = custAddForm(sheetSpec.day);
+  } else if(sheetSpec.type==='resv'){
+    var pp = findPost(sheetSpec.id);
+    if(!pp){ closeSheet(); return; }
+    ttl.textContent = 'S26 사전예약 추가';
+    b.innerHTML = resvForm(pp.id);
+  } else if(sheetSpec.type==='memo'){
+    var c = findCust(sheetSpec.id);
+    if(!c){ closeSheet(); return; }
+    ttl.textContent = '메모 · ' + c.name;
+    b.innerHTML = '<form class="form" data-form="memo" data-id="'+c.id+'">'
+      + '<label>메모<textarea name="memo" rows="3" placeholder="상담 내용·재통화 약속·전달사항">'+esc(c.memo||'')+'</textarea></label>'
+      + '<p class="hint">고객 · 담당자 · 연락처는 명단에서 바로 바꿀 수 있어요.</p>'
+      + '<div class="formfoot"><button class="btn primary" type="submit">저장</button>'
+      + '<button class="btn ghost" type="button" data-act="close">취소</button></div></form>';
+  } else if(sheetSpec.type==='menu'){
+    ttl.textContent = '설정';
+    b.innerHTML = menuHTML();
+  }
+  b.scrollTop = sc;
+}
+
+/* ================= login ================= */
+function renderLogin(){
+  var g = $('staffGrid');
+  g.innerHTML = STAFF.map(function(n){
+    return '<button type="button" class="staff-chip '+(ui.loginStaff===n?'on':'')+'" data-act="staff" data-name="'+esc(n)+'">'
+      + '<span class="dot" style="--c:'+colorOf(n)+'"></span>'+esc(n)+'</button>';
+  }).join('');
+  updateDots();
+}
+function updateDots(){
+  var v = ($('pinInput')||{}).value || '';
+  var dots = $('pindots').children;
+  for(var i=0;i<dots.length;i++) dots[i].className = i<v.length?'on':'';
+}
+function clearPin(){ var p=$('pinInput'); if(p) p.value=''; updateDots(); }
+function loginErr(msg){
+  $('loginErr').textContent = msg||'';
+  var card = document.querySelector('.login-card');
+  card.classList.remove('shake');
+  void card.offsetWidth;
+  card.classList.add('shake');
+}
+function doLogin(){
+  var pin = ($('pinInput').value||'').trim();
+  if(!ui.loginStaff){ loginErr('직원을 선택해 주세요.'); return; }
+  if(!pin){ loginErr('비밀번호를 입력해 주세요.'); return; }
+  if(hash('ktband:'+pin) !== PIN_HASH){ loginErr('비밀번호가 맞지 않아요.'); clearPin(); return; }
+  session = {staff:ui.loginStaff, at:nowAt()};
+  saveSession(session);
+  $('loginErr').textContent = '';
+  $('login').hidden = true;
+  $('app').hidden = false;
+  render();
+  toast(session.staff+'님, 반갑습니다!');
+}
+function pressKey(k){
+  var p = $('pinInput');
+  if(k==='clear'){ p.value=''; updateDots(); return; }
+  if(k==='back'){ p.value = p.value.slice(0,-1); updateDots(); return; }
+  if(p.value.length>=4) return;
+  p.value = p.value + k;
+  updateDots();
+  if(p.value.length===4) setTimeout(doLogin, 120);
+}
+
+/* ================= views ================= */
+function viewHTML(){
+  if(ui.tab==='band') return bandView();
+  if(ui.tab==='write') return writeView();
+  return noticeView();
+}
+
+function kindChips(){
+  var sets = [
+    {k:'all', t:'전체'},
+    {k:'consult', t:'상담놓침'},
+    {k:'notice', t:'매장 공지'},
+    {k:'reserve', t:'사전예약'}
+  ];
+  return sets.map(function(f){
+    return '<button class="chip '+(ui.filter===f.k?'on':'')+'" data-act="filter" data-f="'+f.k+'">'+f.t+'</button>';
+  }).join('');
+}
+function postMatch(p){
+  if(ui.filter==='all') return true;
+  if(ui.filter==='consult') return p.kind==='consult';
+  if(ui.filter==='notice') return p.kind==='notice' && !p.reserve;
+  if(ui.filter==='reserve') return !!p.reserve;
+  if(ui.filter==='memo') return p.kind==='memo';
+  return true;
+}
+function byAtDesc(a,b){ return String(b.at||'').localeCompare(String(a.at||'')); }
+
+function noticeView(){
+  var pinned = state.posts.filter(function(p){ return p.pinned; }).sort(byAtDesc);
+  var feed = state.posts.filter(function(p){ return !p.pinned && postMatch(p); }).sort(byAtDesc);
+  var openConsult = state.posts.filter(function(p){ return p.kind==='consult' && !p.done; }).length;
+  var html = '';
+  html += '<div class="viewhead"><div><h2>📌 공지 · 상담 놓침</h2>'
+        + '<p>고정 공지 + 상담놓침 + 사전예약 명단을 한 곳에서</p></div>'
+        + '<div class="vactions"><button class="btn primary sm" data-act="compose">＋ 글쓰기</button></div></div>';
+
+  html += '<section class="pinblock '+(ui.pinOpen?'':'closed')+'">'
+        + '<div class="pin-head"><h2>📌 고정 공지 <span class="pill">'+pinned.length+'건</span></h2>'
+        + '<button class="linkbtn" data-act="pin-toggle">'+(ui.pinOpen?'접기 ▲':'펼치기 ▼')+'</button></div>'
+        + '<div class="pin-list">'+pinned.map(pinItem).join('')+'</div></section>';
+
+  html += '<div class="toolbar"><div class="chips">'+kindChips()+'</div>'
+        + (openConsult? '<span class="pill" style="margin-left:auto">미완료 '+openConsult+'건</span>':'')
+        + '</div>';
+  html += '<div class="feed">' + (feed.length? feed.map(function(p){ return postCard(p); }).join('')
+        : '<div class="emptycard">해당하는 글이 없어요. 오른쪽 위 <b>＋ 글쓰기</b>로 새 글을 남겨보세요.</div>') + '</div>';
+  return html;
+}
+
+function pinItem(p){
+  var badge = p.reserve? '<span class="badge b-reserve">사전예약</span>'
+            : p.kind==='consult'? '<span class="badge b-consult">상담놓침</span>'
+            : p.kind==='notice'? '<span class="badge b-notice">매장공지</span>'
+            : '<span class="badge b-memo">메모</span>';
+  var bits = [p.author, fmtAt(p.at)];
+  if(p.photos && p.photos.length) bits.push('사진 '+p.photos.length+'장');
+  var right = '';
+  if(p.reserve){
+    var rs = p.reservations||[]; var dn = rs.filter(function(r){return r.done;}).length;
+    right = '<span class="pcount">'+dn+'/'+rs.length+' 개통</span>';
+  } else if(p.kind==='consult'){
+    right = p.done? '<span class="badge b-done">완료</span>' : '<span class="pcount">진행중</span>';
+  }
+  var ptitle = String(p.title||p.body||'').replace(/^상담놓침\s*[:：]\s*/,'');
+  return '<button class="pin-item" data-act="open-post" data-id="'+p.id+'">'
+    + '<span class="pi-top">'+badge+'<span class="pi-title">'+esc(ptitle)+'</span>'+right+'</span>'
+    + '<span class="pi-meta">'+esc(bits.join(' · '))+(p.comments&&p.comments.length?' · 댓글 '+p.comments.length:'')+'</span>'
+    + '</button>';
+}
+
+function postCard(p, opts){
+  opts = opts||{};
+  var cs = p.comments||[];
+  var all = !!opts.sheet;
+  var open = all || !!ui.openThreads[p.id];
+  var shown = open? cs : cs.slice(-2);
+  var kindLabel = p.reserve? '사전예약' : (KIND_LABEL[p.kind]||'글');
+  var badge = p.reserve? '<span class="badge b-reserve">사전예약</span>'
+            : p.kind==='consult'? '<span class="badge b-consult">상담놓침</span>'
+            : p.kind==='notice'? '<span class="badge b-notice">매장공지</span>'
+            : '<span class="badge b-memo">메모</span>';
+  var h = '<article class="post '+(p.done?'isdone':'')+'">';
+  h += '<div class="post-head">'
+     +   '<span class="av" style="--c:'+colorOf(p.author)+'">'+esc(initial(p.author))+'</span>'
+     +   '<div class="who"><div class="wname">'+esc(p.author)
+     +     (p.pinned?'<span class="pinbadge">고정</span>':'')+(p.done?'<span class="donebadge">완료</span>':'')+'</div>'
+     +     '<div class="wmeta">'+fmtAt(p.at)+' · '+kindLabel+'</div></div>'
+     +   '<div style="display:flex;gap:4px;flex:none">'
+     +     (p.kind==='consult'? '<button class="mini '+(p.done?'on':'')+'" data-act="post-done" data-id="'+p.id+'">'+(p.done?'완료 취소':'완료 체크')+'</button>':'')
+     +     '<button class="mini" data-act="post-pin" data-id="'+p.id+'" title="공지 고정">'+(p.pinned?'고정 해제':'고정')+'</button>'
+     +   '</div>'
+     + '</div>';
+  if(p.title) h += '<h3 class="post-title">'+esc(p.title)+'</h3>';
+  if(p.body) h += '<p class="post-body">'+esc(p.body)+'</p>';
+  h += photoGrid(p.photos);
+  if(p.reserve) h += reserveBlock(p);
+  h += threadHTML(p, 'post', all);
+  h += '</article>';
+  return h;
+}
+
+function photoGrid(ps, size){
+  if(!ps || !ps.length) return '';
+  var cls = ps.length===1?'one':(ps.length===2?'two':'');
+  var out = '<div class="pgrid '+(size||'')+' '+cls+'">';
+  for(var i=0;i<ps.length;i++){
+    out += '<button class="pcell" data-act="photo" aria-label="사진 크게 보기"><img src="'+esc(ps[i].src)+'" alt="'+esc(ps[i].name||'첨부 사진')+'" loading="lazy"></button>';
+  }
+  return out+'</div>';
+}
+
+function reserveBlock(p){
+  var rs = p.reservations||[];
+  var done = rs.filter(function(r){return r.done;}).length;
+  var h = '<div class="resv"><div class="resv-head"><b>S26 사전예약 명단</b>'
+        + '<span class="prog"><i style="width:'+pct(done,rs.length)+'%"></i></span>'
+        + '<span class="pcount">'+done+'/'+rs.length+' 개통</span></div><div class="rtable">'
+        + '<div class="rrow rhead"><span class="rn">고객</span><span class="rp">연락처</span><span class="rm">희망기종</span><span class="ro">담당</span><span class="rc">개통</span><span class="rx"></span></div>';
+  if(!rs.length) h += '<div class="rrow"><span class="rn" style="grid-column:1/-1;color:#A9728D;font-weight:600">아직 접수된 예약이 없어요. [＋ 예약 추가]로 첫 예약을 받아보세요.</span></div>';
+  rs.forEach(function(r){
+    h += '<div class="rrow '+(r.done?'done':'')+'">'
+       + '<span class="rn">'+esc(r.name)+'<span class="rm-in">'+esc(r.model||'')+'</span></span>'
+       + '<span class="rp"><a href="tel:'+digits(r.phone)+'">'+esc(ui.mask?maskPhone(r.phone):r.phone)+'</a></span>'
+       + '<span class="rm">'+esc(r.model||'-')+'</span>'
+       + '<span class="ro">'+esc(r.owner||'-')+'</span>'
+       + '<span class="rc"><label class="chk" title="개통 완료"><input type="checkbox" data-act="resv-done" data-pid="'+p.id+'" data-rid="'+r.id+'" '+(r.done?'checked':'')+'><i></i></label></span>'
+       + '<span class="rx"><button class="del" data-act="resv-del" data-pid="'+p.id+'" data-rid="'+r.id+'" title="예약 삭제">✕</button></span>'
+       + '</div>';
+  });
+  h += '</div><button class="btn ghost sm" data-act="resv-add" data-id="'+p.id+'" style="margin-top:8px">＋ 예약 추가</button></div>';
+  return h;
+}
+
+function threadHTML(item, ctx, forceOpen){
+  var cs = item.comments||[];
+  var open = forceOpen || !!ui.openThreads[item.id];
+  var shown = open? cs : cs.slice(-2);
+  var hidden = cs.length - shown.length;
+  var key = ctx+':'+item.id;
+  var att = ui.attach[key]||[];
+  var h = '<div class="thread">';
+  if(!open && hidden>0) h += '<button class="more" data-act="thread-toggle" data-id="'+item.id+'">💬 댓글 '+cs.length+'개 모두 보기 ▾</button>';
+  h += '<ul class="cmts">';
+  if(!shown.length) h += '<li class="empty">아직 댓글이 없어요. 첫 댓글을 남겨보세요.</li>';
+  shown.forEach(function(c){ h += cmtHTML(c, item.id, ctx); });
+  h += '</ul>';
+  if(att.length){
+    h += '<div class="attach">';
+    att.forEach(function(a,i){
+      h += '<span class="athumb"><img src="'+esc(a.src)+'" alt=""><button data-act="attach-del" data-key="'+key+'" data-i="'+i+'" aria-label="첨부 취소">×</button></span>';
+    });
+    h += '</div>';
+  }
+  h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'">'
+     + '<span class="av xs" style="--c:'+colorOf(session?session.staff:'')+'">'+esc(initial(session?session.staff:''))+'</span>'
+     + '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'" placeholder="댓글이나 통화 결과 남기기…" autocomplete="off">'
+     + '<label class="icobtn" title="사진 첨부">📷<input type="file" accept="image/*" data-photo="cmt" data-key="'+key+'" hidden></label>'
+     + '<button class="send" type="submit">등록</button></form>';
+  h += '</div>';
+  return h;
+}
+
+function cmtHTML(c, parentId, ctx){
+  var reps = c.replies||[];
+  var rOpen = ui.replyOpen===c.id;
+  var h = '<li class="cmt '+(c.sys?'sys':'')+'">'
+        + '<div class="cmt-head"><span class="av xs" style="--c:'+colorOf(c.author)+'">'+esc(initial(c.author))+'</span>'
+        + '<b>'+esc(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
+        + (c.sys?'':'<button class="replybtn" data-act="reply-open" data-cid="'+c.id+'">답글</button>')+'</div>';
+  if(c.text) h += '<p>'+esc(c.text)+'</p>';
+  h += photoGrid(c.photos, 'sm');
+  if(reps.length){
+    h += '<ul class="replies">';
+    reps.forEach(function(r){
+      h += '<li><span class="rav">↳</span><b>'+esc(r.author)+'</b><span>'+esc(r.text)+'</span><time>'+fmtAt(r.at)+'</time>'
+         + photoGrid(r.photos,'sm')+'</li>';
+    });
+    h += '</ul>';
+  }
+  if(rOpen){
+    h += '<form class="cbar reply" data-form="reply" data-id="'+parentId+'" data-cid="'+c.id+'" data-ctx="'+ctx+'">'
+       + '<input name="text" placeholder="'+esc(c.author)+'님에게 답글 남기기…" autocomplete="off">'
+       + '<button class="send" type="submit">등록</button>'
+       + '<button class="send ghost" type="button" data-act="reply-close">취소</button></form>';
+  }
+  return h+'</li>';
+}
+
+/* ---------- band view ---------- */
+function custMatch(c){
+  if(ui.filter.indexOf('b:')===0){ if(c.bucket!==ui.filter.slice(2)) return false; }
+  else if(ui.filter.indexOf('s:')===0){ if(c.status!==ui.filter.slice(2)) return false; }
+  if(ui.q){
+    var q = ui.q.replace(/\s+/g,'').toLowerCase();
+    var hay = (c.name+' '+digits(c.phone)+' '+(c.memo||'')).toLowerCase();
+    if(hay.indexOf(q)<0) return false;
+  }
+  return true;
+}
+var SORT_RANK = {'미통화':0,'부재':1,'예약':2,'완료':3};
+function sortCust(a,b){
+  var r = (SORT_RANK[a.status]||0)-(SORT_RANK[b.status]||0);
+  if(r) return r;
+  return String(a.name).localeCompare(String(b.name));
+}
+
+function bandView(){
+  var t = todayStr();
+  var todays = state.customers.filter(function(c){return c.day===t;});
+  var cnt = {};
+  STATUSES.forEach(function(s){ cnt[s] = todays.filter(function(c){return c.status===s;}).length; });
+  var done = cnt['완료'], total = todays.length;
+
+  var days = [];
+  state.customers.forEach(function(c){ if(days.indexOf(c.day)<0) days.push(c.day); });
+  days.sort().reverse();
+
+  var h = '<div class="viewhead"><div><h2>📅 730 · 550 · 3년 명단</h2>'
+        + '<p>일자별 재통화 명단 · 통화상태·담당자·댓글을 직원끼리 공유</p></div>'
+        + '<div class="vactions"><button class="btn primary sm" data-act="add-cust">＋ 명단 추가</button>'
+        + '<button class="btn ghost sm" data-act="mask">'+(ui.mask?'🔓 번호 표시':'🔒 번호 가림')+'</button></div></div>';
+
+  h += '<div class="statstrip">';
+  STATUSES.forEach(function(s){
+    h += '<div class="sstat '+STATUS_CLS[s]+'"><span>'+s+'</span><b>'+cnt[s]+'</b>'
+       + '<div class="bar"><i style="width:'+pct(cnt[s],total)+'%"></i></div></div>';
+  });
+  h += '<div class="sstat rate"><span>완료율</span><b>'+pct(done,total)+'<small>%</small></b></div>';
+  h += '</div>';
+
+  h += '<div class="filters">';
+  FILTERS.forEach(function(f){
+    h += '<button class="chip '+(ui.filter===f.k?'on':'')+'" data-act="filter" data-f="'+f.k+'">'+f.t+'</button>';
+  });
+  h += '<label class="qbox">🔍<input id="q" data-q placeholder="이름·연락처 검색" value="'+esc(ui.q)+'" autocomplete="off"></label>';
+  h += '</div>';
+
+  var cards = days.map(function(d){ return dayCard(d); }).filter(Boolean).join('');
+  h += '<div class="daylist">'+(cards || '<div class="emptycard">조건에 맞는 명단이 없어요. <b>＋ 명단 추가</b>로 고객을 넣어보세요.</div>')+'</div>';
+  return h;
+}
+
+function dayCard(day){
+  var all = state.customers.filter(function(c){return c.day===day;});
+  var list = all.filter(custMatch).sort(sortCust);
+  if(!list.length) return '';
+  var bc = {};
+  BUCKETS.forEach(function(b){ bc[b] = all.filter(function(c){return c.bucket===b;}).length; });
+  var done = all.filter(function(c){return c.status==='완료';}).length;
+  var isToday = day===todayStr();
+  var tag = isToday? '<span class="tag today">오늘</span>' : (day===shiftDay(-1)? '<span class="tag">어제</span>':'');
+  var h = '<section class="day">'
+        + '<div class="day-head">'
+        +   '<div class="dh-date"><b>'+fmtDayLabel(day)+'</b>'+tag+'</div>'
+        +   '<div class="dh-counts">'
+        +     '<span class="bk bk-730">730 '+bc['730']+'</span>'
+        +     '<span class="bk bk-550">550 '+bc['550']+'</span>'
+        +     '<span class="bk bk-3y">3년 '+bc['3년']+'</span>'
+        +   '</div>'
+        +   '<div class="dh-prog"><i style="width:'+pct(done,all.length)+'%"></i></div>'
+        +   '<div class="dh-done">완료 '+done+'/'+all.length+'</div>'
+        + '</div><div class="cust-list">'
+        + list.map(custRow).join('')
+        + '</div><div class="day-foot"><button class="linkbtn" data-act="add-cust" data-day="'+day+'">＋ 이 날짜에 명단 추가</button></div></section>';
+  return h;
+}
+
+function custRow(c){
+  var th = !!ui.custThreads[c.id];
+  var h = '<div class="cust '+(c.status==='완료'?'is-done':'')+'">';
+  h += '<div class="c-main"><div class="c-name">'+esc(c.name)+' <span class="bk '+bucketCls(c.bucket)+'">'+esc(c.bucket)+'</span></div>'
+     + '<a class="c-phone" href="tel:'+digits(c.phone)+'">'+esc(maskPhone(c.phone))+'</a></div>';
+  h += '<div class="c-status">';
+  STATUSES.forEach(function(s){
+    h += '<button class="st '+(c.status===s?'on':'')+'" data-act="status" data-id="'+c.id+'" data-st="'+s+'">'+s+'</button>';
+  });
+  h += '</div>';
+  h += '<div class="c-owner"><span class="ownerdot" style="--c:'+colorOf(c.owner)+'"></span>'
+     + '<select data-act="owner" data-id="'+c.id+'" aria-label="담당자">'
+     + STAFF.map(function(s){ return '<option '+(c.owner===s?'selected':'')+'>'+esc(s)+'</option>'; }).join('')
+     + (STAFF.indexOf(c.owner)<0? '<option selected>'+esc(c.owner||'미지정')+'</option>':'')
+     + '</select></div>';
+  h += '<div class="c-memo '+(c.memo?'':'quiet')+'" data-act="memo" data-id="'+c.id+'" title="눌러서 메모 수정">'+esc(c.memo||'메모 추가')+'</div>';
+  h += '<div class="c-acts"><button class="mini" data-act="cust-thread" data-id="'+c.id+'">💬 '+((c.comments||[]).length)+'</button></div>';
+  if(th) h += '<div class="c-thread">'+threadHTML(c,'cust',true)+'</div>';
+  h += '</div>';
+  return h;
+}
+
+/* ---------- write view ---------- */
+function writeView(){
+  var cm = ui.composer;
+  var photos = cm.photos||[];
+  var h = '<div class="viewhead"><div><h2>📸 글쓰기 / 사진</h2>'
+        + '<p>카메라로 바로 찍어 상담놓침·공지·메모를 올리고 댓글로 이어가세요</p></div></div>';
+  h += '<section class="card composer">'
+     + '<div class="cmp-head"><h2>새 글 쓰기</h2><span class="who2">'+esc(session.staff)+'</span></div>'
+     + '<div class="kindchips">'
+     +   [['consult','상담놓침'],['notice','매장 공지'],['memo','메모']].map(function(k){
+           return '<button class="chip '+(cm.kind===k[0]?'on':'')+'" data-act="cmp-kind" data-k="'+k[0]+'">'+k[1]+'</button>';
+         }).join('')
+     + '</div>'
+     + '<input class="inp" id="cTitle" data-draft="cmp:title" value="'+esc(ui.drafts['cmp:title']||'')+'" placeholder="제목 (선택) — 예) 상담놓침: 홍길동 010-1234-5678">'
+     + '<textarea class="inp" id="cBody" data-draft="cmp:body" rows="3" placeholder="상담 내용·전달사항을 적어주세요. 사진을 붙이면 더 빨라요.">'+esc(ui.drafts['cmp:body']||'')+'</textarea>'
+     + '<div class="cmp-photos">'
+     +   photos.map(function(p,i){ return '<span class="athumb"><img src="'+esc(p.src)+'" alt=""><button data-act="cmp-photo-del" data-i="'+i+'" aria-label="삭제">×</button></span>'; }).join('')
+     + '</div>'
+     + '<div class="cmp-actions">'
+     +   '<div class="photobtns">'
+     +     '<label class="btn ghost sm">📷 카메라로 바로 찍기<input type="file" accept="image/*" capture="environment" data-photo="composer" hidden></label>'
+     +     '<label class="btn ghost sm">🖼 앨범에서 선택<input type="file" accept="image/*" data-photo="composer" hidden></label>'
+     +   '</div>'
+     +   '<label class="switch"><input type="checkbox" id="cPin" '+(cm.pin?'checked':'')+'> 맨 위 공지로 고정</label>'
+     +   '<span class="grow"></span>'
+     +   '<button class="btn primary sm" data-act="submit-post">등록<span class="hide-xs"> (직원 전체 공유)</span></button>'
+     + '</div>'
+     + '<p class="hint" style="margin-top:8px">사진은 자동으로 줄여서 이 기기에 저장합니다. 중요 공지는 <b>맨 위 공지로 고정</b>을 켜두세요.</p>'
+     + '</section>';
+
+  var feed = state.posts.slice().sort(byAtDesc);
+  h += '<div class="feed">' + (feed.length? feed.map(function(p){ return postCard(p); }).join('')
+     : '<div class="emptycard">아직 글이 없어요. 첫 글을 남겨보세요.</div>') + '</div>';
+  return h;
+}
+
+/* ---------- rail ---------- */
+function railHTML(){
+  if(!session) return '';
+  var t = todayStr();
+  var todays = state.customers.filter(function(c){return c.day===t;});
+  var cnt = {};
+  STATUSES.forEach(function(s){ cnt[s] = todays.filter(function(c){return c.status===s;}).length; });
+  var total = todays.length, done = cnt['완료'];
+
+  var h = '<section class="card rail-card"><h3>오늘 현황 <span class="pill">'+fmtDayLabel(t)+'</span></h3>';
+  STATUSES.forEach(function(s){
+    h += '<div class="rstat"><span>'+s+'</span><i><b style="width:'+pct(cnt[s],total)+'%;background:'+STATUS_BAR[s]+'"></b></i><em>'+cnt[s]+'</em></div>';
+  });
+  h += '<div class="rprog"><span>완료율</span><b>'+pct(done,total)+'%</b></div></section>';
+
+  h += '<section class="card rail-card"><h3>직원별 오늘 처리</h3>';
+  STAFF.forEach(function(s){
+    var mine = todays.filter(function(c){return c.owner===s;});
+    var d = mine.filter(function(c){return c.status==='완료';}).length;
+    var left = mine.length-d;
+    h += '<div class="rstaff"><span class="av" style="--c:'+colorOf(s)+'">'+esc(initial(s))+'</span>'
+       + '<b>'+esc(s)+'</b><span>'+(mine.length? '<b>'+d+'</b>/'+mine.length : '—')+'</span></div>';
+  });
+  h += '<p class="rail-note">담당자별 남은 건수는 명단에서 담당자를 바꾸면 바로 반영됩니다.</p></section>';
+
+  h += '<section class="card rail-card"><h3>빠른 실행</h3><div class="qgrid">'
+     + '<button class="btn ghost" data-act="add-cust">＋ 명단 추가</button>'
+     + '<button class="btn ghost" data-act="compose">＋ 글쓰기</button>'
+     + '<button class="btn ghost" data-act="tab" data-tab="notice">📌 공지 보기</button>'
+     + '<button class="btn ghost" data-act="tab" data-tab="band">📅 명단 보기</button>'
+     + '</div></section>';
+
+  h += '<section class="card rail-card"><h3>데이터</h3><div class="qgrid">'
+     + '<button class="btn ghost" data-act="export">⬇ 내보내기</button>'
+     + '<button class="btn ghost" data-act="reset">↺ 초기화</button>'
+     + '</div><p class="rail-note">이 기기 브라우저(localStorage)에 저장됩니다. 기기를 바꾸기 전에 내보내기로 백업하세요.</p></section>';
+  return h;
+}
+
+function menuHTML(){
+  var h = '<div class="menu-list">';
+  h += '<div class="menu-item" style="cursor:default"><span>로그인 직원<small>'+esc(session.staff)+' · '+fmtAt(session.at)+'</small></span></div>';
+  h += '<button class="menu-item" data-act="staff-switch"><span>직원 전환<small>다른 직원으로 로그인</small></span><span class="arw">›</span></button>';
+  h += '<button class="menu-item" data-act="export"><span>내보내기<small>글·댓글·명단을 JSON 파일로 저장</small></span><span class="arw">⬇</span></button>';
+  h += '<button class="menu-item" data-act="reset"><span>초기화<small>샘플 데이터로 되돌리기</small></span><span class="arw">↺</span></button>';
+  h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
+  h += '</div>';
+  h += '<p class="hint" style="margin-top:12px">충주 KT대리점 칠금점 · 가망고객 밴드<br>'
+     + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
+  return h;
+}
+
+/* ================= forms ================= */
+function custAddForm(day){
+  var d = day || todayStr();
+  return '<form class="form" data-form="custadd">'
+    + '<div class="fgrid">'
+    + '<label>일자<input type="date" name="day" value="'+esc(d)+'" required></label>'
+    + '<label>구분<select name="bucket">'+BUCKETS.map(function(b){return '<option>'+b+'</option>';}).join('')+'</select></label>'
+    + '</div>'
+    + '<label>고객명<input name="name" required placeholder="예) 홍길동" autocomplete="off"></label>'
+    + '<label>연락처<input name="phone" inputmode="tel" placeholder="010-1234-5678" autocomplete="off"></label>'
+    + '<label>담당자<select name="owner">'+STAFF.map(function(s){return '<option '+(session.staff===s?'selected':'')+'>'+esc(s)+'</option>';}).join('')+'</select></label>'
+    + '<label>메모<textarea name="memo" rows="2" placeholder="예) S26 기변 + 인터넷 결합 상담"></textarea></label>'
+    + '<div class="formfoot"><button class="btn primary" type="submit">명단에 추가</button>'
+    + '<button class="btn ghost" type="button" data-act="close">취소</button></div></form>';
+}
+function resvForm(pid){
+  return '<form class="form" data-form="resvadd" data-id="'+pid+'">'
+    + '<label>고객명<input name="name" required placeholder="예) 홍길동" autocomplete="off"></label>'
+    + '<label>연락처<input name="phone" inputmode="tel" placeholder="010-1234-5678" autocomplete="off"></label>'
+    + '<label>희망기종<input name="model" placeholder="예) S26 / S26 울트라" autocomplete="off"></label>'
+    + '<label>담당자<select name="owner">'+STAFF.map(function(s){return '<option '+(session.staff===s?'selected':'')+'>'+esc(s)+'</option>';}).join('')+'</select></label>'
+    + '<div class="formfoot"><button class="btn primary" type="submit">예약 추가</button>'
+    + '<button class="btn ghost" type="button" data-act="close">취소</button></div></form>';
+}
+
+/* ================= render ================= */
+function render(){
+  if(!session) return;
+  var y = window.scrollY;
+  var activeId = document.activeElement && document.activeElement.id;
+  var selStart = null, selEnd = null;
+  try{ if(activeId && document.activeElement.setSelectionRange){ selStart = document.activeElement.selectionStart; selEnd = document.activeElement.selectionEnd; } }catch(e){}
+
+  $('main').innerHTML = viewHTML();
+  $('rail').innerHTML = railHTML();
+
+  var tabs = document.querySelectorAll('#tabbar .tab');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('on', tabs[i].getAttribute('data-tab')===ui.tab);
+
+  var openConsult = state.posts.filter(function(p){ return p.kind==='consult' && !p.done; }).length;
+  var todayLeft = state.customers.filter(function(c){ return c.day===todayStr() && c.status!=='완료'; }).length;
+  $('t1n').textContent = openConsult || '';
+  $('t2n').textContent = todayLeft || '';
+  $('t3n').textContent = '';
+
+  $('whoName').textContent = session.staff;
+  var av = $('whoAv');
+  av.textContent = initial(session.staff);
+  av.style.setProperty('--c', colorOf(session.staff));
+
+  if(sheetSpec) renderSheet();
+
+  window.scrollTo(0, y);
+  if(activeId && activeId!=='q'){
+    var el = $(activeId);
+    if(el && el.focus){
+      try{ el.focus({preventScroll:true}); if(selStart!=null){ el.setSelectionRange(selStart, selEnd); } }catch(e){}
+    }
+  }
+  if(activeId==='q'){
+    var q = $('q');
+    if(q){ try{ q.focus({preventScroll:true}); q.setSelectionRange(q.value.length, q.value.length); }catch(e){} }
+  }
+}
+
+/* ================= photos ================= */
+function compressImage(file, maxSide, targetKB){
+  maxSide = maxSide || 1200;
+  targetKB = targetKB || 150;
+  return new Promise(function(resolve, reject){
+    if(!file || !/^image\//.test(file.type)){ reject(new Error('이미지 파일이 아니에요')); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      try{
+        var w = img.naturalWidth, h = img.naturalHeight;
+        var scale = Math.min(1, maxSide/Math.max(w,h));
+        w = Math.max(1, Math.round(w*scale)); h = Math.max(1, Math.round(h*scale));
+        var cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
+        ctx.drawImage(img, 0, 0, w, h);
+        var q = 0.74, data = cv.toDataURL('image/jpeg', q);
+        while(data.length > targetKB*1400 && q > 0.34){
+          q -= 0.08;
+          data = cv.toDataURL('image/jpeg', q);
+        }
+        URL.revokeObjectURL(url);
+        resolve({src:data, name:file.name||'사진'});
+      }catch(err){ URL.revokeObjectURL(url); reject(err); }
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('사진을 읽지 못했어요')); };
+    img.src = url;
+  });
+}
+function handleFiles(input){
+  var files = [];
+  try{ files = Array.prototype.slice.call(input.files||[]); }catch(e){}
+  if(!files.length) return;
+  toast('사진 처리 중…');
+  var jobs = files.slice(0,10).map(function(f){ return compressImage(f).catch(function(){ return null; }); });
+  Promise.all(jobs).then(function(list){
+    var out = list.filter(Boolean);
+    if(!out.length){ toast('사진을 읽지 못했어요. 다른 사진으로 시도해 주세요.', true); return; }
+    if(input.getAttribute('data-photo')==='composer'){
+      ui.composer.photos = (ui.composer.photos||[]).concat(out);
+    } else {
+      var key = input.getAttribute('data-key');
+      ui.attach[key] = (ui.attach[key]||[]).concat(out);
+    }
+    input.value = '';
+    render();
+    toast(out.length+'장 첨부했어요');
+  });
+}
+
+/* ================= actions ================= */
+function setTab(tab){
+  if(ui.tab===tab) return;
+  ui.tab = tab;
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function compose(){
+  ui.tab = 'write';
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+  setTimeout(function(){
+    var b = $('cBody');
+    if(b){ try{ b.focus({preventScroll:true}); }catch(e){} }
+  }, 220);
+}
+function submitPost(){
+  var title = (ui.drafts['cmp:title']||'').trim();
+  var body = (ui.drafts['cmp:body']||'').trim();
+  var photos = ui.composer.photos||[];
+  if(!body && !photos.length && !title){ toast('내용을 입력하거나 사진을 붙여주세요.', true); return; }
+  var p = {
+    id: uid('p'), kind: ui.composer.kind||'consult', pinned: !!ui.composer.pin,
+    title: title, body: body, author: session.staff, at: nowAt(), done:false,
+    photos: photos.slice(), comments: []
+  };
+  if(p.pinned) p.pinned = true;
+  state.posts.push(p);
+  ui.drafts['cmp:title'] = '';
+  ui.drafts['cmp:body'] = '';
+  ui.composer = {kind:'consult', photos:[], pin:false};
+  save(); render();
+  toast(p.pinned? '공지로 등록했어요' : '글을 등록했어요');
+}
+function changeStatus(id, st){
+  var c = findCust(id);
+  if(!c || c.status===st) return;
+  var prev = c.status;
+  c.status = st;
+  c.comments = c.comments||[];
+  c.comments.push(sysCmt('통화상태 '+prev+' → '+st));
+  save(); render();
+  toast(c.name+' · '+st);
+}
+function exportData(){
+  var payload = {app:'kt-band-manager', store:'충주 KT대리점 칠금점', exportedAt:new Date().toISOString(), data:state};
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = '칠금점-가망고객밴드-'+todayStr()+'.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1200);
+  toast('JSON 파일로 내보냈어요');
+}
+function resetData(){
+  if(!confirm('샘플 데이터로 초기화할까요?\n지금까지 적은 글·댓글·명단이 모두 사라집니다. (먼저 내보내기로 백업할 수 있어요)')) return;
+  state = seed();
+  ui.openThreads = {};
+  ui.custThreads = {};
+  ui.drafts = {};
+  ui.attach = {};
+  save(); closeSheet(); render();
+  toast('샘플 데이터로 초기화했어요');
+}
+function logout(){
+  session = null;
+  saveSession(null);
+  closeSheet();
+  $('app').hidden = true;
+  $('login').hidden = false;
+  ui.loginStaff = '김태양';
+  clearPin();
+  renderLogin();
+}
+
+/* ================= events ================= */
+document.addEventListener('click', function(e){
+  var el = e.target.closest('[data-act]');
+  if(!el) return;
+  var act = el.getAttribute('data-act');
+
+  switch(act){
+    case 'tab': setTab(el.getAttribute('data-tab')); break;
+    case 'compose': compose(); break;
+    case 'menu': openSheet({type:'menu'}); break;
+    case 'close': closeSheet(); break;
+    case 'staff-switch':
+      closeSheet(); session=null; saveSession(null);
+      $('app').hidden = true; $('login').hidden = false;
+      clearPin(); renderLogin();
+      break;
+    case 'logout': logout(); break;
+    case 'export': exportData(); break;
+    case 'reset': resetData(); break;
+    case 'pin-toggle': ui.pinOpen = !ui.pinOpen; render(); break;
+    case 'filter':
+      var f = el.getAttribute('data-f');
+      ui.filter = (ui.filter===f && f!=='all')? 'all' : f;
+      render(); break;
+    case 'mask': ui.mask = !ui.mask; render(); toast(ui.mask?'번호를 가렸어요':'번호를 표시해요'); break;
+    case 'thread-toggle':
+      var tid = el.getAttribute('data-id');
+      if(ui.openThreads[tid]) delete ui.openThreads[tid]; else ui.openThreads[tid]=true;
+      render(); break;
+    case 'open-post': openSheet({type:'post', id: el.getAttribute('data-id')}); break;
+    case 'post-done':
+      var pd = findPost(el.getAttribute('data-id'));
+      if(pd){ pd.done = !pd.done; save(); render(); toast(pd.done?'완료 처리했어요':'완료를 취소했어요'); }
+      break;
+    case 'post-pin':
+      var pp = findPost(el.getAttribute('data-id'));
+      if(pp){ pp.pinned = !pp.pinned; save(); render(); toast(pp.pinned?'맨 위 공지로 고정했어요':'고정을 해제했어요'); }
+      break;
+    case 'photo':
+      var img = el.querySelector('img') || el;
+      openLB(img.getAttribute('src'));
+      break;
+    case 'close-lb': closeLB(); break;
+    case 'reply-open': ui.replyOpen = el.getAttribute('data-cid'); render();
+      setTimeout(function(){
+        var f2 = document.querySelector('form[data-form="reply"] input');
+        if(f2) try{ f2.focus({preventScroll:true}); }catch(e){}
+      }, 60);
+      break;
+    case 'reply-close': ui.replyOpen = null; render(); break;
+    case 'cust-thread':
+      var cid = el.getAttribute('data-id');
+      if(ui.custThreads[cid]) delete ui.custThreads[cid]; else ui.custThreads[cid]=true;
+      render(); break;
+    case 'status': changeStatus(el.getAttribute('data-id'), el.getAttribute('data-st')); break;
+    case 'memo': openSheet({type:'memo', id: el.getAttribute('data-id')}); break;
+    case 'add-cust': openSheet({type:'custadd', day: el.getAttribute('data-day') || todayStr()}); break;
+    case 'resv-add': openSheet({type:'resv', id: el.getAttribute('data-id')}); break;
+    case 'resv-del':
+      var rp = findPost(el.getAttribute('data-pid'));
+      if(rp){
+        var rid = el.getAttribute('data-rid');
+        rp.reservations = (rp.reservations||[]).filter(function(r){ return r.id!==rid; });
+        save(); render(); toast('예약을 삭제했어요');
+      }
+      break;
+    case 'attach-del':
+      var k = el.getAttribute('data-key'), ix = +el.getAttribute('data-i');
+      if(ui.attach[k]){ ui.attach[k].splice(ix,1); if(!ui.attach[k].length) delete ui.attach[k]; }
+      render(); break;
+    case 'cmp-photo-del':
+      ui.composer.photos.splice(+el.getAttribute('data-i'),1); render(); break;
+    case 'cmp-kind': ui.composer.kind = el.getAttribute('data-k'); render(); break;
+    case 'submit-post': submitPost(); break;
+    case 'staff':
+      ui.loginStaff = el.getAttribute('data-name');
+      renderLogin(); break;
+    case 'key': pressKey(el.getAttribute('data-k')); break;
+    case 'pin-focus':
+      var pi = $('pinInput'); if(pi) try{ pi.focus({preventScroll:true}); }catch(e){}
+      break;
+  }
+});
+
+document.addEventListener('input', function(e){
+  var t = e.target;
+  if(t.id==='q'){ ui.q = t.value; render(); return; }
+  var dk = t.getAttribute && t.getAttribute('data-draft');
+  if(dk){ ui.drafts[dk] = t.value; }
+});
+document.addEventListener('change', function(e){
+  var t = e.target;
+  if(t.type==='file' && t.getAttribute('data-photo')){ handleFiles(t); return; }
+  if(t.id==='cPin'){ ui.composer.pin = !!t.checked; return; }
+  if(t.getAttribute && t.getAttribute('data-act')==='owner'){
+    var c = findCust(t.getAttribute('data-id'));
+    if(c && c.owner!==t.value){
+      c.comments = c.comments||[];
+      c.comments.push(sysCmt('담당자 '+(c.owner||'미지정')+' → '+t.value));
+      c.owner = t.value;
+      save(); render(); toast('담당자를 '+t.value+'님으로 바꿨어요');
+    }
+    return;
+  }
+  if(t.getAttribute && t.getAttribute('data-act')==='resv-done'){
+    var p = findPost(t.getAttribute('data-pid'));
+    if(p){
+      var rid = t.getAttribute('data-rid');
+      (p.reservations||[]).forEach(function(r){ if(r.id===rid) r.done = !!t.checked; });
+      save(); render(); toast(t.checked?'개통 완료로 체크했어요':'개통 체크를 해제했어요');
+    }
+    return;
+  }
+});
+
+document.addEventListener('submit', function(e){
+  var f = e.target.closest('form[data-form]');
+  if(!f) return;
+  e.preventDefault();
+  var kind = f.getAttribute('data-form');
+
+  if(kind==='login'){ doLogin(); return; }
+
+  if(kind==='cmt' || kind==='reply'){
+    var fd = new FormData(f);
+    var text = String(fd.get('text')||'').trim();
+    var id = f.getAttribute('data-id');
+    var ctx = f.getAttribute('data-ctx');
+    var item = ctx==='cust'? findCust(id) : findPost(id);
+    if(!item){ toast('대상을 찾지 못했어요.', true); return; }
+
+    if(kind==='cmt'){
+      var key = ctx+':'+id;
+      var photos = ui.attach[key]||[];
+      if(!text && !photos.length){ toast('내용을 입력해 주세요.', true); return; }
+      item.comments = item.comments||[];
+      item.comments.push({id:uid('c'), author:session.staff, at:nowAt(), text:text, photos:photos.slice(), replies:[]});
+      delete ui.drafts[key]; delete ui.attach[key];
+      save(); render(); toast('댓글을 남겼어요');
+    } else {
+      var cid = f.getAttribute('data-cid');
+      var parent = (item.comments||[]).filter(function(c){ return c.id===cid; })[0];
+      if(!parent){ toast('댓글을 찾지 못했어요.', true); return; }
+      if(!text){ toast('답글 내용을 입력해 주세요.', true); return; }
+      parent.replies = parent.replies||[];
+      parent.replies.push({id:uid('r'), author:session.staff, at:nowAt(), text:text, photos:[]});
+      ui.replyOpen = null;
+      save(); render(); toast('답글을 남겼어요');
+    }
+    return;
+  }
+
+  if(kind==='custadd'){
+    var d = new FormData(f);
+    var name = String(d.get('name')||'').trim();
+    var phone = String(d.get('phone')||'').trim();
+    var day = String(d.get('day')||todayStr());
+    if(!name){ toast('고객명을 입력해 주세요.', true); return; }
+    var c = {
+      id: uid('c'), day: day, name: name, phone: phone,
+      bucket: String(d.get('bucket')||'730'),
+      owner: String(d.get('owner')||session.staff),
+      status: '미통화',
+      memo: String(d.get('memo')||'').trim(),
+      comments: []
+    };
+    state.customers.push(c);
+    save(); closeSheet(); render();
+    toast(name+'님을 명단에 추가했어요');
+    return;
+  }
+
+  if(kind==='resvadd'){
+    var rd = new FormData(f);
+    var rname = String(rd.get('name')||'').trim();
+    if(!rname){ toast('고객명을 입력해 주세요.', true); return; }
+    var post = findPost(f.getAttribute('data-id'));
+    if(!post){ toast('공지를 찾지 못했어요.', true); return; }
+    post.reservations = post.reservations||[];
+    post.reservations.push({
+      id: uid('r'), name: rname,
+      phone: String(rd.get('phone')||'').trim(),
+      model: String(rd.get('model')||'').trim(),
+      owner: String(rd.get('owner')||session.staff),
+      done: false
+    });
+    save();
+    sheetSpec = {type:'post', id:post.id};
+    render();
+    toast(rname+'님 사전예약을 추가했어요');
+    return;
+  }
+
+  if(kind==='memo'){
+    var md = new FormData(f);
+    var cc = findCust(f.getAttribute('data-id'));
+    if(cc){
+      cc.memo = String(md.get('memo')||'').trim();
+      save(); closeSheet(); render(); toast('메모를 저장했어요');
+    }
+    return;
+  }
+});
+
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){
+    if($('lightbox').classList.contains('on')){ closeLB(); }
+    else if(sheetSpec){ closeSheet(); }
+    return;
+  }
+  if(sheetSpec && e.key==='Enter' && e.target && e.target.tagName==='INPUT' && e.target.name==='text'){
+    /* 댓글 입력에서 Enter = 등록 */
+    var form = e.target.closest('form[data-form="cmt"],form[data-form="reply"]');
+    if(form){ e.preventDefault(); if(form.requestSubmit) form.requestSubmit(); else form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})); }
+  }
+  if(e.target && e.target.id==='pinInput' && e.key==='Enter'){
+    e.preventDefault(); doLogin();
+  }
+});
+
+/* ================= init ================= */
+function registerSW(){
+  if('serviceWorker' in navigator && location.protocol!=='file:'){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  }
+}
+function init(){
+  session = loadSession();
+  state = loadState();
+  renderLogin();
+  if(session){
+    $('login').hidden = true;
+    $('app').hidden = false;
+    ui.loginStaff = session.staff;
+    render();
+    var pi = $('pinInput'); if(pi) try{ pi.blur(); }catch(e){}
+  } else {
+    $('login').hidden = false;
+    $('app').hidden = true;
+    var p2 = $('pinInput');
+    if(p2) try{ p2.focus({preventScroll:true}); }catch(e){}
+  }
+  registerSW();
+}
+init();
+
+})();
+</script>
+</body>
+</html>
