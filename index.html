@@ -3551,7 +3551,7 @@ function init(){
   applyCapture();
   setInterval(adminTick, 20 * 1000);
   setInterval(function(){ if(session && !document.hidden) ledgerSync(false); }, 5*60*1000);
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) ledgerSync(false); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ adminTick(); ledgerSync(false); } });
   registerSW();
 }
 init();
