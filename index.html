@@ -19,6 +19,9 @@
     --line:#EAEEF4; --line-soft:#F1F5F9; --bg:#F5F7FA; --card:#FFFFFF;
     --green:#0E7C5A; --green-bg:#E7F7EF; --amber:#B45309; --amber-bg:#FFF4E5;
     --violet:#5B3FC4; --violet-bg:#EEEBFF; --red:#D14343; --gray-bg:#F2F4F6;
+    --no-call:#EF4444; --no-call-ink:#B91C1C; --no-call-bg:#FEE2E2; --no-call-line:#FCA5A5; --no-call-tint:#FFF5F5;
+    --absent:#F59E0B; --absent-ink:#B45309; --absent-bg:#FEF3C7; --absent-line:#FCD34D; --absent-tint:#FFFBF2;
+    --kt-blue:#0B57D0; --done-ink:#0E7C5A;
     --r:16px;
   }
   *{box-sizing:border-box}
@@ -188,17 +191,44 @@
   .cmt p{margin:4px 0 0 0;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:var(--ink-2)}
   .cmt.sys p{color:var(--hint);font-size:13px}
   .cmt.sys .cmt-head b{color:var(--hint)}
+  .rep-toggle{display:inline-flex;align-items:center;gap:5px;margin:8px 0 0;padding:0 11px;height:32px;border-radius:999px;
+    border:1px solid #D6E4F8;background:#F4F8FF;color:var(--blue-deep);font-size:12.5px;font-weight:700;letter-spacing:-.01em}
+  .rep-toggle:hover{background:#E9F1FE;border-color:#BFD8FB}
+  .rep-toggle .chev{font-size:9px;line-height:1;color:var(--blue)}
   .replies{list-style:none;margin:6px 0 0;padding:0 0 0 12px;border-left:2px solid var(--line)}
   .replies li{font-size:13.5px;line-height:1.6;padding:3px 0;color:var(--ink-2);word-break:break-word}
   .replies li b{font-weight:700;margin-right:5px}
   .replies li time{color:var(--faint);font-size:11.5px;margin-left:6px;font-weight:500}
   .rav{color:var(--faint);font-weight:700;margin-right:4px}
 
-  .cbar{display:flex;align-items:center;gap:8px;margin-top:12px}
+  .cbar{display:block;margin-top:12px}
+  .cbar-row{display:flex;align-items:center;gap:8px}
   .cbar input{flex:1;min-width:0;height:42px;border-radius:12px;border:1px solid transparent;background:var(--line-soft);
     padding:0 14px;font-size:14px}
   .cbar input::placeholder{color:var(--faint)}
   .cbar input:focus{outline:none;border-color:var(--blue);background:#fff}
+  .stpick{margin:0 0 9px;padding:10px 12px;border-radius:12px;background:#F7F9FC;border:1px solid var(--line)}
+  .cbar.reply .stpick{padding:9px 10px;margin-top:2px}
+  .stpick-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .stpick-lbl{font-size:12px;font-weight:800;color:var(--ink-2);letter-spacing:-.01em;white-space:nowrap}
+  .stpick-lbl em{font-style:normal;font-size:10px;font-weight:800;color:#fff;background:var(--no-call);border-radius:5px;padding:2px 5px;margin-left:4px;vertical-align:1px}
+  .stpick-lbl em.opt{background:#E4E9F0;color:var(--sub)}
+  .stpick-tip{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--hint)}
+  .stpick-tip[data-st="미통화"]{color:var(--no-call-ink)}
+  .stpick-tip[data-st="부재"]{color:var(--absent-ink)}
+  .stpick-tip[data-st="예약"]{color:var(--kt-blue)}
+  .stpick-tip[data-st="완료"]{color:var(--done-ink)}
+  .stpick-chips{display:flex;gap:6px;flex-wrap:wrap}
+  .st-chip.sm{display:inline-flex;align-items:center;justify-content:center;height:36px;min-width:0;padding:0 13px;font-size:12.5px;border-radius:10px}
+  .st-chip.sm.on{box-shadow:inset 0 0 0 2px currentColor;background:#fff}
+  .cbar .send[disabled]{opacity:.4;cursor:not-allowed}
+  .cst,.rst{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;font-size:11px;font-weight:800;
+    font-style:normal;letter-spacing:-.01em;line-height:1}
+  .rst{margin-right:5px}
+  .cst[data-st="미통화"],.rst[data-st="미통화"]{background:var(--no-call-bg);color:var(--no-call-ink)}
+  .cst[data-st="부재"],.rst[data-st="부재"]{background:var(--absent-bg);color:var(--absent-ink)}
+  .cst[data-st="예약"],.rst[data-st="예약"]{background:#E8F0FE;color:var(--kt-blue)}
+  .cst[data-st="완료"],.rst[data-st="완료"]{background:#E9F6EF;color:var(--done-ink)}
   .cbar .send{height:42px;padding:0 14px;border-radius:12px;border:0;background:var(--blue);
     color:#fff;font-size:13.5px;font-weight:700;flex:none}
   .cbar .send.ghost{background:var(--gray-bg);color:var(--sub)}
@@ -248,6 +278,11 @@
   .todo em{font-style:normal;font-size:12px;font-weight:600;color:var(--faint)}
   .todo:first-child b{color:#D14343}
   .todo:last-child b{color:var(--blue-deep)}
+  .todo.keep{grid-column:1/-1;flex-direction:row;align-items:center;gap:9px;border-color:#FBD8A8;background:#FFFDF8}
+  .todo.keep:hover{background:#FFF7E8;border-color:#F5B96A}
+  .todo.keep span{font-size:13px;font-weight:800;color:var(--absent-ink)}
+  .todo.keep em{flex:1;text-align:left;color:var(--hint)}
+  .todo.keep b{font-size:22px;color:#D97706;margin-left:auto}
 
   /* ---------- band: summary ---------- */
   .statstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:#fff;border:1px solid var(--line);
@@ -260,7 +295,19 @@
   .sstat span{display:block;font-size:12.5px;font-weight:600;color:var(--hint);letter-spacing:-.01em;white-space:nowrap}
   .sstat b{display:block;margin-top:3px;font-size:24px;font-weight:700;letter-spacing:-.04em;line-height:1.15}
   .sstat.done b{color:var(--blue-deep)}
+  .sstat[data-st="미통화"] b{color:var(--no-call)}
+  .sstat[data-st="부재"] b{color:#D97706}
+  .sstat[data-st="예약"] b{color:var(--kt-blue)}
+  .sstat[data-st="완료"] b{color:#7B8794}
+  .sstat.hot{background:#FFF7F7}
+  .sstat.warm{background:#FFFCF3}
+  .sstat.hot span{color:var(--no-call-ink);font-weight:700}
+  .sstat.warm span{color:var(--absent-ink);font-weight:700}
+  .sstat.hot span::before,.sstat.warm span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:2px}
+  .sstat.hot span::before{background:var(--no-call)}
+  .sstat.warm span::before{background:var(--absent)}
   .sstat.on span{color:var(--blue-deep)}
+  .sstat.on{background:var(--blue-weak);box-shadow:inset 0 0 0 2px #BBD7FA}
   .sstat.rate{padding:12px 14px 10px;display:flex;flex-direction:column;justify-content:center}
   .sstat.rate b{font-size:21px}
   .sstat.rate small{font-size:12px;font-weight:700;margin-left:1px;color:var(--hint)}
@@ -273,7 +320,69 @@
   }
 
   /* ---------- band: filters ---------- */
+  .keepbar{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 14px;padding:11px 14px;
+    border:1px solid #FBD8A8;border-radius:14px;background:linear-gradient(180deg,#FFF9EF,#FFFDF8);text-align:left;transition:.12s}
+  .keepbar:hover{border-color:#F5B96A;background:#FFF7E8}
+  .keepbar .kb-ico{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#FDEFD8;font-size:17px}
+  .keepbar .kb-txt{display:block;flex:1;min-width:0}
+  .keepbar .kb-txt b{display:block;font-size:14px;font-weight:800;letter-spacing:-.02em;color:#8A4B0B}
+  .keepbar .kb-txt small{display:block;font-size:11.5px;font-weight:600;color:#B0722F;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .keepbar .kb-n{flex:none;min-width:28px;height:28px;padding:0 7px;border-radius:9px;background:var(--no-call);color:#fff;
+    font-size:14px;font-weight:800;display:grid;place-items:center}
+  .keepbar .kb-go{flex:none;font-size:12.5px;font-weight:800;color:var(--absent-ink)}
+  .keepbar.zero .kb-n{background:#E9DCC8;color:#8A6A45}
+  @media (max-width:430px){
+    .keepbar{padding:10px 12px;gap:9px}
+    .keepbar .kb-txt small{font-size:11px}
+  }
+
+  .keepnote{margin:0 0 10px;font-size:12.5px;font-weight:600;color:var(--hint)}
+  .keepnote b{color:var(--ink)}
+  .klist{display:grid;gap:10px}
+  .krow{padding:12px 13px 11px;border:1px solid var(--line);border-left:4px solid #E5E8EB;border-radius:14px;background:#fff}
+  .krow[data-st="부재"]{border-left-color:var(--absent);background:#FFFDF8}
+  .krow[data-st="미통화"]{border-left-color:var(--no-call);background:#FFF9F9}
+  .krow[data-st="예약"]{border-left-color:var(--kt-blue);background:#F9FBFF}
+  .krow[data-st="완료"]{border-left-color:#CBD5E1;background:#FAFBFC}
+  .k-top{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .k-name{font-size:15.5px;font-weight:800;letter-spacing:-.02em}
+  .k-day{font-size:11.5px;font-weight:600;color:var(--hint)}
+  .k-tries{font-size:11px;font-weight:800;color:var(--absent-ink);background:var(--absent-bg);border-radius:6px;padding:2px 6px}
+  .k-top .kpin{margin-left:auto}
+  .k-mid{display:flex;align-items:center;gap:8px;margin-top:6px}
+  .k-phone{flex:1;min-width:0;font-size:14.5px;font-weight:700;color:var(--ink-2);letter-spacing:.01em;padding:6px 0}
+  .k-phone:hover{color:var(--blue-deep)}
+  .k-phone.quiet{color:var(--faint);font-weight:500}
+  .k-memo{display:block;width:100%;text-align:left;margin-top:4px;padding:7px 9px;border-radius:9px;border:0;background:var(--line-soft);
+    font-size:13px;font-weight:600;color:var(--sub);white-space:normal;line-height:1.45}
+  .k-memo.quiet{color:var(--faint)}
+  .k-memo:hover{background:#E9EDF2;color:var(--ink-2)}
+  .k-edit{display:flex;align-items:center;gap:6px;margin-top:6px}
+  .k-edit input{flex:1;min-width:0;height:40px;border-radius:10px;border:1px solid var(--blue);padding:0 11px;font-size:13.5px}
+  .k-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .kact{height:38px;padding:0 13px;border-radius:10px;border:1px solid var(--line);background:#fff;
+    font-size:13px;font-weight:800;color:var(--ink-2);letter-spacing:-.01em}
+  .kact:hover{background:#FAFBFC}
+  .kact.res{border-color:#A8C7FA;background:#E8F0FE;color:var(--kt-blue)}
+  .kact.done{border-color:#BBE5D2;background:#E9F6EF;color:var(--done-ink)}
+  .kact.ghost{background:var(--gray-bg);border-color:transparent}
+  .kpin{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid transparent;background:transparent;
+    font-size:14px;line-height:1;color:#C6CDD6;display:grid;place-items:center;filter:grayscale(1);opacity:.75}
+  .kpin:hover{background:var(--line-soft)}
+  .kpin.on{background:#FFF3DC;border-color:#F7CE8E;filter:none;opacity:1}
+
   .filters{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .periodbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .pb-lbl{font-size:12px;font-weight:800;color:var(--hint);letter-spacing:-.01em;margin-right:1px}
+  .psel{position:relative;display:inline-flex;align-items:center;height:36px;padding:0 9px 0 11px;border-radius:10px;
+    border:1px solid var(--line);background:#fff}
+  .psel::after{content:"▾";font-size:9px;color:#9AA3AE;margin-left:5px;pointer-events:none}
+  .psel select{border:0;background:none;outline:none;appearance:none;-webkit-appearance:none;padding:0;margin:0;
+    font-size:12.5px;font-weight:800;color:var(--ink-2);letter-spacing:-.01em}
+  .pb-on{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 9px 0 10px;border:1px solid #BFD8FB;border-radius:9px;
+    background:var(--blue-weak);color:var(--blue-deep);font-size:11.5px;font-weight:800;letter-spacing:-.01em}
+  .pb-on:hover{background:#DCEBFF}
+  .pb-x{font-size:10px;color:#5B8FDC;font-weight:700}
   .filters .sep{flex:none;width:1px;height:18px;background:var(--line);margin:0 3px}
   .ftools{display:flex;align-items:center;gap:7px;flex:none}
   .qbox{flex:none;display:flex;align-items:center;gap:5px;height:40px;padding:0 12px;border-radius:999px;
@@ -296,19 +405,28 @@
     font-size:17px;display:grid;place-items:center;line-height:1}
   .day-add:hover{background:#E9EDF2}
   .cust-list{display:block;padding:0 0 6px}
-  .cust{padding:12px 16px 10px;border-top:1px solid var(--line-soft)}
-  .cust.is-done{background:#FCFDFD}
+  .cust{position:relative;padding:12px 16px 10px 21px;border-top:1px solid var(--line-soft)}
+  .cust::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#E5E8EB}
+  .cust[data-st="미통화"]{background:var(--no-call-tint)}
+  .cust[data-st="미통화"]::before{background:var(--no-call)}
+  .cust[data-st="부재"]{background:var(--absent-tint)}
+  .cust[data-st="부재"]::before{background:var(--absent)}
+  .cust[data-st="예약"]::before{background:var(--kt-blue)}
+  .cust[data-st="완료"]::before{background:#CBD5E1}
+  .cust.is-done{background:#F8FAFB;opacity:.6}
   .cust.is-done .c-name{color:var(--hint)}
   .c-top{display:flex;align-items:center;gap:8px}
   .c-name{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;letter-spacing:-.02em;min-width:0;color:var(--ink);flex:1}
   .c-name .bk{flex:none}
   .cust .bk{font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(--gray-bg);color:var(--sub);letter-spacing:-.01em}
-  .st-chip{flex:none;height:44px;min-width:70px;padding:0 12px;border-radius:11px;border:0;background:var(--gray-bg);color:var(--ink-2);
+  .st-chip{flex:none;height:44px;min-width:70px;padding:0 12px;border-radius:11px;border:1.5px solid transparent;background:var(--gray-bg);color:var(--ink-2);
     font-size:13px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
   .st-chip:active{transform:scale(.98)}
-  .st-chip[data-st="부재"]{background:var(--amber-bg);color:var(--amber)}
-  .st-chip[data-st="예약"]{background:var(--violet-bg);color:var(--violet)}
-  .st-chip[data-st="완료"]{background:var(--green-bg);color:var(--green)}
+  .st-chip[data-st="미통화"]{background:var(--no-call-bg);color:var(--no-call-ink);border-color:var(--no-call-line);font-weight:800}
+  .st-chip[data-st="부재"]{background:var(--absent-bg);color:var(--absent-ink);border-color:var(--absent-line);font-weight:800}
+  .st-chip[data-st="예약"]{background:#E8F0FE;color:var(--kt-blue);border-color:#A8C7FA}
+  .st-chip[data-st="완료"]{background:#E9F6EF;color:var(--done-ink);border-color:#BBE5D2}
+  .cust.is-done .st-chip{opacity:.85}
   .c-mid{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}
   .c-phone{font-size:14.5px;font-weight:600;color:var(--ink-2);letter-spacing:.01em;padding:10px 0;display:inline-block;min-height:44px}
   .c-phone:hover{color:var(--blue-deep)}
@@ -332,7 +450,7 @@
   .mini-x{flex:none;width:42px;height:42px;border-radius:10px;border:0;background:var(--gray-bg);color:var(--sub);font-size:14px}
   .day-empty{padding:22px 16px;text-align:center;font-size:13.5px;color:var(--faint)}
   @media (max-width:430px){
-    .cust{padding:11px 15px 12px}
+    .cust{padding:11px 15px 12px 19px}
     .c-name{font-size:15.5px}
     .c-phone{font-size:14px}
     .day-add{width:32px;height:32px}
@@ -475,7 +593,7 @@
     .statstrip{margin-bottom:14px}
     .day-head{padding:14px 15px 9px}
     .dh-date{font-size:15px}
-    .cust{padding:11px 15px}
+    .cust{padding:11px 15px 11px 19px}
     .c-name{font-size:14.5px}
     .c-memo{font-size:13px}
     .rrow{grid-template-columns:minmax(0,1fr) 30px 22px;grid-template-areas:"n c x" "p o o";gap:2px 8px;font-size:12.5px;padding:9px 12px}
@@ -653,11 +771,16 @@ var ui = {
   tab:'notice',
   filter:'all',
   q:'',
+  year:'all',
+  month:'all',
   pinOpen:true,
   mask:false,
   openThreads:{},
   custThreads:{},
   replyOpen:null,
+  openReplies:{},
+  cmtStatus:{},
+  keepMemo:null,
   memoEdit:null,
   loginStaff:'김태양',
   phoneOnly:false,
@@ -745,7 +868,7 @@ function seed(){
      comments:[
        {id:'cc1', author:'이건엽', at:minsAgo(32), text:'7시에 전화드렸는데 부재중이세요.', photos:[], replies:[{id:'cc1r1', author:'김태양', at:minsAgo(28), text:'내일 오전 10시에 다시 걸게요.', photos:[]}]}
      ]},
-    {id:'c-s2', day:t, name:'김민준', phone:'010-2345-6789', bucket:'730', owner:'김설화', status:'부재',
+    {id:'c-s2', day:t, name:'김민준', phone:'010-2345-6789', bucket:'730', owner:'김설화', status:'부재', tries:2,
      memo:'오후 2시 재통화 약속', comments:[]},
     {id:'c-s3', day:t, name:'이서연', phone:'010-3456-7890', bucket:'730', owner:'이건엽', status:'예약',
      memo:'금요일 15시 내방 예약 (S26 기변)', comments:[]},
@@ -753,7 +876,7 @@ function seed(){
      memo:'5G 요금제 재약정 상담', comments:[]},
     {id:'c-s5', day:t, name:'최유진', phone:'010-5678-9012', bucket:'550', owner:'김태양', status:'완료',
      memo:'5G 슬림 → 5G 스탠다드 상향 완료', comments:[]},
-    {id:'c-s6', day:t, name:'정하늘', phone:'010-6789-0123', bucket:'3년', owner:'김설화', status:'부재',
+    {id:'c-s6', day:t, name:'정하늘', phone:'010-6789-0123', bucket:'3년', owner:'김설화', status:'부재', tries:1,
      memo:'S26+ 사전예약 건 — 오후에 다시 연락', comments:[]},
     {id:'c-s7', day:t, name:'강도윤', phone:'010-7890-1234', bucket:'3년', owner:'이건엽', status:'미통화',
      memo:'갤럭시 S25 사전예약 문의', comments:[]},
@@ -764,8 +887,15 @@ function seed(){
      memo:'재약정 완료', comments:[]},
     {id:'c-y3', day:y, name:'서지안', phone:'010-1122-3344', bucket:'3년', owner:'권영한', status:'예약',
      memo:'11-26 11시 방문 예약', comments:[]},
-    {id:'c-y4', day:y, name:'오세훈', phone:'010-2233-4455', bucket:'730', owner:'이건엽', status:'미통화',
-     memo:'부재 2회 — 문자 발송함', comments:[]}
+    {id:'c-y4', day:y, name:'오세훈', phone:'010-2233-4455', bucket:'730', owner:'이건엽', status:'미통화', tries:2, keep:true,
+     memo:'부재 2회 — 문자 발송함', comments:[]},
+
+    {id:'c-o1', day:'2026-10-28', name:'임도현', phone:'010-3344-5566', bucket:'550', owner:'김태양', status:'완료',
+     memo:'10월 재약정 상담 완료', comments:[]},
+    {id:'c-o2', day:'2025-12-15', name:'백승호', phone:'010-4455-6677', bucket:'730', owner:'김설화', status:'완료',
+     memo:'2025년 12월 기변 완료', comments:[]},
+    {id:'c-o3', day:'2025-12-03', name:'문가영', phone:'010-5566-7788', bucket:'3년', owner:'이건엽', status:'완료',
+     memo:'12월 방문 상담 후 개통', comments:[]}
   ];
 
   return {v:1, posts:posts, customers:customers};
@@ -858,6 +988,9 @@ function renderSheet(){
     if(!c){ closeSheet(); return; }
     ttl.textContent = '고객 정보';
     b.innerHTML = custSheetHTML(c);
+  } else if(type==='keep'){
+    ttl.textContent = '부재중 킵';
+    b.innerHTML = keepSheetHTML();
   } else if(type==='custadd'){
     ttl.textContent = '명단 추가';
     b.innerHTML = custAddForm(sheetSpec.day);
@@ -968,11 +1101,14 @@ function todoBar(){
   var t = todayStr();
   var left = state.customers.filter(function(c){ return c.day===t && c.status!=='완료'; }).length;
   var noCall = state.customers.filter(function(c){ return c.day===t && c.status==='미통화'; }).length;
+  var keeps = keepList().length;
   return '<section class="todobar">'
     + '<button class="todo" data-act="filter" data-f="consult">'
     +   '<span>미완료 상담놓침</span><b>'+openConsult+'</b></button>'
     + '<button class="todo" data-act="tab" data-tab="band">'
     +   '<span>오늘 남은 콜</span><b>'+left+'</b><em>미통화 '+noCall+'</em></button>'
+    + '<button class="todo keep" data-act="keep-open">'
+    +   '<span>📵 부재중 킵</span><em>부재·킵 고객 모아 바로 통화</em><b>'+keeps+'</b></button>'
     + '</section>';
 }
 
@@ -1069,16 +1205,42 @@ function reserveBlock(p){
   return h;
 }
 
+function cmtModeOf(item, ctx){
+  if(ctx==='cust') return 'req';
+  if(item && (item.kind==='consult' || item.reserve)) return 'opt';
+  return '';
+}
+function fmtReady(key, mode){
+  var text = String(ui.drafts[key]||'').trim();
+  var st = ui.cmtStatus[key]||'';
+  if(mode==='req') return !!(text && st);
+  if(mode==='opt') return !!(text || st);
+  return !!text;
+}
+function statusPickHTML(key, mode){
+  var sel = ui.cmtStatus[key]||'';
+  var tip = mode==='req'? '상태를 골라야 등록돼요' : '통화 결과를 함께 남겨보세요';
+  var h = '<div class="stpick"><div class="stpick-top">'
+        + '<span class="stpick-lbl">통화 상태'+(mode==='req'?'<em>필수</em>':'<em class="opt">선택</em>')+'</span>'
+        + '<span class="stpick-tip"'+(sel?' data-st="'+esc(sel)+'"':'')+' data-tip="'+esc(tip)+'">'+(sel? esc(sel)+' 선택됨' : tip)+'</span>'
+        + '</div><div class="stpick-chips">';
+  STATUSES.forEach(function(s){
+    h += '<button type="button" class="st-chip sm '+(sel===s?'on':'')+'" data-st="'+s+'" data-act="cmt-st" data-key="'+key+'" data-st-for="'+s+'">'+s+'</button>';
+  });
+  return h+'</div></div>';
+}
+
 function threadHTML(item, ctx, open){
   if(!open) return '';
   var cs = item.comments||[];
   var key = ctx+':'+item.id;
   var att = ui.attach[key]||[];
+  var mode = cmtModeOf(item, ctx);
   var h = '<div class="thread open">';
   if(!cs.length) h += '<div class="cmts"><div class="empty">아직 댓글이 없어요. 첫 댓글을 남겨보세요.</div></div>';
   else {
     h += '<ul class="cmts">';
-    cs.forEach(function(c){ h += cmtHTML(c, item.id, ctx); });
+    cs.forEach(function(c){ h += cmtHTML(c, item.id, ctx, mode); });
     h += '</ul>';
   }
   if(att.length){
@@ -1088,42 +1250,60 @@ function threadHTML(item, ctx, open){
     });
     h += '</div>';
   }
-  h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'">'
-     + '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'" placeholder="댓글이나 통화 결과 남기기" autocomplete="off">'
+  h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'" data-key="'+key+'" data-mode="'+mode+'">'
+     + (mode? statusPickHTML(key, mode) : '')
+     + '<div class="cbar-row">'
+     + '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'" placeholder="'+(ctx==='cust'?'부재중·재통화 예정·상담 내용을 적어주세요':'댓글이나 통화 결과 남기기')+'" autocomplete="off">'
      + '<label class="icobtn" title="사진 첨부">📷<input type="file" accept="image/*" data-photo="cmt" data-key="'+key+'" hidden></label>'
-     + '<button class="send" type="submit">등록</button></form>';
+     + '<button class="send" type="submit"'+(fmtReady(key,mode)?'':' disabled')+'>등록</button>'
+     + '</div></form>';
   h += '</div>';
   return h;
 }
 
-function cmtHTML(c, parentId, ctx){
+function cmtHTML(c, parentId, ctx, mode){
   var reps = c.replies||[];
   var rOpen = ui.replyOpen===c.id;
+  var rExp = !!ui.openReplies[c.id];
   var h = '<li class="cmt '+(c.sys?'sys':'')+'">'
         + '<div class="cmt-head"><span class="av xs" style="--c:'+colorOf(c.author)+'">'+esc(initial(c.author))+'</span>'
         + '<b>'+esc(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
+        + (c.st? '<span class="cst" data-st="'+esc(c.st)+'">'+esc(c.st)+'</span>' : '')
         + (c.sys?'':'<button class="replybtn" data-act="reply-open" data-cid="'+c.id+'">답글</button>')+'</div>';
   if(c.text) h += '<p>'+esc(c.text)+'</p>';
   h += photoGrid(c.photos, 'sm');
   if(reps.length){
-    h += '<ul class="replies">';
-    reps.forEach(function(r){
-      h += '<li><span class="rav">↳</span><b>'+esc(r.author)+'</b><span>'+esc(r.text)+'</span><time>'+fmtAt(r.at)+'</time>'
-         + photoGrid(r.photos,'sm')+'</li>';
-    });
-    h += '</ul>';
+    h += '<button class="rep-toggle" data-act="rep-toggle" data-cid="'+c.id+'" aria-expanded="'+(rExp?'true':'false')+'">'
+       + (rExp? '답글 접기 <span class="chev">▴</span>' : '답글 '+reps.length+'개 보기 <span class="chev">▾</span>')
+       + '</button>';
+    if(rExp){
+      h += '<ul class="replies">';
+      reps.forEach(function(r){
+        h += '<li><span class="rav">↳</span><b>'+esc(r.author)+'</b>'
+           + (r.st? '<i class="rst" data-st="'+esc(r.st)+'">'+esc(r.st)+'</i>' : '')
+           + '<span>'+esc(r.text)+'</span><time>'+fmtAt(r.at)+'</time>'
+           + photoGrid(r.photos,'sm')+'</li>';
+      });
+      h += '</ul>';
+    }
   }
   if(rOpen){
-    h += '<form class="cbar reply" data-form="reply" data-id="'+parentId+'" data-cid="'+c.id+'" data-ctx="'+ctx+'">'
-       + '<input name="text" placeholder="'+esc(c.author)+'님에게 답글 남기기" autocomplete="off">'
-       + '<button class="send" type="submit">등록</button>'
-       + '<button class="send ghost" type="button" data-act="reply-close">취소</button></form>';
+    var rk = 'rp:'+c.id;
+    h += '<form class="cbar reply" data-form="reply" data-id="'+parentId+'" data-cid="'+c.id+'" data-ctx="'+ctx+'" data-key="'+rk+'" data-mode="'+mode+'">'
+       + (mode? statusPickHTML(rk, mode) : '')
+       + '<div class="cbar-row">'
+       + '<input name="text" data-draft="'+rk+'" value="'+esc(ui.drafts[rk]||'')+'" placeholder="'+esc(c.author)+'님에게 답글 남기기" autocomplete="off">'
+       + '<button class="send" type="submit"'+(fmtReady(rk,mode)?'':' disabled')+'>등록</button>'
+       + '<button class="send ghost" type="button" data-act="reply-close">취소</button>'
+       + '</div></form>';
   }
   return h+'</li>';
 }
 
 /* ---------- band view ---------- */
 function custMatch(c){
+  if(ui.year!=='all' && String(c.day).slice(0,4)!==ui.year) return false;
+  if(ui.month!=='all' && String(c.day).slice(5,7)!==ui.month) return false;
   if(ui.filter.indexOf('b:')===0){ if(c.bucket!==ui.filter.slice(2)) return false; }
   else if(ui.filter.indexOf('s:')===0){ if(c.status!==ui.filter.slice(2)) return false; }
   if(ui.q){
@@ -1133,16 +1313,76 @@ function custMatch(c){
   }
   return true;
 }
+function periodActive(){ return ui.year!=='all' || ui.month!=='all'; }
+function periodCustomers(){
+  if(!periodActive()) return state.customers.filter(function(c){ return c.day===todayStr(); });
+  return state.customers.filter(function(c){
+    if(ui.year!=='all' && String(c.day).slice(0,4)!==ui.year) return false;
+    if(ui.month!=='all' && String(c.day).slice(5,7)!==ui.month) return false;
+    return true;
+  });
+}
+function periodLabel(){
+  return (ui.year==='all'? '전체 연도' : ui.year+'년') + ' ' + (ui.month==='all'? '전체 월' : (+ui.month)+'월');
+}
+function periodHTML(){
+  var years = {};
+  state.customers.forEach(function(c){ years[String(c.day).slice(0,4)] = 1; });
+  var yl = Object.keys(years).sort().reverse();
+  var months = {};
+  state.customers.forEach(function(c){
+    if(ui.year!=='all' && String(c.day).slice(0,4)!==ui.year) return;
+    months[String(c.day).slice(5,7)] = 1;
+  });
+  var ml = Object.keys(months).sort();
+  var h = '<div class="periodbar"><span class="pb-lbl">📅 기간</span>'
+        + '<label class="psel"><select data-act="fyear" aria-label="연도 선택">'
+        +   '<option value="all"'+(ui.year==='all'?' selected':'')+'>전체 연도</option>'
+        +   yl.map(function(y){ return '<option value="'+y+'"'+(ui.year===y?' selected':'')+'>'+y+'년</option>'; }).join('')
+        + '</select></label>'
+        + '<label class="psel"><select data-act="fmonth" aria-label="월 선택">'
+        +   '<option value="all"'+(ui.month==='all'?' selected':'')+'>전체 월</option>'
+        +   ml.map(function(m){ return '<option value="'+m+'"'+(ui.month===m?' selected':'')+'>'+(+m)+'월</option>'; }).join('')
+        + '</select></label>';
+  if(periodActive()){
+    h += '<button class="pb-on" data-act="period-clear" aria-label="기간 초기화">'+periodLabel()+' 기준 <span class="pb-x">✕</span></button>';
+  }
+  return h+'</div>';
+}
 var SORT_RANK = {'미통화':0,'부재':1,'예약':2,'완료':3};
+var BUCKET_RANK = {'730':0,'550':1,'3년':2};
 function sortCust(a,b){
+  var ba = BUCKET_RANK[a.bucket], bb = BUCKET_RANK[b.bucket];
+  var br = (ba==null?9:ba)-(bb==null?9:bb);
+  if(br) return br;
   var r = (SORT_RANK[a.status]||0)-(SORT_RANK[b.status]||0);
   if(r) return r;
   return String(a.name).localeCompare(String(b.name));
 }
+function lastAtOf(c){
+  var at = c.at||'';
+  (c.comments||[]).forEach(function(x){ if(String(x.at||'')>at) at = String(x.at); });
+  return at;
+}
+function keepList(){
+  return state.customers.filter(function(c){ return c.status==='부재' || c.keep; }).sort(function(a,b){
+    if(a.day!==b.day) return String(b.day).localeCompare(String(a.day));
+    var la = lastAtOf(a), lb = lastAtOf(b);
+    if(la!==lb) return lb.localeCompare(la);
+    return String(a.name).localeCompare(String(b.name));
+  });
+}
+function lastMemoOf(c){
+  var m = String(c.memo||'').trim();
+  if(m) return m;
+  var cs = c.comments||[];
+  for(var i=cs.length-1;i>=0;i--){ if(cs[i].text && !cs[i].sys) return cs[i].text; }
+  return '';
+}
 
 function bandView(){
   var t = todayStr();
-  var todays = state.customers.filter(function(c){return c.day===t;});
+  var todays = periodCustomers();
   var cnt = {};
   STATUSES.forEach(function(s){ cnt[s] = todays.filter(function(c){return c.status===s;}).length; });
   var done = cnt['완료'], total = todays.length;
@@ -1153,10 +1393,22 @@ function bandView(){
 
   var h = '<div class="statstrip">';
   STATUSES.forEach(function(s){
-    h += '<button class="sstat '+(s==='완료'?'done':'')+(ui.filter==='s:'+s?' on':'')+'" data-act="filter" data-f="s:'+s+'">'
+    var cls = (s==='완료'?'done':'');
+    if(s==='미통화' && cnt[s]) cls += ' hot';
+    if(s==='부재' && cnt[s]) cls += ' warm';
+    h += '<button class="sstat '+cls+(ui.filter==='s:'+s?' on':'')+'" data-st="'+s+'" data-act="filter" data-f="s:'+s+'">'
        + '<span>'+s+'</span><b>'+cnt[s]+'</b></button>';
   });
   h += '</div>';
+
+  var keeps = keepList();
+  h += '<button class="keepbar '+(keeps.length?'':'zero')+'" data-act="keep-open">'
+     +   '<span class="kb-ico">📵</span>'
+     +   '<span class="kb-txt"><b>부재중 킵</b><small>부재중·킵 고객만 모아 바로 통화</small></span>'
+     +   '<span class="kb-n">'+keeps.length+'</span>'
+     +   '<span class="kb-go">열기 ›</span></button>';
+
+  h += periodHTML();
 
   h += '<div class="filters">';
   FILTERS.forEach(function(f){
@@ -1197,8 +1449,9 @@ function custRow(c){
   var editing = ui.memoEdit===c.id;
   var ownerOpts = STAFF.map(function(s){ return '<option '+(c.owner===s?'selected':'')+'>'+esc(s)+'</option>'; }).join('')
     + (STAFF.indexOf(c.owner)<0? '<option selected>'+esc(c.owner||'미지정')+'</option>':'');
-  var h = '<div class="cust '+(c.status==='완료'?'is-done':'')+'">';
+  var h = '<div class="cust '+(c.status==='완료'?'is-done':'')+'" data-st="'+esc(c.status)+'">';
   h += '<div class="c-top"><span class="c-name">'+esc(c.name)+'<span class="bk">'+esc(c.bucket)+'</span></span>'
+     +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" title="부재중 킵" aria-label="부재중 킵">📌</button>'
      +   '<button class="st-chip" data-st="'+esc(c.status)+'" data-act="status-menu" data-id="'+c.id+'" aria-label="통화 상태 변경">'+esc(c.status)+'</button>'
      + '</div>';
   h += '<div class="c-mid">'
@@ -1271,6 +1524,48 @@ function custSheetHTML(c){
   return h;
 }
 
+/* ---------- 부재중 킵 sheet ---------- */
+function keepSheetHTML(){
+  var list = keepList();
+  var h = '<p class="keepnote">부재중·킵 고객 <b>'+list.length+'</b>명 · 최신순</p>';
+  if(!list.length){
+    return h + '<div class="emptycard">지금 부재중이거나 킵해둔 고객이 없어요.<br>명단에서 <b>📌</b>를 누르면 여기에 모입니다.</div>';
+  }
+  h += '<div class="klist">';
+  list.forEach(function(c){ h += keepRow(c); });
+  return h + '</div>';
+}
+function keepRow(c){
+  var memo = lastMemoOf(c);
+  var tries = c.tries||0;
+  var editing = ui.keepMemo===c.id;
+  var h = '<div class="krow" data-st="'+esc(c.status)+'">'
+    + '<div class="k-top"><b class="k-name">'+esc(c.name)+'</b>'
+    +   '<span class="bk">'+esc(c.bucket)+'</span>'
+    +   '<span class="k-day">'+fmtDayLabel(c.day)+'</span>'
+    +   (tries? '<span class="k-tries">부재 '+tries+'회</span>' : '')
+    +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" aria-label="킵 고정">📌</button></div>'
+    + '<div class="k-mid">'
+    +   (digits(c.phone)
+          ? '<a class="k-phone" href="tel:'+digits(c.phone)+'">📞 '+esc(maskPhone(c.phone))+'</a>'
+          : '<span class="k-phone quiet">연락처 없음</span>')
+    +   '<span class="st-chip sm" data-st="'+esc(c.status)+'">'+esc(c.status)+'</span></div>';
+  if(editing){
+    h += '<div class="k-edit"><input id="kmemo_'+c.id+'" data-keepmemo="'+c.id+'" value="'+esc(c.memo||'')+'" placeholder="상담 내용·재통화 약속">'
+       + '<button class="mini-ok" data-act="keep-memo-save" data-id="'+c.id+'">저장</button>'
+       + '<button class="mini-x" data-act="keep-memo-cancel" aria-label="취소">✕</button></div>';
+  } else {
+    h += '<button class="k-memo '+(memo?'':'quiet')+'" data-act="keep-memo" data-id="'+c.id+'">'+esc(memo||'메모 추가')+'</button>';
+  }
+  h += '<div class="k-acts">'
+     +   '<button class="kact res" data-act="keep-status" data-id="'+c.id+'" data-st="예약">예약</button>'
+     +   '<button class="kact done" data-act="keep-status" data-id="'+c.id+'" data-st="완료">완료</button>'
+     +   '<button class="kact" data-act="keep-status" data-id="'+c.id+'" data-st="미통화">킵 해제</button>'
+     +   '<button class="kact ghost" data-act="keep-try" data-id="'+c.id+'">＋ 부재 1회</button>'
+     + '</div></div>';
+  return h;
+}
+
 function postMenuHTML(p){
   var h = '<div class="menu-list">';
   if(p.kind==='consult'){
@@ -1324,7 +1619,7 @@ function menuHTML(){
   h += '<button class="menu-item" data-act="reset"><span>초기화<small>샘플 데이터로 되돌리기</small></span><span class="arw">↺</span></button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드<br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v3</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -1452,6 +1747,61 @@ function handleFiles(input){
 }
 
 /* ================= actions ================= */
+function syncFormBtn(form){
+  if(!form) return;
+  var key = form.getAttribute('data-key')||'';
+  var mode = form.getAttribute('data-mode')||'';
+  var btn = form.querySelector('button.send[type="submit"]');
+  if(!btn) return;
+  if(fmtReady(key, mode)) btn.removeAttribute('disabled');
+  else btn.setAttribute('disabled','');
+}
+function applyCustStatus(c, st){
+  if(!c || !st || c.status===st) return false;
+  var prev = c.status;
+  c.status = st;
+  c.comments = c.comments||[];
+  c.comments.push(sysCmt('통화상태 '+prev+' → '+st));
+  return true;
+}
+function keepStatus(id, st){
+  var c = findCust(id);
+  if(!c) return;
+  if(st==='미통화'){
+    if(c.status==='부재') applyCustStatus(c, '미통화');
+    c.keep = false;
+    save(); render();
+    toast('부재중 킵에서 뺐어요');
+    return;
+  }
+  applyCustStatus(c, st);
+  c.keep = false;
+  save(); render();
+  toast(c.name+' · '+st+'으로 넘겼어요');
+}
+function keepTry(id){
+  var c = findCust(id);
+  if(!c) return;
+  var prev = c.status;
+  c.tries = (c.tries||0)+1;
+  c.comments = c.comments||[];
+  if(prev!=='부재'){
+    c.status = '부재';
+    c.comments.push(sysCmt('통화상태 '+prev+' → 부재'));
+  }
+  c.comments.push(sysCmt('부재 통화 '+c.tries+'회차 — 재통화 필요'));
+  save(); render();
+  toast(c.name+' · 부재 '+c.tries+'회 기록');
+}
+function saveKeepMemo(id){
+  var c = findCust(id);
+  if(!c) return;
+  var el = $('kmemo_'+id);
+  if(el) c.memo = String(el.value||'').trim();
+  ui.keepMemo = null;
+  save(); render();
+  toast('메모를 저장했어요');
+}
 function setTab(tab){
   if(ui.tab===tab) return;
   ui.tab = tab;
@@ -1519,6 +1869,8 @@ function resetData(){
   state = seed();
   ui.openThreads = {};
   ui.custThreads = {};
+  ui.openReplies = {};
+  ui.replyOpen = null;
   ui.drafts = {};
   ui.attach = {};
   ui.memoEdit = null;
@@ -1561,6 +1913,9 @@ document.addEventListener('click', function(e){
       ui.filter = (ui.filter===f && f!=='all')? 'all' : f;
       render(); break;
     case 'mask': ui.mask = !ui.mask; render(); toast(ui.mask?'번호를 가렸어요':'번호를 표시해요'); break;
+    case 'period-clear':
+      ui.year = 'all'; ui.month = 'all'; render();
+      toast('기간을 초기화했어요'); break;
     case 'thread-toggle':
       var tid = el.getAttribute('data-id');
       if(ui.openThreads[tid]) delete ui.openThreads[tid]; else ui.openThreads[tid]=true;
@@ -1590,14 +1945,57 @@ document.addEventListener('click', function(e){
       openLB(img.getAttribute('src'));
       break;
     case 'close-lb': closeLB(); break;
-    case 'reply-open': ui.replyOpen = el.getAttribute('data-cid'); render();
+    case 'reply-open':
+      var roc = el.getAttribute('data-cid');
+      ui.replyOpen = roc;
+      ui.openReplies[roc] = true;
+      render();
       setTimeout(function(){
         var f2 = document.querySelector('form[data-form="reply"] input');
         if(f2) try{ f2.focus({preventScroll:true}); }catch(e){}
       }, 60);
       break;
+    case 'rep-toggle':
+      var rtc = el.getAttribute('data-cid');
+      if(ui.openReplies[rtc]) delete ui.openReplies[rtc]; else ui.openReplies[rtc] = true;
+      render(); break;
     case 'reply-close': ui.replyOpen = null; render(); break;
     case 'cust': openSheet({type:'cust', id: el.getAttribute('data-id')}); break;
+    case 'keep-open': openSheet({type:'keep'}); break;
+    case 'keep-toggle':
+      var kc = findCust(el.getAttribute('data-id'));
+      if(kc){
+        kc.keep = !kc.keep; save(); render();
+        toast(kc.keep? kc.name+'님을 부재중 킵에 꽂았어요' : '킵을 해제했어요');
+      }
+      break;
+    case 'keep-status': keepStatus(el.getAttribute('data-id'), el.getAttribute('data-st')); break;
+    case 'keep-try': keepTry(el.getAttribute('data-id')); break;
+    case 'keep-memo':
+      ui.keepMemo = el.getAttribute('data-id'); render();
+      setTimeout(function(){
+        var km = $('kmemo_'+ui.keepMemo);
+        if(km) try{ km.focus({preventScroll:true}); km.setSelectionRange(km.value.length, km.value.length); }catch(e){}
+      }, 60);
+      break;
+    case 'keep-memo-cancel': ui.keepMemo = null; render(); break;
+    case 'keep-memo-save': saveKeepMemo(el.getAttribute('data-id')); break;
+    case 'cmt-st':
+      var sk = el.getAttribute('data-key'), sv = el.getAttribute('data-st-for');
+      if(ui.cmtStatus[sk]===sv) delete ui.cmtStatus[sk]; else ui.cmtStatus[sk] = sv;
+      var curSt = ui.cmtStatus[sk]||'';
+      var sf = el.closest('form');
+      if(sf){
+        var schips = sf.querySelectorAll('.st-chip.sm');
+        for(var si=0; si<schips.length; si++) schips[si].classList.toggle('on', schips[si].getAttribute('data-st-for')===curSt);
+        var stip = sf.querySelector('.stpick-tip');
+        if(stip){
+          if(curSt){ stip.textContent = curSt+' 선택됨'; stip.setAttribute('data-st', curSt); }
+          else { stip.textContent = stip.getAttribute('data-tip')||''; stip.removeAttribute('data-st'); }
+        }
+        syncFormBtn(sf);
+      }
+      break;
     case 'status-menu': openSheet({type:'status', id: el.getAttribute('data-id')}); break;
     case 'status': changeStatus(el.getAttribute('data-id'), el.getAttribute('data-st')); break;
     case 'status-pick':
@@ -1649,11 +2047,31 @@ document.addEventListener('input', function(e){
   if(t.id==='q'){ ui.q = t.value; render(); return; }
   var dk = t.getAttribute && t.getAttribute('data-draft');
   if(dk){ ui.drafts[dk] = t.value; }
+  if(t.name==='text'){
+    var frm = t.closest('form[data-form]');
+    if(frm) syncFormBtn(frm);
+  }
 });
 document.addEventListener('change', function(e){
   var t = e.target;
   if(t.type==='file' && t.getAttribute('data-photo')){ handleFiles(t); return; }
   if(t.id==='cPin'){ ui.composer.pin = !!t.checked; return; }
+  if(t.getAttribute && t.getAttribute('data-act')==='fyear'){
+    ui.year = t.value;
+    if(ui.year!=='all' && ui.month!=='all'){
+      var hasM = state.customers.some(function(c){ return String(c.day).slice(0,4)===ui.year && String(c.day).slice(5,7)===ui.month; });
+      if(!hasM) ui.month = 'all';
+    }
+    render();
+    toast(ui.year==='all'? '전체 연도로 봅니다' : ui.year+'년만 봅니다');
+    return;
+  }
+  if(t.getAttribute && t.getAttribute('data-act')==='fmonth'){
+    ui.month = t.value;
+    render();
+    toast(ui.month==='all'? '전체 월로 봅니다' : (+ui.month)+'월만 봅니다');
+    return;
+  }
   if(t.getAttribute && t.getAttribute('data-act')==='owner'){
     var c = findCust(t.getAttribute('data-id'));
     if(c && c.owner!==t.value){
@@ -1688,26 +2106,39 @@ document.addEventListener('submit', function(e){
     var text = String(fd.get('text')||'').trim();
     var id = f.getAttribute('data-id');
     var ctx = f.getAttribute('data-ctx');
+    var mode = f.getAttribute('data-mode')||'';
+    var fkey = f.getAttribute('data-key') || (ctx+':'+id);
+    var st = ui.cmtStatus[fkey]||'';
     var item = ctx==='cust'? findCust(id) : findPost(id);
     if(!item){ toast('대상을 찾지 못했어요.', true); return; }
+    if(!text && st) text = st;
+    if(mode==='req'){
+      if(!st){ toast('통화 상태를 먼저 골라주세요.', true); return; }
+      if(!text){ toast('상담 내용을 적어주세요.', true); return; }
+    }
 
     if(kind==='cmt'){
-      var key = ctx+':'+id;
-      var photos = ui.attach[key]||[];
+      var photos = ui.attach[fkey]||[];
       if(!text && !photos.length){ toast('내용을 입력해 주세요.', true); return; }
       item.comments = item.comments||[];
-      item.comments.push({id:uid('c'), author:session.staff, at:nowAt(), text:text, photos:photos.slice(), replies:[]});
-      delete ui.drafts[key]; delete ui.attach[key];
-      save(); render(); toast('댓글을 남겼어요');
+      if(ctx==='cust') applyCustStatus(item, st);
+      item.comments.push({id:uid('c'), author:session.staff, at:nowAt(), text:text, st:st, photos:photos.slice(), replies:[]});
+      delete ui.drafts[fkey]; delete ui.attach[fkey]; delete ui.cmtStatus[fkey];
+      save(); render();
+      toast((ctx==='cust'? '통화 기록을 남겼어요' : '댓글을 남겼어요') + (st? ' · '+st : ''));
     } else {
       var cid = f.getAttribute('data-cid');
       var parent = (item.comments||[]).filter(function(c){ return c.id===cid; })[0];
       if(!parent){ toast('댓글을 찾지 못했어요.', true); return; }
       if(!text){ toast('답글 내용을 입력해 주세요.', true); return; }
       parent.replies = parent.replies||[];
-      parent.replies.push({id:uid('r'), author:session.staff, at:nowAt(), text:text, photos:[]});
+      if(ctx==='cust') applyCustStatus(item, st);
+      parent.replies.push({id:uid('r'), author:session.staff, at:nowAt(), text:text, st:st, photos:[]});
       ui.replyOpen = null;
-      save(); render(); toast('답글을 남겼어요');
+      ui.openReplies[cid] = true;
+      delete ui.drafts[fkey]; delete ui.cmtStatus[fkey];
+      save(); render();
+      toast('답글을 남겼어요' + (st? ' · '+st : ''));
     }
     return;
   }
@@ -1779,6 +2210,11 @@ document.addEventListener('keydown', function(e){
     saveMemo(e.target.getAttribute('data-memo'));
     return;
   }
+  if(e.target && e.target.getAttribute && e.target.getAttribute('data-keepmemo') && e.key==='Enter'){
+    e.preventDefault();
+    saveKeepMemo(e.target.getAttribute('data-keepmemo'));
+    return;
+  }
   if(e.key==='Enter' && e.target && e.target.tagName==='INPUT' && e.target.name==='text'){
     var form = e.target.closest('form[data-form="cmt"],form[data-form="reply"]');
     if(form){ e.preventDefault(); if(form.requestSubmit) form.requestSubmit(); else form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})); }
@@ -1791,7 +2227,11 @@ document.addEventListener('keydown', function(e){
 /* ================= init ================= */
 function registerSW(){
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    navigator.serviceWorker.register('sw.js').catch(function(){});
+    try{
+      navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).then(function(reg){
+        try{ reg.update(); }catch(e){}
+      }).catch(function(){});
+    }catch(e){}
   }
 }
 function init(){
