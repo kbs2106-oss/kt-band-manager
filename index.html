@@ -1562,6 +1562,8 @@ function ledgerApply(){
       c.comments = c.comments || [];
       c.comments.push(ledgerCmt(hit));
       n++;
+    } else if(c.keep){
+      c.keep = false;   /* 개통완료면 부재중 킵에서 빼낸다 */
     }
   });
   (state.posts || []).forEach(function(p){
