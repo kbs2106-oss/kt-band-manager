@@ -2362,7 +2362,7 @@ function dayCard(day){
   var h = '<section class="day" data-day="'+day+'">'
         + '<div class="day-head">'
         +   '<div class="dh-date"><b>'+fmtDayLabel(day)+'</b>'+tag+'</div>'
-        +   '<div class="dh-done '+(left?'':'all-done')+'">'+(left? '남은 <b>'+left+'</b>' : '모두 개통완료')+'</div>'
+        +   '<div class="dh-done '+(left?'':'all-done')+'">'+(left? '남은 <b>'+left+'</b>' : '모두 완료')+'</div>'
         +   '<button class="day-add" data-act="add-cust" data-day="'+day+'" aria-label="이 날짜에 명단 추가">＋</button>'
         + '</div><div class="cust-list">'
         + list.map(custRow).join('')
@@ -2912,7 +2912,7 @@ function updateCounts(){
     var rest = all.length - dn;
     var hd = days[j].querySelector('.dh-done');
     if(hd){
-      hd.innerHTML = rest? '남은 <b>'+rest+'</b>' : '모두 개통완료';
+      hd.innerHTML = rest? '남은 <b>'+rest+'</b>' : '모두 완료';
       hd.classList.toggle('all-done', !rest);
     }
   }
