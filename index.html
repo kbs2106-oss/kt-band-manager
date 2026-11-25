@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.8">
+<meta name="app-version" content="v8.9">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -116,6 +116,14 @@
     border-radius:999px;background:var(--gray-bg);color:var(--sub);font-size:11.5px;font-weight:700}
   .tab .n:empty{display:none}
   .tab.on .n{background:var(--blue-weak);color:var(--blue-deep)}
+  /* v8.9: 전 직원 실시간 공유 표시 — 탭 줄 오른쪽 끝에 작게 */
+  .livechip{margin-left:auto;align-self:center;flex:none;display:inline-flex;align-items:center;gap:5px;
+    height:24px;padding:0 9px;border-radius:999px;background:#E7F6EF;color:#0E7C5A;
+    border:1px solid #C4E9D8;font-size:11.5px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+  .livechip[hidden]{display:none}
+  .livechip.wait{background:var(--gray-bg);color:var(--sub);border-color:#E5E9EF}
+  .livechip.warn{background:#FFF6E5;color:#B45309;border-color:#F5DFAE}
+  @media (max-width:400px){ .livechip{font-size:11px;padding:0 7px} }
 
   /* ---------- layout ---------- */
   .page{max-width:1040px;margin:0 auto;padding:18px 18px 110px;display:grid;grid-template-columns:minmax(0,1fr);gap:28px;align-items:start}
@@ -533,6 +541,9 @@
   .form input::placeholder,.form textarea::placeholder{color:var(--faint);font-weight:500}
   .form input:focus,.form select:focus,.form textarea:focus{outline:none;border-color:var(--blue)}
   .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  /* v8.9(#18595): 확인 창 */
+  .confirmbox{padding:10px 2px 2px}
+  .confirmbox p{margin:0 0 20px;font-size:14.5px;line-height:1.75;color:var(--ink-2);font-weight:600;letter-spacing:-.01em}
   .formfoot{display:flex;gap:8px;margin-top:4px}
   .formfoot .btn{flex:1}
   .hint{font-size:12.5px;color:var(--faint);font-weight:500;line-height:1.6}
@@ -1233,6 +1244,7 @@
     <nav class="tabs" id="tabbar">
       <button class="tab" data-act="tab" data-tab="notice"><span>홈 피드</span> <span class="n" id="t1n"></span></button>
       <button class="tab" data-act="tab" data-tab="band"><span>730 · 550 · 3년</span> <span class="n" id="t2n"></span></button>
+      <span class="livechip" id="liveChip" hidden></span>
     </nav>
     <div class="aban" id="adminBadge" hidden>🔓 관리자 모드 · 화면 캡처 허용 중 <span>10분 뒤 자동 잠금</span></div>
   </header>
@@ -1796,6 +1808,8 @@ function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(state)); }
   catch(e){ toast('저장 공간이 부족해요. 사진을 줄이거나 내보내기 후 초기화해 주세요.', true); }
   custIdxDirty();
+  /* v8.9: 바뀐 칸이 있으면 전 직원 실시간 공유로 곧바로 올린다(0.4초 묶음) */
+  try{ if(typeof syncChanged === 'function') syncChanged(); }catch(e){}
 }
 function findPost(id){ for(var i=0;i<state.posts.length;i++){ if(state.posts[i].id===id) return state.posts[i]; } return null; }
 function sysCmt(text){
@@ -1973,6 +1987,14 @@ function closeLB(){
   if(!sheetSpec) document.body.classList.remove('lock');
 }
 function sheetPanel(){ return document.querySelector('.sheet-panel'); }
+/* v8.9(#18595): [추소][확인] 두 버튼짜리 확인 창 — 이미 완료된 고객의 상태를 바꿀 때 */
+function openConfirm(opts){
+  opts = opts || {};
+  /* 확인 창이 열리면 그 위에 겹쳐 보이던 토스트는 먼저 지운다 */
+  try{ clearTimeout(toastTimer); var t = $('toast'); t.className = 'toast'; t.textContent = ''; }catch(e){}
+  openSheet({type:'confirm', title:opts.title || '확인', msg:opts.msg || '',
+             ok:opts.ok || '확인', cancel:opts.cancel || '추소', onOk:opts.onOk || null});
+}
 function openSheet(spec){
   /* v7: 시트를 열면 저장하지 않은 인라인 메모 수정은 버린다 */
   if(ui.memoEdit || ui.resvMemo || ui.keepMemo){
@@ -2062,6 +2084,12 @@ function renderSheet(){
   } else if(type==='admin'){
     ttl.textContent = '관리자 모드';
     b.innerHTML = adminFormHTML();
+  } else if(type==='confirm'){
+    /* v8.9(#18595): 이미 완료·개통완료인 고객의 상태를 바꿀 때만 나오는 확인 창 */
+    ttl.textContent = sheetSpec.title || '확인';
+    b.innerHTML = '<div class="confirmbox"><p>'+esc(sheetSpec.msg||'')+'</p>'
+      + '<div class="formfoot"><button class="btn primary" type="button" data-act="confirm-ok">'+esc(sheetSpec.ok||'확인')+'</button>'
+      + '<button class="btn ghost" type="button" data-act="confirm-cancel">'+esc(sheetSpec.cancel||'취소')+'</button></div></div>';
   }
   b.scrollTop = sc;
 }
@@ -2103,6 +2131,7 @@ function doLogin(){
   setTimeout(resvNotifyDue, 1200);   /* v8.3 */
   toast(session.staff+'님, 반갑습니다!');
   ledgerSync(false);
+  syncStart();   /* v8.9: 전 직원 실시간 공유 시작 */
 }
 function pressKey(k){}   /* v8.2: 자판 없음 (비밀번호 입력 제거) */
 
@@ -2442,6 +2471,651 @@ function ledgerBadgeHTML(link, auto){
   return '<span class="lk-badge' + (link.back ? ' back' : (auto ? '' : ' off')) + '">🔗 '
     + label + ' (' + esc(when) + ')</span>';
 }
+
+/* ================= realtime sync (v8.9) ================= */
+/* 전 직원 실시간 공유 — 개통장부가 쓰는 공용 Apps Script(Code.gs)에 붙인 숨김 탭 '_밴드공유' 와 주고받습니다.
+   · 직원이 부재·예약·완료·개통완료·부재중 킵·메모·댓글·글쓰기·수정을 하면
+     바뀐 칸만 updatedAt 과 변경자(staff)를 붙여 곧바로 band_push 로 올립니다(연속 변경은 0.4초 묶어서).
+   · 앱을 열 때·화면으로 돌아올 때(focus/visibilitychange) 즉시 band_get,
+     화면을 켜 둔 동안 6.5초마다 since(마지막 서버 시각) 이후 변경분만 받아 화면에 바로 반영합니다.
+   · 칸(고객 상태·메모…) 단위로 최신 것만 반영하므로, 직원 A가 김기*를 완료 누르는 동시에
+     직원 B가 김미*를 부재 눌러도 서로 덮어쓰지 않습니다.
+   · 라이브 Apps Script 가 아직 band_get 을 모르면(구버전) 조용히 로컬 모드로 두고
+     30초마다 다시 확인해, 새 Code.gs 가 배포되는 즉시 자동으로 실시간 공유가 켜집니다. */
+var SYNC_INT = 6500;            /* 켜 둔 동안 변경 확인 간격(ms) */
+var SYNC_IDLE_INT = 30000;      /* 서버가 아직 band_get 을 모를 때 다시 확인하는 간격 */
+var SYNC_TMO = 12000;           /* 요청 제한 시간 */
+var SYNC_PUSH_WAIT = 400;       /* 연속 변경 묶어 보내기 */
+var SYNC_CHUNK = 20;            /* 한 번에 올리는 항목 수 */
+var SYNC_CHUNK_BYTES = 24000;   /* 한 번에 올리는 크기(구글 셀 한 칸 50,000자 보호) */
+var SYNC_SINCE_KEY = 'kt_band_sync_since_v2';
+var SYNC_BASE_KEY = 'kt_band_sync_base_v2';
+
+var sync = {
+  mode: 'off',        /* off(로그인 전) | wait(서버 준비 대기) | live(실시간) */
+  started: false,
+  primed: false,
+  since: 0,
+  skew: 0,            /* 서버 시각 - 이 기기 시각 */
+  map: {},            /* 항목 key → {u, f:{칸:{v,u}}, cm:{댓글id:{u}}, rv:예약지문} */
+  applying: false,
+  pullBusy: false,
+  pushBusy: false,
+  loopT: null,
+  pushT: null,
+  lastAt: 0,
+  lastErr: '',
+  fails: 0,
+  baseSent: false,
+  lastNote: ''
+};
+
+function syncNow(){ return Date.now() + (sync.skew || 0); }
+function syncRec(key){
+  var r = sync.map[key];
+  if(!r) r = sync.map[key] = {u:0, f:{}, cm:{}, rv:null};
+  return r;
+}
+function syncBase(){
+  return LEDGER_URL + (LEDGER_URL.indexOf('?') < 0 ? '?' : '&') + 'pin=' + LEDGER_PIN;
+}
+
+/* ---------- 바뀐 칸만 골라내는 투영(projection) ---------- */
+/* 링크(장부 연동 표시)는 기기마다 장부를 직접 대조해 스스로 채우므로 주고받지 않습니다. */
+function syncCustFields(c){
+  return {
+    day: c.day || '', name: c.name || '', phone: c.phone || '', bucket: c.bucket || '',
+    status: c.status || '미통화', resDate: c.resDate || '', resTime: c.resTime || '',
+    memo: c.memo || '', keep: !!c.keep, tries: +c.tries || 0, owner: c.owner || ''
+  };
+}
+function syncPostFields(p){
+  return {
+    kind: p.kind || '', reserve: !!p.reserve, pinned: !!p.pinned, isNotice: !!p.isNotice,
+    done: !!p.done, title: p.title || '', body: String(p.body || '').slice(0, 12000),
+    author: p.author || '', at: p.at || '', bandPostId: +p.bandPostId || 0, bandUrl: p.bandUrl || ''
+  };
+}
+/* 댓글·답글은 사진(data:)을 빼고 주소(http)만 — 큰 이미지는 폰에만 두고 글로만 공유합니다 */
+function syncPhotos(list){
+  var out = [];
+  (list || []).forEach(function(ph){
+    var src = String((ph && ph.src) || '');
+    if(/^https?:\/\//.test(src) && src.length < 600) out.push({src: src, name: String(ph.name || '').slice(0, 40)});
+  });
+  return out;
+}
+function syncReplies(list){
+  var out = [];
+  (list || []).slice(-20).forEach(function(r){
+    out.push({id: r.id || '', author: r.author || '', at: r.at || '', text: String(r.text || '').slice(0, 2000),
+              st: r.st || '', photos: syncPhotos(r.photos)});
+  });
+  return out;
+}
+function syncCmtPayload(c){
+  if(!c || !c.id) return null;
+  return {
+    id: c.id, author: c.author || '', at: c.at || '', text: String(c.text || '').slice(0, 2000),
+    st: c.st || '', stBy: c.stBy || '', stAt: c.stAt || '', resDate: c.resDate || '', resTime: c.resTime || '',
+    memo: String(c.memo || '').slice(0, 200), sys: !!c.sys,
+    photos: syncPhotos(c.photos), replies: syncReplies(c.replies), u: syncNow()
+  };
+}
+function syncCmtFp(c){
+  return [c.author || '', c.at || '', c.text || '', c.st || '', c.stBy || '', c.stAt || '',
+          c.resDate || '', c.resTime || '', c.memo || '', (c.photos || []).length, (c.replies || []).length].join('\u001f');
+}
+function syncNewCmts(list, rec){
+  var out = [];
+  (list || []).forEach(function(c){
+    if(!c || !c.id) return;
+    if(c.sys && c.author === '장부 연동') return;   /* 장부 자동 표시는 기기마다 스스로 계산 — 중복 방지 */
+    var fp = syncCmtFp(c);
+    var prev = rec.cm[c.id];
+    if(prev && prev.fp === fp) return;
+    var p = syncCmtPayload(c);
+    if(p){ p.fp = fp; out.push(p); }
+  });
+  return out;
+}
+function syncRvKey(list){
+  var out = [];
+  (list || []).slice(-100).forEach(function(r){
+    out.push({id: r.id || '', name: r.name || '', phone: r.phone || '', model: r.model || '',
+              owner: r.owner || '', memo: String(r.memo || '').slice(0, 300), at: r.at || '', done: !!r.done});
+  });
+  return JSON.stringify(out);
+}
+
+/* ---------- 시드 색인 (처음 한 번 기준 올리기에 쓴다) ---------- */
+var SYNC_SEED = null;
+function syncSeedIndex(){
+  if(SYNC_SEED) return SYNC_SEED;
+  var d = seed();
+  var out = {p: {}, c: {}, cust: {}};
+  (d.posts || []).forEach(function(p){
+    var ids = {};
+    (p.comments || []).forEach(function(c){ if(c.id) ids[c.id] = 1; });
+    out.p[p.id] = ids;
+  });
+  (d.customers || []).forEach(function(c){
+    var ids = {};
+    (c.comments || []).forEach(function(x){ if(x.id) ids[x.id] = 1; });
+    out.c[c.id] = ids;
+    out.cust[c.id] = c;
+  });
+  SYNC_SEED = out;
+  return out;
+}
+/* 이 기기에서 실제로 손댄 고객인가 — 시드에 없는 명단이거나, 메모·킵·예약·직원 댓글이 붙은 건 */
+function syncCustTouched(c){
+  if(!c) return false;
+  if(c.keep || c.resDate || c.resTime) return true;
+  if(String(c.memo || '').trim()) return true;
+  var idx = syncSeedIndex();
+  var known = idx.c[c.id];
+  if(!known) return true;                     /* 시드에 없음 = 새로 넣었거나 과거 명단에서 고친 건 */
+  var cs = c.comments || [];
+  for(var i = 0; i < cs.length; i++){
+    if(!cs[i] || !cs[i].id) continue;
+    if(cs[i].sys && cs[i].author === '장부 연동') continue;
+    if(!known[cs[i].id]) return true;
+  }
+  return false;
+}
+
+/* ---------- 기준 올리기(baseline) ---------- */
+/* v8.8까지는 기기마다 따로 저장돼서, 이미 눌러 둔 완료·부재·메모가 서버에 없습니다.
+   실시간 공유가 처음 켜질 때 '시드와 달라진 칸'만 한 번 올려 전 직원 폰을 같은 상태로 맞춥니다. */
+function syncBaseline(){
+  if(sync.baseSent || !state) return;
+  sync.baseSent = true;
+  try{ if(localStorage.getItem(SYNC_BASE_KEY) === '1') return; }catch(e){}
+  var idx = syncSeedIndex(), n = 0;
+  (state.customers || []).forEach(function(c){
+    if(!syncCustTouched(c)) return;
+    var rec = syncRec('c:' + c.id), f = syncCustFields(c), s = idx.cust[c.id];
+    for(var k in f){
+      if(!f.hasOwnProperty(k)) continue;
+      var sv = s ? (k === 'keep' ? !!s.keep : (k === 'tries' ? (+s.tries || 0) : (s[k] == null ? '' : s[k]))) : null;
+      if(s && sv === f[k]) continue;        /* 시드와 같은 값은 올리지 않는다 */
+      delete rec.f[k];
+    }
+    var known = idx.c[c.id] || {};
+    (c.comments || []).forEach(function(cm){
+      if(cm.id && !known[cm.id] && !(cm.sys && cm.author === '장부 연동')) delete rec.cm[cm.id];
+    });
+    n++;
+  });
+  (state.posts || []).forEach(function(p){
+    var rec = syncRec('p:' + p.id), known = idx.p[p.id];
+    if(!known){                             /* 이 기기에서 새로 쓴 글 */
+      var f = syncPostFields(p);
+      for(var k in f){ if(f.hasOwnProperty(k)) delete rec.f[k]; }
+      (p.comments || []).forEach(function(cm){ if(cm.id) delete rec.cm[cm.id]; });
+      rec.rv = null;
+      n++;
+      return;
+    }
+    (p.comments || []).forEach(function(cm){ if(cm.id && !known[cm.id]) delete rec.cm[cm.id]; });
+  });
+  try{ localStorage.setItem(SYNC_BASE_KEY, '1'); }catch(e){}
+  if(n) syncFlush(80);
+}
+
+/* ---------- 이 기기 상태 → 보낼 변경분 ---------- */
+function syncScan(){
+  if(!session || !state || sync.applying) return [];
+  var items = [], now = syncNow();
+  (state.customers || []).forEach(function(c){
+    var rec = syncRec('c:' + c.id), f = syncCustFields(c), ch = null, k;
+    for(k in f){
+      if(!f.hasOwnProperty(k)) continue;
+      var prev = rec.f[k];
+      if(prev && prev.v === f[k]) continue;
+      ch = ch || {};
+      ch[k] = f[k];
+    }
+    var cm = syncNewCmts(c.comments, rec);
+    if(ch || cm.length) items.push({t: 'c', id: c.id, f: ch || {}, cm: cm, u: now});
+  });
+  (state.posts || []).forEach(function(p){
+    var rec = syncRec('p:' + p.id), f = syncPostFields(p), ch = null, k;
+    for(k in f){
+      if(!f.hasOwnProperty(k)) continue;
+      var prev = rec.f[k];
+      if(prev && prev.v === f[k]) continue;
+      ch = ch || {};
+      ch[k] = f[k];
+    }
+    var cm = syncNewCmts(p.comments, rec);
+    var rv = syncRvKey(p.reservations);
+    var rvChanged = (rec.rv !== rv);
+    if(ch || cm.length || rvChanged){
+      var it = {t: 'p', id: p.id, f: ch || {}, cm: cm, u: now};
+      if(rvChanged) it.rv = JSON.parse(rv);
+      items.push(it);
+    }
+  });
+  return items;
+}
+function syncMarkSent(items, at){
+  items.forEach(function(it){
+    var rec = syncRec((it.t === 'c' ? 'c:' : 'p:') + it.id);
+    for(var k in (it.f || {})){
+      if(it.f.hasOwnProperty(k)) rec.f[k] = {v: it.f[k], u: at || syncNow()};
+    }
+    (it.cm || []).forEach(function(c){ if(c && c.id) rec.cm[c.id] = {fp: c.fp, u: at || syncNow()}; });
+    if(it.rv) rec.rv = syncRvKey(it.rv);
+    rec.u = at || syncNow();
+  });
+}
+
+/* ---------- 주고받기 ---------- */
+function syncPostJson(payload){
+  return new Promise(function(resolve, reject){
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var tm = setTimeout(function(){ if(ctrl){ try{ ctrl.abort(); }catch(e){} } }, SYNC_TMO);
+    var opt = {method: 'POST', cache: 'no-store', redirect: 'follow',
+               headers: {'Content-Type': 'text/plain;charset=utf-8'},
+               body: JSON.stringify(payload)};
+    if(ctrl) opt.signal = ctrl.signal;
+    fetch(syncBase(), opt).then(function(res){ return res.text(); }).then(function(text){
+      clearTimeout(tm);
+      var d = null;
+      try{ d = JSON.parse(text); }catch(e){ d = null; }
+      if(d) resolve(d); else reject(new Error('응답을 읽지 못했어요'));
+    }).catch(function(e){ clearTimeout(tm); reject(e); });
+  });
+}
+function syncIsUnknown(msg){
+  return /지원하지\s*않는|unknown_action|band_get|band_push/i.test(String(msg || ''));
+}
+function syncWait(){
+  if(sync.mode === 'live') toast('실시간 공유가 잠시 멈췄어요 — 서버가 준비되면 다시 켜집니다');
+  sync.mode = 'wait';
+  sync.lastErr = '';
+  syncFails(0);
+  syncChip();
+}
+function syncFails(n){
+  sync.fails = n;
+  syncChip();
+}
+function syncFail(msg){
+  sync.lastErr = msg || '연결 실패';
+  sync.fails = (sync.fails || 0) + 1;
+  if(sync.fails > 6){
+    sync.mode = 'wait';                 /* 계속 실패하면 조용히 쉬었다가 다시 */
+    sync.lastErr = '';
+  }
+  syncChip();
+}
+function syncLive(d){
+  var was = sync.mode;
+  sync.mode = 'live';
+  sync.lastErr = '';
+  sync.fails = 0;
+  if(+d.now) sync.skew = (+d.now) - Date.now();
+  syncChip();
+  if(was !== 'live'){
+    try{ console.log('[sync] 실시간 공유 ON'); }catch(e){}
+    if(was !== 'off' && was !== 'wait') toast('전 직원 실시간 공유가 켜졌어요');
+    syncBaseline();
+    syncFlush(250);
+    syncLoop();          /* 대기(30초) 주기로 잡혀 있던 타이머를 실시간(6.5초)으로 */
+  }
+}
+function syncPull(full){
+  if(!session || sync.pullBusy) return Promise.resolve(0);
+  sync.pullBusy = true;
+  var since = full ? 0 : sync.since;
+  var url = syncBase() + '&action=band_get&since=' + since + '&t=' + Date.now();
+  return ledgerFetchJson(url).then(function(d){
+    sync.pullBusy = false;
+    if(!d || d.ok !== true){
+      var msg = (d && (d.error || d.message)) || '연결 실패';
+      if(syncIsUnknown(msg)) syncWait(); else syncFail(msg);
+      return 0;
+    }
+    syncLive(d);
+    if(+d.now) sync.since = +d.now;
+    try{ localStorage.setItem(SYNC_SINCE_KEY, String(sync.since)); }catch(e){}
+    sync.lastAt = Date.now();
+    var items = Array.isArray(d.items) ? d.items : [];
+    var n = items.length ? syncApply(items) : 0;
+    if(n) syncChip();
+    return n;
+  }, function(e){
+    sync.pullBusy = false;
+    syncFail((e && e.message) || '연결 실패');
+    return 0;
+  });
+}
+function syncPush(){
+  if(!session || !state || sync.pushBusy || sync.mode !== 'live') return;
+  var items = syncScan();
+  if(!items.length) return;
+  var chunks = [], cur = [], size = 0;
+  items.forEach(function(it){
+    var s = 0;
+    try{ s = JSON.stringify(it).length; }catch(e){ s = 200; }
+    if(cur.length && (cur.length >= SYNC_CHUNK || size + s > SYNC_CHUNK_BYTES)){ chunks.push(cur); cur = []; size = 0; }
+    cur.push(it); size += s;
+  });
+  if(cur.length) chunks.push(cur);
+  sync.pushBusy = true;
+  var chain = Promise.resolve();
+  chunks.forEach(function(ch){
+    chain = chain.then(function(){
+      return syncPostJson({pin: LEDGER_PIN, action: 'band_push', staff: (session && session.staff) || '', items: ch})
+        .then(function(d){
+          if(!d || d.ok !== true){
+            var msg = (d && (d.error || d.message)) || '저장 실패';
+            if(syncIsUnknown(msg)){ syncWait(); return; }
+            throw new Error(msg);
+          }
+          var at = +d.now ? (+d.now - sync.skew) : syncNow();
+          if(+d.now) sync.skew = (+d.now) - Date.now();
+          syncMarkSent(ch, at);
+          sync.lastAt = Date.now();
+          sync.fails = 0;
+        });
+    });
+  });
+  chain.then(function(){
+    sync.pushBusy = false;
+    syncChip();
+  }, function(e){
+    sync.pushBusy = false;
+    syncFail((e && e.message) || '저장 실패');
+  });
+}
+function syncFlush(delay){
+  clearTimeout(sync.pushT);
+  sync.pushT = setTimeout(syncPush, delay == null ? SYNC_PUSH_WAIT : delay);
+}
+/* 저장(save) 뒤에 부른다 — 바뀐 칸이 있으면 묶어서 곧바로 올린다 */
+function syncChanged(){
+  if(!session || !state || sync.applying || !sync.primed) return;
+  if(sync.mode !== 'live') return;   /* 서버 준비 전에는 기다렸다가 켜질 때 한꺼번에 */
+  syncFlush();
+}
+
+/* ---------- 받은 변경을 화면에 반영 ---------- */
+function syncSetCustField(c, k, v){
+  var cur = c[k];
+  if(k === 'keep' || k === 'tries' || k === 'status' || k === 'owner' ||
+     k === 'memo' || k === 'day' || k === 'name' || k === 'phone' || k === 'bucket' ||
+     k === 'resDate' || k === 'resTime'){
+    if(cur === v) return false;
+    c[k] = v;
+    return true;
+  }
+  return false;
+}
+function syncMergeCmts(arr, list, rec){
+  if(!list || !list.length) return 0;
+  var n = 0;
+  list.forEach(function(rc){
+    if(!rc || !rc.id) return;
+    var cur = null;
+    for(var i = 0; i < arr.length; i++){ if(arr[i] && arr[i].id === rc.id){ cur = arr[i]; break; } }
+    var lr = rec.cm[rc.id];
+    if(lr && lr.u && rc.u && (+rc.u) < (+lr.u)) return;      /* 내가 더 최근에 고친 댓글 */
+    if(!cur){ cur = {id: rc.id, photos: [], replies: []}; arr.push(cur); }
+    ['author', 'at', 'text', 'st', 'stBy', 'stAt', 'resDate', 'resTime', 'memo', 'sys'].forEach(function(k){
+      if(rc[k] !== undefined && rc[k] !== null) cur[k] = rc[k];
+    });
+    if(rc.photos && rc.photos.length) cur.photos = rc.photos;
+    if(rc.replies && rc.replies.length) cur.replies = rc.replies;
+    cur.photos = cur.photos || [];
+    cur.replies = cur.replies || [];
+    rec.cm[rc.id] = {fp: syncCmtFp(cur), u: +rc.u || 0};
+    n++;
+  });
+  return n;
+}
+function syncApplyCust(it){
+  var rec = syncRec('c:' + it.id);
+  var c = null, i, created = false;
+  for(i = 0; i < state.customers.length; i++){ if(state.customers[i].id === it.id){ c = state.customers[i]; break; } }
+  if(!c){
+    if(findCust(it.id)) c = ensureCust(it.id);     /* 과거 명단에서 꺼내 고친 건 */
+    else if(it.f && it.f.name && it.f.day){
+      c = {id: it.id, day: it.f.day, name: it.f.name, phone: it.f.phone || '', bucket: it.f.bucket || '730',
+           owner: it.f.owner || '', status: it.f.status || '미통화', memo: it.f.memo || '',
+           resDate: it.f.resDate || '', resTime: it.f.resTime || '', keep: !!it.f.keep,
+           tries: +it.f.tries || 0, comments: []};
+      state.customers.push(c);
+      custIdxDirty();
+      created = true;
+    }
+    if(!c) return 0;
+  }
+  var n = created ? 1 : 0, u = +it.u || 0, f = it.f || {}, k;
+  for(k in f){
+    if(!f.hasOwnProperty(k)) continue;
+    var prev = rec.f[k];
+    if(prev && prev.u && u && u < prev.u) continue;
+    if(syncSetCustField(c, k, f[k])) n++;
+    rec.f[k] = {v: f[k], u: u};
+  }
+  c.comments = c.comments || [];
+  n += syncMergeCmts(c.comments, it.cm, rec);
+  rec.u = Math.max(rec.u || 0, u);
+  if(n){ custIdxDirty(); }
+  return n;
+}
+function syncApplyPost(it){
+  var rec = syncRec('p:' + it.id);
+  var p = findPost(it.id), created = false;
+  if(!p){
+    var f0 = it.f || {};
+    if(!f0.author && !f0.at) return 0;
+    p = {id: it.id, kind: f0.kind || 'store', pinned: !!f0.pinned, isNotice: f0.isNotice !== false,
+         title: f0.title || '', body: f0.body || '', author: f0.author || '', at: f0.at || nowAt(),
+         done: !!f0.done, reserve: !!f0.reserve, bandPostId: +f0.bandPostId || 0, bandUrl: f0.bandUrl || '',
+         photos: [], comments: [], reservations: []};
+    state.posts.push(p);
+    created = true;
+  }
+  var n = created ? 1 : 0, u = +it.u || 0, f = it.f || {}, k;
+  for(k in f){
+    if(!f.hasOwnProperty(k)) continue;
+    var prev = rec.f[k];
+    if(prev && prev.u && u && u < prev.u) continue;
+    if(p[k] !== f[k]){ p[k] = f[k]; n++; }
+    rec.f[k] = {v: f[k], u: u};
+  }
+  p.comments = p.comments || [];
+  n += syncMergeCmts(p.comments, it.cm, rec);
+  if(it.rv && syncRvKey(p.reservations) !== syncRvKey(it.rv)){
+    p.reservations = it.rv.slice();
+    n++;
+  }
+  if(it.rv) rec.rv = syncRvKey(it.rv);
+  rec.u = Math.max(rec.u || 0, u);
+  return n;
+}
+function syncItemKind(it){
+  var t = String((it && it.t) || '');
+  if(t === 'c' || t === 'cust') return 'c';
+  if(t === 'p' || t === 'post') return 'p';
+  return '';
+}
+function syncApplyItem(it){
+  if(!it || !it.id) return 0;
+  var k = syncItemKind(it);
+  if(k === 'c') return syncApplyCust(it);
+  if(k === 'p') return syncApplyPost(it);
+  return 0;
+}
+function syncNoteOf(it){
+  var who = it.st || '';
+  if(syncItemKind(it) === 'c'){
+    var c = findCust(it.id);
+    var nm = (it.f && it.f.name) || (c && c.name) || '고객';
+    var st = it.f && it.f.status;
+    if(st) return (who ? who + ' · ' : '') + nm + ' ' + stLabel(st);
+    if(it.f && it.f.memo !== undefined) return (who ? who + ' · ' : '') + nm + ' 메모';
+    if(it.f && it.f.resDate !== undefined) return (who ? who + ' · ' : '') + nm + ' 예약';
+    return '';
+  }
+  var p = findPost(it.id);
+  var ttl = (it.f && it.f.title) || (p && p.title) || '';
+  if(it.cm && it.cm.length){ var a = it.cm[it.cm.length - 1]; return (a.author || who) + ' · 댓글' + (ttl ? ' · ' + shortText(ttl, 18) : ''); }
+  if(it.f && it.f.body !== undefined && !p) return (who ? who + ' · ' : '') + '새 글';
+  return '';
+}
+function syncApply(items){
+  var changed = 0, notes = [];
+  sync.applying = true;
+  items.forEach(function(it){
+    try{
+      var n = syncApplyItem(it);
+      if(n > 0){
+        changed += n;
+        var mine = (it.st && session && it.st === session.staff);
+        if(!mine){ var t = syncNoteOf(it); if(t) notes.push(t); }
+      }
+    }catch(e){ try{ console.warn('[sync] 적용 실패', it && it.id, (e && e.message) || e); }catch(e2){} }
+  });
+  sync.applying = false;
+  if(changed){
+    syncAfterApply();
+    if(notes.length){
+      var uniq = [];
+      notes.forEach(function(t){ if(uniq.indexOf(t) < 0) uniq.push(t); });
+      var head = uniq.slice(0, 2).join(' · ');
+      var rest = uniq.length - Math.min(2, uniq.length);
+      toast((rest > 0 ? head + ' 외 ' + rest + '건' : head) + ' 반영');
+    }
+  }
+  return changed;
+}
+/* 화면을 다시 그린다 — 입력 중이면 손대지 않고, 시트가 열려 있으면 그 시트만 갱신 */
+function syncAfterApply(){
+  custIdxDirty();
+  save();
+  if(!$('app') || $('app').hidden) return;
+  var ae = document.activeElement;
+  if(ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return;
+  if(sheetSpec){ renderSheet(); return; }
+  render();
+}
+
+/* ---------- 상태 표시 ---------- */
+function syncChip(){
+  var el = $('liveChip');
+  if(!el) return;
+  var on = !!session && sync.mode === 'live';
+  var txt = on ? '● 실시간' : (sync.mode === 'wait' && sync.lastErr ? '○ 대기' : '');
+  var cls = 'livechip' + (on ? ' on' : ' wait') + (sync.lastErr ? ' warn' : '');
+  var tip = on ? ('전 직원 실시간 공유 중' + (sync.lastErr ? ' · ' + sync.lastErr : '')) : (sync.lastErr || '실시간 공유 준비 중');
+  var sig = txt + '|' + cls + '|' + tip;
+  if(sync.chipSig === sig){ return; }
+  sync.chipSig = sig;
+  el.hidden = !txt;
+  el.className = cls;
+  el.textContent = txt;
+  el.title = tip;
+  if(sheetSpec && sheetSpec.type === 'menu') renderSheet();
+}
+function syncStatusText(){
+  if(sync.mode === 'live'){
+    var m = sync.lastAt ? Math.floor((Date.now() - sync.lastAt) / 1000) : -1;
+    return '켜짐 · 전 직원 변경을 ' + (m < 0 ? '확인 중' : (m < 60 ? m + '초 전' : Math.floor(m / 60) + '분 전') + ' 확인');
+  }
+  if(sync.mode === 'wait'){
+    return sync.lastErr ? ('연결 지연 · ' + sync.lastErr) : '서버 준비 중 · 새 Code.gs 를 배포하면 자동으로 켜져요';
+  }
+  return '로그인하면 시작합니다';
+}
+
+/* ---------- 시작 · 멈춤 · 주기 ---------- */
+function syncStart(){
+  if(!session || !state) return;
+  if(!sync.primed) syncPrime();
+  if(sync.started){ syncWake(); return; }
+  sync.started = true;
+  sync.mode = 'wait';
+  try{ sync.since = parseInt(localStorage.getItem(SYNC_SINCE_KEY) || '0', 10) || 0; }catch(e){ sync.since = 0; }
+  sync.chipEl = $('liveChip');
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden && session) syncWake();
+  });
+  window.addEventListener('focus', function(){ if(session) syncWake(); });
+  window.addEventListener('online', function(){ if(session) syncWake(); });
+  syncPull(sync.since ? false : true);
+  syncLoop();
+}
+function syncWake(){
+  if(!session) return;
+  if(!sync.primed) syncPrime();
+  syncPull(sync.since ? false : true);
+  syncPush();
+}
+function syncLoop(){
+  clearTimeout(sync.loopT);
+  var wait = (sync.mode === 'live' && !sync.lastErr) ? SYNC_INT : SYNC_IDLE_INT;
+  sync.loopT = setTimeout(function(){
+    if(!session){ syncLoop(); return; }
+    if(document.hidden){ syncLoop(); return; }
+    if(sync.mode === 'live'){ syncPull(false); syncPush(); }
+    else syncPull(sync.since ? false : true);
+    syncLoop();
+  }, wait);
+}
+function syncStop(){
+  clearTimeout(sync.loopT);
+  clearTimeout(sync.pushT);
+  sync.loopT = null;
+  sync.started = false;
+  sync.mode = 'off';
+  sync.primed = false;
+  sync.map = {};
+  sync.since = 0;
+  syncChip();
+}
+/* 기준값 — 지금 화면 상태를 '이미 아는 값'으로 채워 두고, 이후 바뀐 칸만 올린다 */
+function syncPrime(){
+  if(!state) return;
+  sync.map = {};
+  (state.customers || []).forEach(function(c){
+    var r = syncRec('c:' + c.id), f = syncCustFields(c), k;
+    for(k in f){ if(f.hasOwnProperty(k)) r.f[k] = {v: f[k], u: 0}; }
+    (c.comments || []).forEach(function(cm){ if(cm && cm.id) r.cm[cm.id] = {fp: syncCmtFp(cm), u: 0}; });
+  });
+  (state.posts || []).forEach(function(p){
+    var r = syncRec('p:' + p.id), f = syncPostFields(p), k;
+    for(k in f){ if(f.hasOwnProperty(k)) r.f[k] = {v: f[k], u: 0}; }
+    (p.comments || []).forEach(function(cm){ if(cm && cm.id) r.cm[cm.id] = {fp: syncCmtFp(cm), u: 0}; });
+    r.rv = syncRvKey(p.reservations);
+  });
+  sync.primed = true;
+}
+/* 메뉴의 '지금 동기화' */
+function syncNowPush(){
+  if(!session){ toast('로그인하면 실시간 공유가 켜져요'); return; }
+  toast('전 직원 변경을 확인하는 중…');
+  syncPull(sync.since ? false : true).then(function(n){
+    syncPush();
+    if(!n) toast(sync.mode === 'live' ? '최신 상태예요 · 전 직원 실시간 공유 중' : '서버 준비 중이에요');
+  });
+}
+
+/* 진단용 — 앱 콘솔/자동검사에서 실시간 공유 상태를 들여다볼 때 (값을 바꾸지는 않습니다) */
+try{
+  window.__ktBandSync = sync;
+  window.__ktBandSyncPull = syncPull;
+  window.__ktBandSyncState = function(){
+    return {mode:sync.mode, since:sync.since, skew:sync.skew, at:sync.lastAt, err:sync.lastErr,
+            fails:sync.fails, keys:Object.keys(sync.map).length,
+            custs:(state&&state.customers||[]).length, posts:(state&&state.posts||[]).length};
+  };
+}catch(e){}
 
 /* ================= views ================= */
 function viewHTML(){
@@ -2814,10 +3488,11 @@ function reserveBlock(p){
   return h;
 }
 
-/* v5: 글 댓글(1단계)은 고객 상태 선택 가능 · 대댓글은 상태 없이 진행 내용만 */
+/* v5: 고객 시트의 통화 기록만 상태 선택이 필수 · v8.9(#18512): 글(공지·상담) 댓글창은
+   상태 선택 박스를 없애 [입력칸][📷][등록] 한 줄만 남긴다(상태는 댓글 아래 칩으로). */
 function cmtModeOf(item, ctx){
   if(ctx==='cust') return 'req';
-  return 'opt';
+  return '';
 }
 function fmtReady(key, mode){
   var text = String(ui.drafts[key]||'').trim();
@@ -3412,6 +4087,7 @@ function menuHTML(){
   h += '<div class="menu-item static"><span>로그인 직원<small>'+esc(session.staff)+' · '+fmtAt(session.at)+'</small></span></div>';
   h += '<button class="menu-item" data-act="staff-switch"><span>직원 전환<small>다른 직원으로 로그인</small></span><span class="arw">›</span></button>';
   h += '<button class="menu-item" data-act="ledger-sync"><span>🔄 장부 개통 연동<small>'+esc(ledgerSummary())+'</small></span><span class="arw">'+(ledger.busy?'⏳':'↻')+'</span></button>';
+  h += '<button class="menu-item" data-act="sync-now"><span>📡 전 직원 실시간 공유<small>'+esc(syncStatusText())+'</small></span><span class="arw">'+(sync.mode==='live'?'●':'↻')+'</span></button>';
   h += '<button class="menu-item" data-act="arch-load"><span>📚 과거 명단<small>'+esc(archStatusText())+'</small></span><span class="arw">'+(arch.loading?'⏳':'↻')+'</span></button>';
   h += '<button class="menu-item" data-act="export"><span>내보내기<small>글·댓글·명단을 JSON 파일로 저장</small></span><span class="arw">⬇</span></button>';
   h += '<button class="menu-item" data-act="reset"><span>초기화<small>실제 밴드 시드(v8)로 되돌리기</small></span><span class="arw">↺</span></button>';
@@ -3422,7 +4098,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.2</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.9</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -3580,6 +4256,27 @@ function syncFormBtn(form){
   if(fmtReady(key, mode)) btn.removeAttribute('disabled');
   else btn.setAttribute('disabled','');
 }
+/* v8.9(#18627): 상태가 이미 하나 체크돼 있으면(부재·예약·완료·개통완료) 해제·변경 전에 [취소][확인] 확인을 받는다.
+   미통화(아무것도 체크 안 됨) → 부재·완료·개통완료 는 예전처럼 1탭 즉시. */
+function needsDoneConfirm(prev, target){
+  var p = prev || '미통화';
+  if(p === '미통화') return false;
+  return (target || '미통화') !== p;
+}
+
+function needResvAsk(prev){
+  var p = prev || '미통화';
+  return p !== '미통화' && p !== '예약';
+}
+function askDoneChange(name, prev, target, onOk){
+  var label = target ? stLabel(target) : '미통화';
+  openConfirm({
+    title: '상태 변경',
+    msg: (name || '고객') + ' 님은 이미 ' + stLabel(prev || '완료') + ' 상태예요. ' + label + '로 변경할까요?',
+    ok: '확인', cancel: '취소',
+    onOk: onOk
+  });
+}
 function applyCustStatus(c, st){
   if(!c || !st || c.status===st) return false;
   var prev = c.status || '미통화';
@@ -3596,7 +4293,20 @@ function applyCustStatus(c, st){
 function keepStatus(id, st){
   var c = ensureCust(id);
   if(!c) return;
-  if(st==='예약'){ openSheet({type:'resvdate', target:'cust', id:id}); return; }   /* v8.3 */
+  if(st==='예약'){   /* v8.3 */
+    if(needResvAsk(c.status)){ askDoneChange(c.name, c.status, '예약', function(){ openSheet({type:'resvdate', target:'cust', id:id}); }); return; }
+    openSheet({type:'resvdate', target:'cust', id:id});
+    return;
+  }
+  if(needsDoneConfirm(c.status, st)){   /* v8.9(#18627) */
+    askDoneChange(c.name, c.status, st, function(){ keepStatusNow(id, st); });
+    return;
+  }
+  keepStatusNow(id, st);
+}
+function keepStatusNow(id, st){
+  var c = ensureCust(id);
+  if(!c) return;
   if(st==='미통화'){
     if(c.status==='부재') applyCustStatus(c, '미통화');
     c.keep = false;
@@ -3708,9 +4418,25 @@ function setCmtStatus(pid, cid, st, el){
   var c = null;
   (p.comments||[]).forEach(function(x){ if(x.id===cid) c = x; });
   if(!c) return;
-  if(st==='예약'){ openSheet({type:'resvdate', target:'cmt', pid:pid, cid:cid}); return; }   /* v8.3 */
+  if(st==='예약'){   /* v8.3 */
+    if(needResvAsk(c.st)){ askDoneChange(c.author, c.st, '예약', function(){ openSheet({type:'resvdate', target:'cmt', pid:pid, cid:cid}); }); return; }
+    openSheet({type:'resvdate', target:'cmt', pid:pid, cid:cid});
+    return;
+  }
   var target = (c.st===st) ? '' : st;
   if((c.st||'')===target) return;
+  if(needsDoneConfirm(c.st||'', target)){   /* v8.9(#18627) */
+    askDoneChange(c.author, c.st, target, function(){ setCmtStatusNow(pid, cid, target, el); });
+    return;
+  }
+  setCmtStatusNow(pid, cid, target, el);
+}
+function setCmtStatusNow(pid, cid, target, el){
+  var p = findPost(pid);
+  if(!p) return;
+  var c = null;
+  (p.comments||[]).forEach(function(x){ if(x.id===cid) c = x; });
+  if(!c) return;
   c.st = target; c.stBy = session.staff; c.stAt = nowAt();
   if(target !== '예약'){ c.resDate = ''; c.resTime = ''; }   /* v8.4(#17938): 예약 취소 시 날짜·시간도 지운다 */
   save();
@@ -3752,9 +4478,22 @@ function openResvMemo(pid, rid){
 function changeStatus(id, st){
   var c = ensureCust(id);
   if(!c) return false;
-  if(st==='예약'){ openSheet({type:'resvdate', target:'cust', id:id}); return false; }   /* v8.3: 예약은 날짜·시간부터(생성·수정·취소 모두) */
+  if(st==='예약'){   /* v8.3: 예약은 날짜·시간부터(생성·수정·취소 모두) */
+    if(needResvAsk(c.status)){ askDoneChange(c.name, c.status, '예약', function(){ openSheet({type:'resvdate', target:'cust', id:id}); }); return false; }
+    openSheet({type:'resvdate', target:'cust', id:id});
+    return false;
+  }
   /* v8: 같은 칸을 한 번 더 누르면 선택을 풀어 미통화로 */
   var target = (c.status===st && st!=='미통화') ? '미통화' : st;
+  if(needsDoneConfirm(c.status, target)){   /* v8.9(#18627) */
+    askDoneChange(c.name, c.status, target, function(){ changeStatusNow(id, target); });
+    return false;
+  }
+  return changeStatusNow(id, target);
+}
+function changeStatusNow(id, target){
+  var c = ensureCust(id);
+  if(!c) return false;
   if(!applyCustStatus(c, target)) return false;
   save(); render();
   toast(c.name+' · '+stLabel(target));
@@ -3764,8 +4503,21 @@ function changeStatus(id, st){
 function inlineStatus(id, st, el){
   var c = ensureCust(id);
   if(!c) return;
-  if(st==='예약'){ openSheet({type:'resvdate', target:'cust', id:id}); return; }   /* v8.3: 예약은 날짜·시간부터 */
+  if(st==='예약'){   /* v8.3: 예약은 날짜·시간부터 */
+    if(needResvAsk(c.status)){ askDoneChange(c.name, c.status, '예약', function(){ openSheet({type:'resvdate', target:'cust', id:id}); }); return; }
+    openSheet({type:'resvdate', target:'cust', id:id});
+    return;
+  }
   var target = (c.status===st && st!=='미통화') ? '미통화' : st;
+  if(needsDoneConfirm(c.status, target)){   /* v8.9(#18627) */
+    askDoneChange(c.name, c.status, target, function(){ inlineStatusNow(id, target, el); });
+    return;
+  }
+  inlineStatusNow(id, target, el);
+}
+function inlineStatusNow(id, target, el){
+  var c = ensureCust(id);
+  if(!c) return;
   if(!applyCustStatus(c, target)) return;
   save();
   var row = el && el.closest? el.closest('.cust') : null;
@@ -3862,6 +4614,7 @@ function resetData(){
 }
 function logout(){
   setAdmin(false, true);
+  syncStop();
   session = null;
   saveSession(null);
   closeSheet();
@@ -3898,8 +4651,14 @@ document.addEventListener('click', function(e){
     case 'admin': openSheet({type:'admin'}); break;
     case 'admin-off': setAdmin(false); closeSheet(); break;
     case 'close': closeSheet(); break;
+    case 'confirm-ok':
+      var okFn = sheetSpec && sheetSpec.onOk;
+      closeSheet();
+      if(okFn) setTimeout(okFn, 0);
+      break;
+    case 'confirm-cancel': closeSheet(); toast('그대로 두었어요'); break;
     case 'staff-switch':
-      closeSheet(); setAdmin(false, true); session=null; saveSession(null);
+      closeSheet(); setAdmin(false, true); syncStop(); session=null; saveSession(null);
       $('app').hidden = true; $('login').hidden = false;
       clearPin(); renderLogin();
       break;
@@ -3931,6 +4690,7 @@ document.addEventListener('click', function(e){
       ui.feedAll = false;   /* v8.4: 필터를 바꾸면 '더 보기'는 접는다 */
       render(); break;
     case 'ledger-sync': ledgerSync(true); break;
+    case 'sync-now': syncNowPush(); break;
     case 'mask': ui.mask = !ui.mask; render(); toast(ui.mask?'번호를 가렸어요':'번호를 표시해요'); break;
     case 'more-days':
       ui.dayShown = dayLimit() + 10;
@@ -4510,6 +5270,7 @@ function init(){
     render();
     var pi = $('pinInput'); if(pi) try{ pi.blur(); }catch(e){}
     ledgerSync(false);
+    syncStart();   /* v8.9: 전 직원 실시간 공유 — 앱을 열 때 바로 한 번 받아온다 */
     setTimeout(resvNotifyDue, 1200);   /* v8.3: 오늘·지난 예약은 앱을 열 때 한 번 알림 */
   } else {
     $('login').hidden = false;
