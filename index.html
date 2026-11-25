@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.12">
+<meta name="app-version" content="v8.13">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1224,6 +1224,50 @@
     .pst{height:23px;padding:0 7px;font-size:11px}
     .pst b{font-size:11.5px}
   }
+
+  /* ================= v8.13: 댓글 사진(바로 촬영·앨범) · 접힌 카드 바로 댓글 · 고정 배지 ================= */
+  /* 댓글 줄 📷 을 누르면 뜨는 작은 메뉴 — 줄 폭을 늘리지 않는다 */
+  .pmenu{position:fixed;z-index:66;min-width:172px;padding:6px;border-radius:14px;background:#fff;
+    border:1px solid #E3E9F0;box-shadow:0 12px 28px rgba(15,23,42,.18),0 2px 6px rgba(15,23,42,.08);
+    animation:pmIn .12s ease-out}
+  @keyframes pmIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .pmenu button{display:flex;align-items:center;gap:10px;width:100%;height:48px;padding:0 12px;border:0;border-radius:10px;
+    background:none;font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;text-align:left;cursor:pointer}
+  .pmenu button:hover{background:#F5F8FC}
+  .pmenu button:active{background:#EAF0F7}
+  .pmenu button i{font-style:normal;font-size:18px;line-height:1;flex:none}
+
+  /* 접힌 글 카드의 바로 댓글 줄 — 펼친 카드의 입력칸과 같은 높이·모양 */
+  .cbar.qbar{margin-top:4px;padding-bottom:16px}
+  .cbar.qbar input{background:#F5F8FC}
+  .cbar.qbar .send[disabled]{opacity:.38}
+
+  /* '전체' 피드에서도 고정 글임을 알리는 배지 */
+  .pinbadge{flex:none;display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:8px;
+    background:#FFF3D6;color:#8A5B00;font-size:11.5px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+  @media (max-width:400px){
+    .pinbadge{height:22px;padding:0 7px;font-size:11px}
+    .pmenu button{height:46px;font-size:14.5px}
+  }
+
+  /* ================= v8.13: 730·550·3년 고객 카드 메모 — 시인성·터치감 ================= */
+  /* 빈 메모: 연한 테두리 입력 박스(최소 40px) / 적힌 메모: 연노랑 박스 + 진한 글씨 */
+  .c-memo{display:flex;align-items:flex-start;gap:7px;width:100%;min-height:40px;margin-top:4px;
+    padding:9px 11px;border-radius:11px;border:1px solid #F2E3B6;background:#FFF9E8;
+    font-size:14.5px;font-weight:700;line-height:1.45;letter-spacing:-.01em;color:#4A3B12;
+    text-align:left;white-space:normal;overflow:visible;text-overflow:clip;flex:none}
+  .c-memo .c-memo-ic{flex:none;font-size:14px;line-height:1.5}
+  .c-memo .c-memo-t{flex:1;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;white-space:normal;word-break:break-word}
+  .c-memo.empty{background:#F7F9FC;border:1px dashed #C7D2DF;color:#5C6B7F;font-weight:700}
+  .c-memo.empty .c-memo-ic{filter:grayscale(1);opacity:.6}
+  .c-memo:hover{background:#FFF4D6;border-color:#E7CE8C}
+  .c-memo.empty:hover{background:#EEF3F9;border-color:#AEBECD;color:#33414F}
+  .c-memo:active{transform:scale(.995)}
+  .cust.is-done .c-memo.has{color:#4A3B12;opacity:.92}
+  @media (max-width:400px){
+    .c-memo{font-size:14px;min-height:38px;padding:8px 10px}
+  }
 </style>
 </head>
 <body>
@@ -1370,11 +1414,12 @@ function resvTimeLabel(t){
   var hh = h%12; if(!hh) hh = 12;
   return ap+' '+hh+':'+mi;
 }
-/* 예약 표기 — '11/27(오후 2:00)' */
+/* 예약 표기 — '11/27(오후 2:00)'. v8.13: 해가 다르면 '2027-01-05(오전 9:00)' 처럼 연도를 붙인다 */
 function resvText(o){
   if(!o || !o.resDate) return '';
   var s = String(o.resDate);
-  var md = s.slice(5,7)+'/'+s.slice(8,10);
+  var y = s.slice(0,4), cy = String(new Date().getFullYear());
+  var md = (y && y!==cy? y+'-' : '') + s.slice(5,7)+'/'+s.slice(8,10);
   var tt = resvTimeLabel(o.resTime);
   return md + (tt? '('+tt+')' : '');
 }
@@ -1486,12 +1531,15 @@ function fmtAt(at){
   var day=at.slice(0,10), t=at.slice(11,16);
   if(day===todayStr()) return '오늘 '+t;
   if(day===shiftDay(-1)) return '어제 '+t;
-  return day.slice(5,7)+'-'+day.slice(8,10)+' '+t;
+  /* v8.13: 월·일만 보이면 어느 해 글인지 알 수 없어서 연도까지 — '2026-10-01 11:02' */
+  return day + (t? ' '+t : '');
 }
 function fmtDayLabel(day){
   var d=new Date(day+'T00:00:00');
   var w='일월화수목금토'[d.getDay()];
-  return (+day.slice(5,7))+'월 '+(+day.slice(8,10))+'일 ('+w+')';
+  /* v8.13: 해가 다르면 연도를 붙인다 */
+  var y=String(day||'').slice(0,4), cy=String(new Date().getFullYear());
+  return (y && y!==cy? y+'년 ':'') + (+day.slice(5,7))+'월 '+(+day.slice(8,10))+'일 ('+w+')';
 }
 function digits(p){ return String(p||'').replace(/[^0-9]/g,''); }
 function maskPhone(p){
@@ -3118,10 +3166,10 @@ function viewHTML(){
 }
 
 function kindChips(){
-  /* v8.4(#17808): 전체 | 매장 공지 | 상담 | 사전예약 */
+  /* v8.13: v8.4(#17808) '전체 | 매장 공지 | 상담 | 사전예약' → '매장 공지' 칩 제거(전체 | 상담 | 사전예약).
+     기존 매장 공지 글은 '전체'에서 그대로 보인다. */
   var sets = [
     {k:'all', t:'전체'},
-    {k:'notice', t:'매장 공지'},
     {k:'consult', t:'상담'},
     {k:'reserve', t:'사전예약'}
   ];
@@ -3221,7 +3269,7 @@ function noticeView(){
   var feedAllList = state.posts.filter(function(p){
     if(!postMatch(p)) return false;
     if(isTablePost(p)) return false;
-    if(p.pinned && ui.filter==='all') return false;   /* 박스에 이미 뜬 고정 공지는 아래에 또 띄우지 않음 */
+    /* v8.13: 고정 공지도 위 박스에 그대로 두면서 아래 '전체'에서도 빠지지 않고 함께 보인다. */
     return true;
   }).sort(byAtDesc);
   /* v8.4(#17280): '전체'는 최신 6건만 — 나머지는 '더 보기'로 펼친다 */
@@ -3396,6 +3444,7 @@ function postCard(p, opts){
      +   '<div class="who"><div class="wname">'+esc(p.author)+'</div>'
      +     '<div class="wmeta">'+fmtAt(p.at)+'</div></div>'
      +   '<span class="kbadge kb-'+kk+'">'+KIND_META[kk].label+'</span>'
+     +   (p.pinned? '<span class="pinbadge">📌 고정</span>' : '')   /* v8.13: 전체 피드에서도 고정 글임을 표시 */
      +   '<button class="morebtn" data-act="post-menu" data-id="'+p.id+'" aria-label="글 관리">⋯</button>'
      + '</div>';
   if(p.title) h += '<h3 class="post-title">'+esc(p.title)+'</h3>';
@@ -3406,13 +3455,17 @@ function postCard(p, opts){
   h += '<div class="post-actions">'
      +   (opts.sheet
             ? '<span class="act cmt-act static">💬 댓글 <b class="cnt">'+cs.length+'</b></span>'
-            : '<button class="act cmt-act'+(open?' on':'')+'" data-act="thread-toggle" data-id="'+p.id+'" aria-expanded="'+(open?'true':'false')+'">'
-              +     (open? '💬 댓글 접기 <span class="chev">▴</span>'
-                     : (cs.length? '💬 댓글 <b class="cnt">'+cs.length+'</b>개 모두 보기 <span class="chev">▾</span>'
-                                 : '💬 첫 댓글 남기기'))
-              +   '</button>')
+            : (open || cs.length
+                ? '<button class="act cmt-act'+(open?' on':'')+'" data-act="thread-toggle" data-id="'+p.id+'" aria-expanded="'+(open?'true':'false')+'">'
+                  +     (open? '💬 댓글 접기 <span class="chev">▴</span>'
+                           : '💬 댓글 <b class="cnt">'+cs.length+'</b>개 모두 보기 <span class="chev">▾</span>')
+                  +   '</button>'
+                : ''))   /* v8.13: 댓글이 없으면 아래 바로 쓰는 입력칸이 그 자리를 대신한다 */
      +   postStatHTML(p)
      + '</div>';
+  /* v8.13: 접힌 카드에서도 '댓글 모두 보기'를 누르기 전에 바로 댓글·사진을 남길 수 있게 한다.
+     펼친 카드(threadHTML)와 같은 입력 키를 써서 한 상태에서는 입력칸이 하나만 보인다. */
+  if(!opts.sheet && !open) h += quickCmtHTML(p);
   h += threadHTML(p, 'post', open);
   h += '</article>';
   return h;
@@ -3534,9 +3587,43 @@ function cmtModeOf(item, ctx){
 function fmtReady(key, mode){
   var text = String(ui.drafts[key]||'').trim();
   var st = ui.cmtStatus[key]||'';
+  var hasPh = !!(ui.attach[key] && ui.attach[key].length);   /* v8.13: 사진만 찍어도 등록 가능 */
   if(mode==='req') return !!(text && st);
   if(mode==='opt') return !!(text || st);
-  return !!text;
+  return !!(text || hasPh);
+}
+/* v8.13(#카메라): 댓글 줄의 사진 버튼.
+   줄 오른쪽 한 칸(📷)만 그대로 쓰고, 누르면 작은 메뉴로 [바로 촬영]·[앨범에서 선택]을 고른다.
+   → 360px 폰에서도 입력칸이 좁아지지 않고, 촬영은 capture="environment" 로 카메라가 바로 뜬다. */
+function photoBtnHTML(key){
+  return '<button type="button" class="icobtn" data-act="photo-menu" aria-label="사진 첨부" aria-haspopup="menu">📷</button>'
+       + '<input type="file" accept="image/*" capture="environment" data-photo="cmt" data-cap="1"'
+       +  ' data-key="'+esc(key)+'" hidden>'
+       + '<input type="file" accept="image/*" data-photo="cmt" data-cap="0"'
+       +  ' data-key="'+esc(key)+'" hidden>';
+}
+/* 첨부한 사진 미리보기 줄 — 입력칸 아래에서 한 번만 그린다 */
+function attachHTML(key){
+  var att = ui.attach[key]||[];
+  if(!att.length) return '';
+  return '<div class="attach">'+att.map(function(a,i){
+    return '<span class="athumb"><img src="'+esc(a.src)+'" alt="">'
+         + '<button type="button" data-act="attach-del" data-key="'+esc(key)+'" data-i="'+i+'" aria-label="첨부 취소">×</button></span>';
+  }).join('')+'</div>';
+}
+/* v8.13: 접힌 글 카드 — 펼치지 않고 바로 댓글·사진을 남기는 한 줄 */
+function quickCmtHTML(p){
+  var key = 'post:'+p.id;
+  return '<form class="cbar qbar" data-form="cmt" data-id="'+p.id+'" data-ctx="post"'
+       +  ' data-key="'+key+'" data-mode="" data-quick="1">'
+       +  '<div class="cbar-row">'
+       +  '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'"'
+       +  ' placeholder="댓글·사진 남기기" autocomplete="off" enterkeyhint="send">'
+       +  photoBtnHTML(key)
+       +  '<button class="send" type="submit"'+(fmtReady(key,'')?'':' disabled')+'>등록</button>'
+       +  '</div>'
+       +  attachHTML(key)
+       +  '</form>';
 }
 function threadHTML(item, ctx, open){
   if(!open) return '';
@@ -3565,7 +3652,7 @@ function threadHTML(item, ctx, open){
   h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'" data-key="'+key+'" data-mode="'+mode+'">'
      + '<div class="cbar-row">'
      + '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'" placeholder="'+ph+'" autocomplete="off">'
-     + '<label class="icobtn" title="사진 첨부">📷<input type="file" accept="image/*" data-photo="cmt" data-key="'+key+'" hidden></label>'
+     + photoBtnHTML(key)
      + '<button class="send" type="submit"'+(fmtReady(key,mode)?'':' disabled')+'>등록</button>'
      + '</div></form>';
   h += '</div>';
@@ -3608,7 +3695,7 @@ function cmtHTML(c, parentId, ctx, mode){
     h += '<form class="cbar reply" data-form="reply" data-id="'+parentId+'" data-cid="'+c.id+'" data-ctx="'+ctx+'" data-key="'+rk+'" data-mode="">'
        + '<div class="cbar-row">'
        + '<input name="text" data-draft="'+rk+'" value="'+esc(ui.drafts[rk]||'')+'" placeholder="'+esc(c.author)+'님에게 진행 내용 남기기" autocomplete="off">'
-       + '<label class="icobtn" title="사진 첨부">📷<input type="file" accept="image/*" data-photo="cmt" data-key="'+rk+'" hidden></label>'
+       + photoBtnHTML(rk)
        + '<button class="send" type="submit"'+(fmtReady(rk,'')?'':' disabled')+'>등록</button>'
        + '<button class="send ghost" type="button" data-act="reply-close">취소</button>'
        + '</div>'
@@ -3703,7 +3790,7 @@ function flatKeepHTML(mode){
 function cmtAbsentRow(it){
   return '<button class="krow cmtrow" data-act="open-post" data-id="'+esc(it.pid)+'">'
     + '<div class="k-top"><b class="k-name">'+esc(it.name)+'</b><span class="k-src">상담 댓글</span>'
-    +   '<span class="k-day">'+esc(it.at.slice(5,7))+'-'+esc(it.at.slice(8,10))+'</span></div>'
+    +   '<span class="k-day">'+esc(String(it.at||'').slice(0,10))+'</span></div>'
     + '<div class="k-mid"><span class="k-phone quiet">'+esc(it.memo||'부재')+'</span>'
     +   '<span class="st-chip sm" data-st="부재">부재</span></div>'
     + '</button>';
@@ -3944,9 +4031,14 @@ function custRow(c){
   } else {
     h += '<div class="c-bottom"><span class="c-owner">'
        +   '<span class="ownerdot" style="--c:'+colorOf(c.owner)+'"></span>'
-       +   '<select data-act="owner" data-id="'+c.id+'" aria-label="담당자">'+ownerOpts+'</select></span>'
-       +   '<button class="c-memo '+(c.memo?'':'quiet')+'" data-act="memo-edit" data-id="'+c.id+'">'+esc(c.memo||'메모 추가')+'</button>'
-       + '</div>';
+       +   '<select data-act="owner" data-id="'+c.id+'" aria-label="담당자">'+ownerOpts+'</select></span></div>'
+       /* v8.13: 메모를 카드 폭 전체 입력 박스로 — 빈 메모는 연한 테두리 '📝 메모 입력',
+          적힌 메모는 연노랑 박스 + 진한 글씨로 바로 읽히게 한다. */
+       + '<button class="c-memo '+(c.memo?'has':'empty')+'" data-act="memo-edit" data-id="'+c.id+'"'
+       +   ' title="'+esc(c.memo||'메모 입력')+'">'
+       +   '<span class="c-memo-ic">📝</span>'
+       +   '<span class="c-memo-t">'+esc(c.memo||'메모 입력')+'</span>'
+       + '</button>';
   }
   h += '</div>';
   return h;
@@ -4181,6 +4273,7 @@ function resvForm(pid){
 /* ================= render ================= */
 function render(){
   if(!session) return;
+  if(typeof closePhotoMenu==='function') closePhotoMenu();   /* v8.13: 다시 그릴 때 사진 메뉴는 접는다 */
   var y = window.scrollY;
   var activeId = document.activeElement && document.activeElement.id;
   var selStart = null, selEnd = null;
@@ -4278,6 +4371,47 @@ function handleFiles(input){
 }
 
 /* ================= actions ================= */
+
+/* v8.13(#카메라): 댓글 줄의 📷 — 작은 메뉴로 [바로 촬영]·[앨범에서 선택].
+   숨은 file 입력을 그대로 눌러 주므로 안드로이드 APK·브라우저 모두 카메라/앨범이 바로 뜬다. */
+var photoMenu = null, photoMenuForm = null;
+function closePhotoMenu(){
+  if(photoMenu && photoMenu.parentNode) photoMenu.parentNode.removeChild(photoMenu);
+  photoMenu = null; photoMenuForm = null;
+}
+function openPhotoMenu(btn){
+  closePhotoMenu();
+  var form = btn.closest('form');
+  if(!form) return;
+  var menu = document.createElement('div');
+  menu.className = 'pmenu';
+  menu.setAttribute('role', 'menu');
+  menu.innerHTML = '<button type="button" data-act="photo-cap" role="menuitem"><i>📷</i><span>바로 촬영</span></button>'
+                 + '<button type="button" data-act="photo-album" role="menuitem"><i>🖼</i><span>앨범에서 선택</span></button>';
+  document.body.appendChild(menu);
+  photoMenu = menu; photoMenuForm = form;
+  /* 사진 버튼 위에 띄우고(자리가 없으면 아래), 화면 오른쪽 끝을 맞춘다 */
+  var r = btn.getBoundingClientRect();
+  var mw = menu.offsetWidth || 172, mh = menu.offsetHeight || 104;
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var left = Math.max(8, Math.min(vw - mw - 8, r.right - mw));
+  var top = r.top - mh - 8;
+  if(top < 8) top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 8));
+  menu.style.left = Math.round(left) + 'px';
+  menu.style.top = Math.round(top) + 'px';
+}
+function pickPhoto(cap){
+  var form = photoMenuForm;
+  var inp = form ? form.querySelector('input[data-photo][data-cap="'+(cap?'1':'0')+'"]') : null;
+  closePhotoMenu();
+  if(!inp){ toast('사진 버튼을 다시 눌러 주세요.', true); return; }
+  try{ inp.click(); }catch(e){ toast('사진을 열지 못했어요.', true); }
+}
+/* 화면이 움직이면 메뉴는 닫기 (버튼 자리를 따라가지 않도록) */
+window.addEventListener('scroll', function(){ if(photoMenu) closePhotoMenu(); }, true);
+window.addEventListener('resize', function(){ if(photoMenu) closePhotoMenu(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape' && photoMenu) closePhotoMenu(); });
+
 function syncFormBtn(form){
   if(!form) return;
   var key = form.getAttribute('data-key')||'';
@@ -4677,6 +4811,8 @@ document.addEventListener('error', function(e){
 }, true);
 
 document.addEventListener('click', function(e){
+  /* v8.13: 사진 메뉴 밖을 누르면 메뉴를 닫는다 */
+  if(photoMenu && e.target.closest && !e.target.closest('.pmenu') && !e.target.closest('[data-act="photo-menu"]')) closePhotoMenu();
   if((ui.memoEdit || ui.resvMemo || ui.keepMemo)
      && !(e.target.closest && e.target.closest('.c-edit,.rmemo-edit,.k-edit'))){
     cancelInlineEdit();
@@ -4751,6 +4887,9 @@ document.addEventListener('click', function(e){
       var tid = el.getAttribute('data-id');
       if(ui.openThreads[tid]) delete ui.openThreads[tid]; else ui.openThreads[tid]=true;
       render(); break;
+    case 'photo-menu': openPhotoMenu(el); break;
+    case 'photo-cap': pickPhoto(true); break;
+    case 'photo-album': pickPhoto(false); break;
     case 'cmts-toggle':
       var cmk = el.getAttribute('data-key');
       if(ui.openCmts[cmk]) delete ui.openCmts[cmk]; else ui.openCmts[cmk] = true;
@@ -5085,6 +5224,8 @@ document.addEventListener('submit', function(e){
       }
       item.comments.push(ncm);
       ui.openCmts[item.id] = true;
+      /* v8.13: 접힌 카드에서 바로 쓴 댓글도 등록하면 바로 보이게 그 글의 댓글을 펼친다 */
+      if(ctx==='post') ui.openThreads[item.id] = true;
       delete ui.drafts[fkey]; delete ui.attach[fkey]; delete ui.cmtStatus[fkey]; delete ui.cmtRes[fkey];
       save(); render();
       toast((ctx==='cust'? '통화 기록을 남겼어요' : '댓글을 남겼어요') + (st? ' · '+stLabel(st) : ''));
