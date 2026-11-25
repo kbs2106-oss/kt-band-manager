@@ -1051,10 +1051,12 @@
   .nl-title{font-size:15.5px}
 }
   /* ================= v8.3: 생년월일 · 예약 알람 ================= */
-  .c-birth{flex:none;display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 8px;border-radius:8px;
-    background:var(--gray-bg);color:var(--ink-2);font-size:11.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
-  .c-birth em{font-style:normal;font-weight:600;color:var(--hint);font-size:10.5px}
-  .c-birth.none{background:#fff;border:1px dashed var(--line);color:var(--faint);font-weight:600}
+  .c-birth{flex:none;display:inline-flex;align-items:baseline;gap:5px;height:28px;padding:0 9px;border-radius:8px;
+    background:#fff;border:1px solid #C9D3E0;color:#0F172A;font-size:15px;font-weight:700;letter-spacing:-.01em;
+    white-space:nowrap;font-variant-numeric:tabular-nums}
+  /* v8.4(#17833·#17844): 생년월일은 크고 진하게, 만 나이는 옆에 작게 */
+  .c-birth em{font-style:normal;font-size:12px;font-weight:600;color:#64748B;letter-spacing:0}
+  .c-birth.none{background:#fff;border:1px dashed var(--line);color:var(--hint);font-weight:600;font-size:13px}
   .c-resv{display:inline-flex;align-items:center;gap:5px;margin:6px 0 0;padding:4px 9px;border-radius:9px;
     background:#E8F0FE;color:var(--kt-blue);font-size:12px;font-weight:800;letter-spacing:-.01em}
   .c-resv.late{background:var(--no-call-bg);color:var(--no-call-ink)}
@@ -1104,8 +1106,70 @@
   @media (max-width:420px){
     .ra-row{grid-template-columns:auto 1fr;row-gap:4px}
     .ra-phone,.ra-go{font-size:11.5px}
-    .c-birth{font-size:11px;padding:0 7px}
+    .c-birth{font-size:14.5px;padding:0 8px;gap:4px}
+    .c-birth em{font-size:11.5px}
   }
+
+  /* ================= v8.4: 홈 피드 정리(매장 공지·상담·사전예약) ================= */
+  .feedmore{display:block;width:100%;margin:2px 0 6px;padding:13px 12px;border-radius:12px;border:1px solid var(--line);
+    background:#fff;color:var(--kt-blue);font-size:13.5px;font-weight:800;letter-spacing:-.01em}
+  .feedmore:hover{background:#F5F9FF}
+  .cmtbanner{background:#FEF2F2;border:1px solid #FBD5D5}
+  .cmtbanner b{color:#B91C1C}
+  .cmtbanner span b{color:#B91C1C}
+  /* v8.4: 좁은 화면에서 필터 칩 4개가 다 보이게 — '모두 펼치기'는 윗줄 오른쪽으로 */
+  @media (max-width:520px){
+    .feedbar{flex-wrap:wrap;row-gap:6px}
+    .feedbar .filterbar{order:2;flex:1 1 100%;padding-bottom:12px}
+    .feedbar .collapsebtn{order:1;margin-left:auto;height:32px;padding:0 11px;font-size:12px}
+  }
+
+  /* ================= v8.4(#17870): 명단 상단 필터 정리 ================= */
+  .cf-row{display:flex;align-items:center;gap:6px;min-width:0;margin:0 0 8px}
+  .cf-buckets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .cf-status{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+  .cf-row .fchip{width:100%;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 4px;height:36px;font-size:13px;font-weight:700}
+  .cf-status .fchip{font-size:12.5px;letter-spacing:-.02em}
+  .qfull{display:flex;width:100%;flex:none;margin:0 0 14px}
+  .qfull input{width:100%;min-width:0;flex:1;font-size:13.5px}
+  .c-top{gap:7px}
+  .c-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  @media (max-width:420px){
+    .cf-row .fchip{height:34px;font-size:12.5px;padding:0 3px}
+    .cf-status .fchip{font-size:12px}
+  }
+  @media (max-width:340px){
+    .cf-status .fchip{font-size:11.5px;padding:0 2px;letter-spacing:-.03em}
+    .cf-row .fchip{font-size:12px}
+  }
+
+  /* ================= v8.4(#17927): 상태별 바로 보기 목록 ================= */
+  .flathead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:12px 14px;
+    border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .flathead b{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.02em;display:inline-flex;align-items:center;gap:6px}
+  .flathead .n{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 7px;
+    border-radius:999px;background:var(--kt-blue);color:#fff;font-size:12px;font-weight:800}
+  .flathead small{flex:1;min-width:0;font-size:11.5px;font-weight:700;color:var(--hint)}
+  .flatback{flex:none;height:32px;padding:0 11px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    font-size:12.5px;font-weight:800;color:var(--kt-blue)}
+  .resvlist{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  .rrowline{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 10px;width:100%;
+    padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;text-align:left}
+  .rrowline:hover{background:#F7FAFF;border-color:#D5E3F8}
+  .rl-when{font-size:13.5px;font-weight:800;color:var(--kt-blue);white-space:nowrap;letter-spacing:-.01em}
+  .rl-when.late{color:var(--no-call-ink)}
+  .rl-main{display:flex;align-items:baseline;gap:8px;min-width:0}
+  .rl-name{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.02em;display:inline-flex;align-items:center;gap:6px}
+  .rl-phone{font-size:13px;font-weight:700;color:var(--sub);white-space:nowrap}
+  .rl-memo{grid-column:1/-1;font-size:12.5px;font-weight:600;color:var(--hint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rl-late{font-size:11px;font-weight:800;color:var(--no-call-ink);background:var(--no-call-bg);
+    padding:2px 7px;border-radius:7px;white-space:nowrap}
+  .ra-head{width:100%;background:none;border:0;text-align:left;cursor:pointer}
+  .ra-memo{grid-column:1/-1;font-size:11.5px;font-weight:600;color:#B0741F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .krow.cmtrow{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff}
+  .krow.cmtrow .k-top{display:flex;align-items:center;gap:6px}
+  .k-src{flex:none;font-size:10.5px;font-weight:800;color:#B45309;background:#FEF3C7;padding:2px 6px;border-radius:6px}
 </style>
 </head>
 <body>
@@ -1203,7 +1267,7 @@ var ST_BTNS = ['부재','예약','완료','개통완료'];
 var BUCKETS = ['730','550','3년'];
 var STATUS_CLS = {'미통화':'s-mic','부재':'s-busy','예약':'s-res','완료':'s-done','개통완료':'s-open'};
 var STATUS_BAR = {'미통화':'#64748B','부재':'#B45309','예약':'#5B3FC4','완료':'#0E7C5A','개통완료':'#04724D'};
-var KIND_LABEL = {consult:'매장 공지', notice:'매장 공지', memo:'메모', reserve:'사전예약 공지'};
+var KIND_LABEL = {consult:'상담', store:'매장 공지', notice:'매장 공지', memo:'메모', reserve:'사전예약'};   /* v8.4: 상담놓침 → 상담 */
 var STATUS_LABEL = {'미통화':'미통화','부재':'부재','예약':'예약','완료':'완료','개통완료':'개통완료'};
 function stLabel(s){ return STATUS_LABEL[s] || s; }
 function isDoneSt(s){ return s==='완료' || s==='개통완료'; }   /* 처리된 건(통화 완료·개통 완료) */
@@ -1265,12 +1329,12 @@ function resvDueList(){
   var t = todayStr(), out = [];
   (state && state.customers || []).forEach(function(c){
     if(c.status==='예약' && c.resDate && String(c.resDate)<=t)
-      out.push({kind:'cust', id:c.id, name:c.name, phone:c.phone, resDate:c.resDate, resTime:c.resTime});
+      out.push({kind:'cust', id:c.id, name:c.name, phone:c.phone, resDate:c.resDate, resTime:c.resTime, memo:c.memo||''});
   });
   (state && state.posts || []).forEach(function(p){
     (p.comments||[]).forEach(function(cm){
       if(cm.st==='예약' && cm.resDate && String(cm.resDate)<=t)
-        out.push({kind:'cmt', pid:p.id, cid:cm.id, name:cm.author, phone:'', resDate:cm.resDate, resTime:cm.resTime});
+        out.push({kind:'cmt', pid:p.id, cid:cm.id, name:cm.author, phone:'', resDate:cm.resDate, resTime:cm.resTime, memo:cm.memo||''});
     });
   });
   out.sort(function(a,b){ return (a.resDate+(a.resTime||'99:99')).localeCompare(b.resDate+(b.resTime||'99:99')); });
@@ -1399,8 +1463,9 @@ var ui = {
   tab:'notice',
   filter:'all',
   q:'',
-  year:'all',
-  month:'all',
+  /* v8.4(#17884): 명단 탭은 열 때 당월(예: 2026년 11월)로 시작 — 드롭다운에서 전체·과거로 바꿀 수 있다 */
+  year:String(new Date().getFullYear()),
+  month:('0'+(new Date().getMonth()+1)).slice(-2),
   dayShown:6,
   pinOpen:true,
   mask:false,
@@ -1412,6 +1477,7 @@ var ui = {
   cmtStatus:{},
   cmtRes:{},        /* v8.3: 예약 날짜·시간(댓글 작성창) */
   resvAll:false,    /* v8.3: 예약 알람 전체 펼치기 */
+  feedAll:false,    /* v8.4: 홈 피드 '전체'에서 6건 더 보기 */
   keepMemo:null,
   memoEdit:null,
   resvMemo:null,
@@ -1420,7 +1486,7 @@ var ui = {
   phoneOnly:false,
   drafts:{},
   attach:{},
-  composer:{kind:'notice', photos:[], pin:false}
+  composer:{kind:'store', photos:[], pin:false}   /* v8.4: 매장 공지·상담·사전예약 */
 };
 var sheetSpec = null;
 var toastTimer = null;
@@ -1910,7 +1976,7 @@ function renderSheet(){
   if(type==='post'){
     var p = findPost(id);
     if(!p){ closeSheet(); return; }
-    ttl.textContent = p.reserve?'사전예약 공지':((p.isNotice||p.kind==='consult')?'매장 공지':(KIND_LABEL[p.kind]||'글'));
+    ttl.textContent = KIND_LABEL[kindOf(p)] || '글';   /* v8.4: 매장 공지 · 상담 · 사전예약 */
     b.innerHTML = postCard(p, {sheet:true});
   } else if(type==='compose'){
     ttl.textContent = '새 글';
@@ -2150,6 +2216,7 @@ function ledgerApply(){
     /* v8: 장부에서 실개통이 확인된 고객은 '개통완료'(통화만 끝난 '완료'와 구분) */
     if(c.status !== '개통완료'){
       c.status = '개통완료';
+      c.resDate = ''; c.resTime = '';   /* v8.4(#17938): 실제 개통 확인되면 예약 정보는 정리 */
       c.keep = false;
       c.comments = c.comments || [];
       c.comments.push(ledgerCmt(hit));
@@ -2288,9 +2355,11 @@ function viewHTML(){
 }
 
 function kindChips(){
+  /* v8.4(#17808): 전체 | 매장 공지 | 상담 | 사전예약 */
   var sets = [
     {k:'all', t:'전체'},
-    {k:'notice', t:'📢 매장 공지'},
+    {k:'notice', t:'매장 공지'},
+    {k:'consult', t:'상담'},
     {k:'reserve', t:'사전예약'}
   ];
   return sets.map(function(f){
@@ -2299,28 +2368,46 @@ function kindChips(){
 }
 function postMatch(p){
   if(ui.filter==='all') return true;
-  /* v8.2: 매장 공지 = 중요공지 + 일반공지(옛 상담놓침·사전예약 공지 포함) 전부 */
-  if(ui.filter==='notice') return !!p.isNotice;
-  if(ui.filter==='reserve') return !!p.reserve;
-  if(ui.filter==='consult') return p.kind==='consult';
+  if(ui.filter==='noticeall') return !!p.isNotice;          /* 📢 전체 공지 목록 */
+  if(ui.filter==='notice') return kindOf(p)==='notice';      /* 매장 공지 */
+  if(ui.filter==='consult') return kindOf(p)==='consult';    /* 상담(옛 상담건) */
+  if(ui.filter==='reserve') return !!p.reserve;              /* 사전예약 */
   if(ui.filter==='memo') return p.kind==='memo';
   return true;
 }
 function byAtDesc(a,b){ return String(b.at||'').localeCompare(String(a.at||'')); }
+/* v8.4(#17762): 매일 자동 업로드되는 730·550·3년 표 글 — 명단 탭에 이미 있으니 홈 피드에서는 감춥니다.
+   판별: 메모 글 + 본문 첫머리가 730/550/3년/1095 + (본문이 그 조합뿐이거나 표 사진이 붙은 날짜별 업로드) */
+function isTablePost(p){
+  if(!p || p.kind!=='memo') return false;
+  var b = String(p.body||'').trim();
+  if(!/^(730|550|3년|1095)(\s|$)/.test(b)) return false;
+  if(/^(730|550|3년|1095)([\s,·\/+-]*(730|550|3년|1095))*[\s,·\/+-]*$/.test(b)) return true;
+  return !!(p.photos && p.photos.length) && !p.title;
+}
 
 /* ---------- v4: 구분(730/550/3년) 고유 색상 ---------- */
 var BUCKET_CLS = {'730':'b730','550':'b550','3년':'b3y'};
 function bkCls(b){ return BUCKET_CLS[b] || 'b730'; }
 function bkBadge(b){ return '<span class="bk '+bkCls(b)+'">'+esc(b)+'</span>'; }
 
-/* v6: 글 종류별 배지·왼쪽 컬러 바 */
+/* v6: 글 종류별 배지·왼쪽 컬러 바 — v8.4: 사전예약이 아닌 공지는 '상담' */
 var KIND_META = {
-  consult:{label:'매장 공지', short:'공지'},
+  consult:{label:'상담', short:'상담'},
+  store:{label:'매장 공지', short:'공지'},
   notice:{label:'매장 공지', short:'공지'},
   reserve:{label:'사전예약', short:'예약'},
   memo:{label:'메모', short:'메모'}
 };
-function kindOf(p){ return p.reserve? 'reserve' : (p.isNotice? 'notice' : (KIND_META[p.kind]? p.kind : 'memo')); }
+/* v8.4(#17819): 사전예약 글만 '사전예약', 나머지 공지(월별 상담건·550/730 등)는 전부 '상담'.
+   새로 쓰는 매장 공지는 kind 'store' 로 저장한다. */
+function kindOf(p){
+  if(p.reserve) return 'reserve';
+  if(p.kind==='consult') return 'consult';
+  if(p.kind==='store') return 'notice';
+  if(p.isNotice) return 'consult';
+  return KIND_META[p.kind]? p.kind : 'memo';
+}
 
 /* v4: 댓글이 3개 이상이면 2개만 보이고 나머지는 접기 */
 var CMT_FOLD_AT = 3;
@@ -2353,7 +2440,7 @@ function todoBar(){
   var t = todayStr();
   var left = custsOfDay(t).filter(function(c){ return !isDoneSt(c.status); }).length;
   var noCall = custsOfDay(t).filter(function(c){ return c.status==='미통화'; }).length;
-  var keeps = keepList().length;
+  var keeps = absentCount('keep');   /* v8.4(#17983): 최근 3개월 부재·킵 */
   return '<section class="todobar">'
     + '<button class="todo" data-act="tab" data-tab="band">'
     +   '<span>오늘 남은 콜</span><b>'+left+'</b><em>미통화 '+noCall+'</em></button>'
@@ -2363,39 +2450,50 @@ function todoBar(){
 }
 
 function noticeView(){
-  var pinned = state.posts.filter(function(p){ return p.pinned; }).sort(byAtDesc);
+  var pinnedAll = state.posts.filter(function(p){ return p.pinned; }).sort(byAtDesc);
+  var pinned = pinnedAll.slice(0,2);   /* v8.4(#17280): 고정 공지 박스에는 중요공지 2건만 */
   var notices = state.posts.filter(function(p){ return !!p.isNotice; }).sort(byAtDesc);
-  /* v8.2: 기본 피드에는 공지를 빼고 최신 글만 — 공지는 고정 공지 박스와 📢 공지사항 목록에서 본다 */
-  var feed = state.posts.filter(function(p){
+  /* v8.4(#17819): 홈 피드 = 매장 공지 · 상담 · 사전예약만.
+     730·550·3년 일일 표 글은 명단 탭에만 두고 피드에서는 뺀다. */
+  var feedAllList = state.posts.filter(function(p){
     if(!postMatch(p)) return false;
-    if(p.isNotice && ui.filter==='all') return false;
-    if(p.pinned && ui.filter==='all') return false;
+    if(isTablePost(p)) return false;
+    if(p.pinned && ui.filter==='all') return false;   /* 박스에 이미 뜬 고정 공지는 아래에 또 띄우지 않음 */
     return true;
   }).sort(byAtDesc);
+  /* v8.4(#17280): '전체'는 최신 6건만 — 나머지는 '더 보기'로 펼친다 */
+  var FEED_MAX = 6;
+  var canFold = ui.filter==='all' && feedAllList.length > FEED_MAX;
+  var feed = (canFold && !ui.feedAll)? feedAllList.slice(0, FEED_MAX) : feedAllList;
   /* v7: '모두 접기' 대상은 피드 글의 댓글만 — 고정 공지는 자기 '접기' 버튼으로만 접힌다 */
   var openN = state.posts.filter(function(p){ return !!ui.openThreads[p.id]; }).length;
   var anyOpen = openN>0;
   var h = todoBar() + resvAlarmHTML();   /* v8.3: 홈 피드에도 예약 알람 */
   if(pinned.length){
     h += '<section class="noticecard '+(ui.pinOpen?'':'closed')+'">'
-       + '<div class="nc-head"><b><span class="pindot">📌</span>고정 공지<span class="nc-n">'+pinned.length+'</span></b>'
-       + (ui.filter!=='notice'? '<button class="nc-all" data-act="filter" data-f="notice">📢 전체 공지 '+notices.length+'건 ›</button>' : '')
+       + '<div class="nc-head"><b><span class="pindot">📌</span>고정 공지<span class="nc-n">'+pinnedAll.length+'</span></b>'
+       + (ui.filter!=='noticeall'? '<button class="nc-all" data-act="filter" data-f="noticeall">📢 전체 공지 '+notices.length+'건 ›</button>' : '')
        + '<button class="nc-toggle" data-act="pin-toggle" aria-expanded="'+(ui.pinOpen?'true':'false')+'">'
        +   (ui.pinOpen? '접기 <span class="chev">▴</span>' : '펼치기 <span class="chev">▾</span>')+'</button></div>'
        + pinned.map(pinItem).join('')
        + '</section>';
   }
   h += '<div class="feedbar">'
-     +   (ui.filter==='notice' ? '' : '<button class="collapsebtn'+(anyOpen?' on':'')+'" data-act="'+(anyOpen?'collapse-all':'expand-all')+'" aria-label="'+(anyOpen?'모두 접기':'모두 펼치기')+'">'
+     +   (ui.filter==='noticeall' ? '' : '<button class="collapsebtn'+(anyOpen?' on':'')+'" data-act="'+(anyOpen?'collapse-all':'expand-all')+'" aria-label="'+(anyOpen?'모두 접기':'모두 펼치기')+'">'
      +     (anyOpen? '모두 접기 <span class="chev">▴</span>' : '모두 펼치기 <span class="chev">▾</span>')
      +   '</button>')
      +   '<div class="filterbar">'+kindChips()+'</div>'
      + '</div>';
-  if(ui.filter==='notice'){
+  if(ui.filter==='noticeall'){
     h += noticeListHTML(notices);
   } else {
+    var emptyTxt = ui.filter==='all' ? '아직 글이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 첫 글을 남겨보세요.'
+                 : (ui.filter==='consult'? '상담 글이 아직 없어요.' : (ui.filter==='reserve'? '사전예약 글이 아직 없어요.' : '매장 공지가 아직 없어요.'));
     h += '<div class="feed">' + (feed.length? feed.map(function(p){ return postCard(p); }).join('')
-       : '<div class="emptycard">아직 글이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 첫 글을 남겨보세요.</div>') + '</div>';
+       : '<div class="emptycard">'+emptyTxt+'</div>');
+    if(canFold) h += '<button class="feedmore" data-act="feed-all">'
+       + (ui.feedAll? '접기 ▴' : '글 '+(feedAllList.length-FEED_MAX)+'건 더 보기 ▾') + '</button>';
+    h += '</div>';
   }
   return h;
 }
@@ -2413,8 +2511,8 @@ function resvAlarmHTML(){
   var t = todayStr();
   var shown = ui.resvAll? list : list.slice(0,4);
   var h = '<section class="resvalarm" id="resvAlarm">'
-        + '<div class="ra-head"><b>⏰ 예약 알람 <span class="ra-n">'+list.length+'</span></b>'
-        + '<span class="ra-sub">오늘·지난 예약 · 눌러서 바로 통화</span></div>'
+        + '<button class="ra-head" data-act="resv-filter"><b>⏰ 예약 알람 <span class="ra-n">'+list.length+'</span></b>'
+        + '<span class="ra-sub">오늘·지난 예약 · 눌러서 목록 보기 ›</span></button>'
         + '<div class="ra-list">';
   shown.forEach(function(r){
     var late = String(r.resDate) < t;
@@ -2424,6 +2522,7 @@ function resvAlarmHTML(){
        +   '<b class="ra-name">'+esc(r.name||'')+(late? '<i>지남</i>':'')+'</b>'
        +   (r.phone? '<span class="ra-phone">📞 '+esc(maskPhone(r.phone))+'</span>' : '<span class="ra-phone"></span>')
        +   '<span class="ra-go">통화 ›</span>'
+       +   (r.memo? '<span class="ra-memo">📝 '+esc(shortText(r.memo, 44))+'</span>' : '')
        + '</button>';
   });
   h += '</div>';
@@ -2432,22 +2531,25 @@ function resvAlarmHTML(){
 }
 /* 예약 날짜·시간 고르기 시트 — 명단 고객(cust) / 글 댓글(cmt) / 아직 등록 전 댓글(cmtnew) */
 function resvDateHTML(sp){
-  var target = sp.target||'cust', cur = null, who = '', phone = '', curText = '';
+  var target = sp.target||'cust', cur = null, who = '', phone = '', curText = '', curMemo = '';
   if(target==='cust'){
     var c = findCust(sp.id);
     if(!c) return '';
     cur = c; who = (c.name||'고객') + ' · ' + (c.bucket||''); phone = maskPhone(c.phone)||'';
     if(c.status==='예약' && c.resDate) curText = '지금 예약 : ' + resvText(c);
+    curMemo = c.memo || '';
   } else if(target==='cmt'){
     var p = findPost(sp.pid), cm = null;
     (p && p.comments || []).forEach(function(x){ if(x.id===sp.cid) cm = x; });
     if(!cm) return '';
     cur = cm; who = (cm.author||'댓글') + ' · 글 댓글';
     if(cm.st==='예약' && cm.resDate) curText = '지금 예약 : ' + resvText(cm);
+    curMemo = cm.memo || '';
   } else {
     cur = ui.cmtRes[sp.key] || {};
     who = '통화 상태 예약';
     if(cur.resDate) curText = '고른 예약 : ' + resvText(cur);
+    curMemo = cur.memo || '';
   }
   var d = (cur && cur.resDate) || todayStr();
   var tm = (cur && cur.resTime) || '';
@@ -2469,6 +2571,9 @@ function resvDateHTML(sp){
         + '</div>'
         + '<label><span>예약 날짜</span><input type="date" name="date" id="resvDate" value="'+esc(d)+'"></label>'
         + '<label><span>시간 (선택 — 비우면 하루 종일)</span><input type="time" name="time" id="resvTime" value="'+esc(tm)+'"></label>'
+        /* v8.4(#17916): 예약 메모 — 고객 카드·⏰ 예약 알람에도 함께 보인다 */
+        + '<label><span>예약 메모 (선택)</span>'
+        +   '<textarea name="memo" id="resvMemo" rows="2" class="rf-memo" placeholder="예) 오전 10시 재통화 · S26 블랙 견적">'+esc(curMemo)+'</textarea></label>'
         + '<div class="rf-btns">'
         +   '<button class="btn primary lg" type="submit">예약 저장</button>'
         +   (curText? '<button class="rf-cancel" type="button" data-act="resv-clear">예약 취소 (미통화로)</button>' : '')
@@ -2765,7 +2870,73 @@ function dayHasMatch(day){
   for(var i=0;i<list.length;i++){ if(custMatch(list[i])) return true; }
   return false;
 }
+/* v8.4(#17983): 부재는 '오늘 기준 최근 3개월(90일)' 기준 — 명단 고객 + 상담 공지 댓글까지 한 번에 모은다.
+   mode: 'absent' = 부재 상태만 · 'keep' = 부재 + 📌킵(미완료) */
+function absentItems(mode){
+  var cut = shiftDay(-89), out = [];
+  (state.customers||[]).forEach(function(c){
+    var isAbs = c.status==='부재', isKeep = !!c.keep && !isDoneSt(c.status);
+    if(mode==='absent' ? !isAbs : !(isAbs || isKeep)) return;
+    var day = String(c.day||'').slice(0,10), last = String(lastAtOf(c)||'').slice(0,10);
+    var ref = last > day ? last : day;
+    if(ref < cut) return;
+    out.push({kind:'cust', id:c.id, at:ref, name:c.name, phone:c.phone, status:c.status, memo:lastMemoOf(c), c:c});
+  });
+  (state.posts||[]).forEach(function(p){
+    (p.comments||[]).forEach(function(cm){
+      if(cm.st !== '부재') return;
+      var at = String(cm.at||'').slice(0,10);
+      if(!at || at < cut) return;
+      out.push({kind:'cmt', pid:p.id, cid:cm.id, at:at, name:cm.author||'댓글', memo:shortText(cm.text||'', 60)});
+    });
+  });
+  out.sort(function(a,b){ return String(b.at).localeCompare(String(a.at)); });
+  return out;
+}
+function absentCount(mode){ return absentItems(mode||'absent').length; }
+
+/* v8.4(#17927): 상태 스트립·부재중 킵·⏰ 예약 알람을 누르면 작은 창 대신 이 자리에 바로 목록 */
+function flatHeadHTML(icon, title, n, sub){
+  return '<div class="flathead"><b>'+icon+' '+esc(title)+' <span class="n">'+n+'</span></b>'
+       + '<small>'+esc(sub)+'</small>'
+       + '<button class="flatback" data-act="filter" data-f="all">전체 명단 ›</button></div>';
+}
+function flatKeepHTML(mode){
+  var items = absentItems(mode);
+  var h = flatHeadHTML('📵', mode==='absent'?'부재 고객':'부재중 킵', items.length, '최근 3개월 · 명단 + 상담 댓글 · 최신순');
+  if(!items.length) return h + '<div class="emptycard">'+(mode==='absent'?'최근 3개월 부재 건이 없어요.':'최근 3개월 부재중·킵 고객이 없어요.')+'<br>명단에서 <b>📌</b>를 누르면 여기에 모입니다.</div>';
+  return h + '<div class="klist">' + items.map(function(it){ return it.kind==='cust'? keepRow(it.c) : cmtAbsentRow(it); }).join('') + '</div>';
+}
+function cmtAbsentRow(it){
+  return '<button class="krow cmtrow" data-act="open-post" data-id="'+esc(it.pid)+'">'
+    + '<div class="k-top"><b class="k-name">'+esc(it.name)+'</b><span class="k-src">상담 댓글</span>'
+    +   '<span class="k-day">'+esc(it.at.slice(5,7))+'-'+esc(it.at.slice(8,10))+'</span></div>'
+    + '<div class="k-mid"><span class="k-phone quiet">'+esc(it.memo||'부재')+'</span>'
+    +   '<span class="st-chip sm" data-st="부재">부재</span></div>'
+    + '</button>';
+}
+function resvSortKey(o){ return String(o.resDate||'9999-99-99')+(o.resTime||'99:99'); }
+function resvListHTML(){
+  var list = state.customers.filter(function(c){ return c.status==='예약'; })
+    .sort(function(a,b){ return resvSortKey(a).localeCompare(resvSortKey(b)); });
+  var h = flatHeadHTML('⏰', '예약 고객', list.length, '전체 기간 · 예약 날짜·시간 순');
+  if(!list.length) return h + '<div class="emptycard">지금 예약 잡힌 고객이 없어요.<br>명단에서 <b>예약</b>을 누르면 날짜·시간을 골라 바로 여기에 모입니다.</div>';
+  return h + '<div class="resvlist">' + list.map(resvRowHTML).join('') + '</div>';
+}
+function resvRowHTML(c){
+  var late = String(c.resDate||'') < todayStr();
+  return '<button class="rrowline" data-act="cust" data-id="'+c.id+'">'
+    + '<span class="rl-when'+(late?' late':'')+'">'+esc(resvText(c)||'날짜 없음')+'</span>'
+    + '<span class="rl-main"><b class="rl-name">'+esc(c.name)+bkBadge(c.bucket)+'</b>'
+    +   '<span class="rl-phone">'+(digits(c.phone)? '📞 '+esc(maskPhone(c.phone)) : '연락처 없음')+'</span></span>'
+    + (c.memo? '<span class="rl-memo">📝 '+esc(shortText(c.memo, 60))+'</span>' : '')
+    + (late? '<span class="rl-late">지남</span>' : '')
+    + '</button>';
+}
 function custListHTML(){
+  if(ui.filter==='keep') return flatKeepHTML('keep');
+  if(ui.filter==='s:부재') return flatKeepHTML('absent');
+  if(ui.filter==='s:예약') return resvListHTML();
   var days = listDays(custIndex());
   var limit = dayLimit();
   var hits = [], i;
@@ -2775,6 +2946,8 @@ function custListHTML(){
     if(!arch.ready && (ui.year!=='all' || ui.q)){
       return '<div class="emptycard">과거 명단을 불러오는 중이에요…<br>잠시 뒤 다시 보여드릴게요.</div>';
     }
+    if(periodActive()) return '<div class="emptycard">'+esc(periodLabel())+'에 조건에 맞는 명단이 없어요.<br>'
+      + '<button class="linkbtn" data-act="period-clear">전체 기간에서 보기</button></div>';
     return '<div class="emptycard">조건에 맞는 명단이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 고객을 추가해보세요.</div>';
   }
   if(hits.length > limit){
@@ -2803,6 +2976,9 @@ function periodHTML(){
   });
   var yl = Object.keys(years).sort().reverse();
   var ml = Object.keys(months).sort();
+  /* v8.4: 지금 고른 연·월이 자료에 없어도 드롭다운이 비지 않게 목록에 넣어 둔다 */
+  if(ui.year!=='all' && yl.indexOf(ui.year)<0){ yl.push(ui.year); yl.sort().reverse(); }
+  if(ui.month!=='all' && ml.indexOf(ui.month)<0){ ml.push(ui.month); ml.sort(); }
   var h = '<div class="periodbar"><span class="pb-lbl">📅 기간</span>'
         + '<label class="psel"><select data-act="fyear" aria-label="연도 선택">'
         +   '<option value="all"'+(ui.year==='all'?' selected':'')+'>전체 연도</option>'
@@ -2859,6 +3035,7 @@ function bandView(){
   var todays = periodCustomers();
   var cnt = {};
   STATUSES.forEach(function(s){ cnt[s] = todays.filter(function(c){return c.status===s;}).length; });
+  cnt['부재'] = absentCount('absent');   /* v8.4(#17983): 부재는 최근 3개월(명단+상담 댓글) 기준 */
 
   var h = ledgerBar();
   h += resvAlarmHTML();   /* v8.3: 오늘·지난 예약 알람을 맨 위에 따로 */
@@ -2872,8 +3049,8 @@ function bandView(){
   });
   h += '</div>';
 
-  var keeps = keepList();
-  h += '<button class="keepbar '+(keeps.length?'':'zero')+'" data-act="keep-open">'
+  var keeps = absentItems('keep');
+  h += '<button class="keepbar '+(keeps.length?'':'zero')+'" data-act="filter" data-f="keep">'
      +   '<span class="kb-ico">📵</span>'
      +   '<span class="kb-txt"><b>부재중 킵</b><small>부재중·킵 고객만 모아 바로 통화</small></span>'
      +   '<span class="kb-n">'+keeps.length+'</span>'
@@ -2881,16 +3058,16 @@ function bandView(){
 
   h += periodHTML();
 
-  h += '<div class="filters">';
-  FILTERS.forEach(function(f){
+  /* v8.4(#17870): 구분 1줄 · 상태 1줄 · 검색은 맨 아래 풀폭 한 줄 (🔒 버튼 제거) */
+  function fchipHTML(f){
     var bcls = f.k.indexOf('b:')===0? ' '+bkCls(f.k.slice(2)) : '';
-    h += '<button class="fchip'+bcls+' '+(ui.filter===f.k?'on':'')+'" data-act="filter" data-f="'+f.k+'">'+f.t+'</button>';
-  });
-  h += '<div class="ftools">'
-     +   '<label class="qbox">🔍<input id="custSearch" data-q placeholder="이름·번호·생일·메모" value="'+esc(ui.q)+'" autocomplete="off" enterkeyhint="search"></label>'
-     +   '<button class="maskbtn '+(ui.mask?'on':'')+'" data-act="mask" aria-label="번호 가림">'+(ui.mask?'🔓':'🔒')+'</button>'
-     + '</div>';
-  h += '</div>';
+    return '<button class="fchip'+bcls+' '+(ui.filter===f.k?'on':'')+'" data-act="filter" data-f="'+f.k+'">'+f.t+'</button>';
+  }
+  var bucketF = FILTERS.filter(function(f){ return f.k==='all' || f.k.indexOf('b:')===0; });
+  var statusF = FILTERS.filter(function(f){ return f.k.indexOf('s:')===0; });
+  h += '<div class="cf-row cf-buckets">' + bucketF.map(fchipHTML).join('') + '</div>';
+  h += '<div class="cf-row cf-status">' + statusF.map(fchipHTML).join('') + '</div>';
+  h += '<label class="qbox qfull">🔍<input id="custSearch" data-q placeholder="이름 · 번호 · 생일 · 메모 검색" value="'+esc(ui.q)+'" autocomplete="off" enterkeyhint="search"></label>';
 
   h += '<div class="daylist" id="custListBody">'+custListHTML()+'</div>';
   return h;
@@ -2921,7 +3098,11 @@ function custRow(c){
   var ownerOpts = STAFF.map(function(s){ return '<option '+(c.owner===s?'selected':'')+'>'+esc(s)+'</option>'; }).join('')
     + (STAFF.indexOf(c.owner)<0? '<option selected>'+esc(c.owner||'미지정')+'</option>':'');
   var h = '<div class="cust '+(isDoneSt(c.status)?'is-done':'')+'" data-id="'+c.id+'" data-st="'+esc(c.status)+'">';
+  /* v8.4: 생년월일은 이름 줄에 — 날짜는 크게, 만 나이는 옆에 작게 */
   h += '<div class="c-top"><span class="c-name">'+esc(c.name)+bkBadge(c.bucket)+'</span>'
+     +   (function(){ var b = birthISO(c.birth); return b
+            ? '<span class="c-birth" title="생년월일">'+esc(b)+'<em>만 '+birthAge(c.birth)+'세</em></span>'
+            : '<span class="c-birth none" title="장부에 생년월일이 없습니다">생일 없음</span>'; })()
      +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" title="부재중 킵" aria-label="부재중 킵">📌</button>'
      + '</div>';
   /* v8.3: 예약 날짜가 있으면 이름 바로 아래에 한 줄로 — 오늘·지난 예약은 빨갛게 */
@@ -2935,9 +3116,6 @@ function custRow(c){
      +   (digits(c.phone)
             ? '<a class="c-phone" href="tel:'+digits(c.phone)+'">📞 '+esc(maskPhone(c.phone))+'</a>'
             : '<span class="c-phone quiet">연락처 없음</span>')
-     +   (function(){ var b = birthISO(c.birth); return b
-              ? '<span class="c-birth" title="생년월일">🎂 '+esc(b)+' <em>만 '+birthAge(c.birth)+'</em></span>'
-              : '<span class="c-birth none" title="장부에 생년월일이 없습니다">🎂 없음</span>'; })()
      +   '<button class="c-cmt" data-act="cust" data-id="'+c.id+'" aria-label="댓글·통화 기록">💬 '+n+'</button>'
      + '</div>';
   if(editing){
@@ -2959,20 +3137,20 @@ function custRow(c){
 function composerHTML(){
   var cm = ui.composer;
   var isRes = cm.kind==='reserve';
+  var isConsult = cm.kind==='consult';
   var photos = cm.photos||[];
+  /* v8.4(#17808): 글 종류 = 매장 공지 · 상담 · 사전예약 */
   var ph = isRes
     ? '사전예약 안내 문구를 적어주세요.\n예) S26 사전예약 접수 중 — 이름·연락처·희망기종만 남겨주세요. 예약금 없이 접수합니다.'
-    : (cm.kind==='notice' ? '매장 공지 내용을 적어주세요.\n예) 이번 주 토요일 정상 영업합니다.'
-                          : '상담 내용·전달사항을 적어주세요.\n사진을 붙이면 더 빨라요.');
+    : (isConsult ? '상담 내용·전달사항을 적어주세요.\n예) 11월 상담건 — 통화 결과·다음 연락 일정을 남겨주세요.'
+                 : '매장 공지 내용을 적어주세요.\n예) 이번 주 토요일 정상 영업합니다.');
   var h = '<div class="cmp-tabs">'
-        +   [['notice','일반 공지'],['notice+pin','고정 공지'],['reserve','사전예약']].map(function(k){
+        +   [['store','매장 공지'],['consult','상담'],['reserve','사전예약']].map(function(k){
               var kk = k[0];
-              var on = kk==='notice+pin' ? (cm.kind!=='reserve' && !!cm.pin)
-                     : kk==='notice' ? (cm.kind!=='reserve' && !cm.pin)
-                     : (cm.kind==='reserve');
-              return '<button class="fchip '+(on?'on':'')+'" data-act="cmp-kind" data-k="'+kk+'">'+k[1]+'</button>';
+              return '<button class="fchip '+(cm.kind===kk?'on':'')+'" data-act="cmp-kind" data-k="'+kk+'">'+k[1]+'</button>';
             }).join('')
         + '</div>'
+        + (isConsult? '<div class="resvbanner cmtbanner"><b>📞 상담</b><span>통화 결과·전달사항을 남기는 글입니다. 홈 피드 <b>상담</b> 탭에 모입니다.</span></div>' : '')
         + (isRes? '<div class="resvbanner"><b>📢 사전예약 공지</b><span>등록하면 <b>상단 고정 공지</b> + <b>사전예약 탭</b>에 바로 뜹니다. 예약자는 글 안에서 <b>＋ 예약자 추가</b>로 받고 <b>개통 체크</b>로 관리하세요.</span></div>' : '')
         + '<input class="inp inp-title" id="cTitle" data-draft="cmp:title" value="'+esc(ui.drafts['cmp:title']||'')+'" placeholder="'+(isRes?'제목 (선택) — 예) S26 사전예약 접수 중':'제목 (선택)')+'">'
         + '<textarea class="inp" id="cBody" data-draft="cmp:body" rows="7" placeholder="'+ph+'">'+esc(ui.drafts['cmp:body']||'')+'</textarea>'
@@ -3288,6 +3466,8 @@ function applyCustStatus(c, st){
   if(!c || !st || c.status===st) return false;
   var prev = c.status || '미통화';
   c.status = st;
+  /* v8.4(#17938): 예약에서 다른 상태로 바뀌면 예약 날짜·시간을 함께 지운다(알람·예약 목록에서 즉시 빠짐) */
+  if(st !== '예약'){ c.resDate = ''; c.resTime = ''; }
   if(c.link) c.linkOff = (st !== '개통완료');
   c.comments = c.comments || [];
   c.comments.push(sysCmt('통화상태 '+stLabel(prev)+' → '+stLabel(st)));
@@ -3319,6 +3499,7 @@ function keepTry(id){
   c.comments = c.comments||[];
   if(prev!=='부재'){
     c.status = '부재';
+    c.resDate = ''; c.resTime = '';   /* v8.4(#17938): 예약 → 부재면 예약 정보도 정리 */
     if(c.link) c.linkOff = true;
     c.comments.push(sysCmt('통화상태 '+stLabel(prev)+' → 부재'));
   }
@@ -3359,6 +3540,10 @@ function setTab(tab){
   ui.tab = tab;
   ui.filter = 'all';
   ui.dayShown = 6;
+  if(tab==='band'){   /* v8.4(#17884): 명단 탭을 열면 기간을 당월로 */
+    ui.year = String(new Date().getFullYear());
+    ui.month = ('0'+(new Date().getMonth()+1)).slice(-2);
+  }
   render();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -3372,7 +3557,7 @@ function submitPost(){
   var isRes = ui.composer.kind==='reserve';
   if(!body && !photos.length && !title){ toast(isRes? '사전예약 안내 문구를 적어주세요.' : '내용을 입력하거나 사진을 붙여주세요.', true); return; }
   var p = {
-    id: uid('p'), kind: isRes? 'reserve' : (ui.composer.kind||'notice'), pinned: !!ui.composer.pin,
+    id: uid('p'), kind: isRes? 'reserve' : (ui.composer.kind||'store'), pinned: !!ui.composer.pin,
     isNotice: true, title: title, body: body, author: session.staff, at: nowAt(), done:false,
     photos: photos.slice(), comments: []
   };
@@ -3385,7 +3570,7 @@ function submitPost(){
   state.posts.push(p);
   ui.drafts['cmp:title'] = '';
   ui.drafts['cmp:body'] = '';
-  ui.composer = {kind:'notice', photos:[], pin:false};
+  ui.composer = {kind:'store', photos:[], pin:false};
   ui.tab = 'notice';
   save();
   closeSheet();
@@ -3409,6 +3594,7 @@ function setCmtStatus(pid, cid, st, el){
   var target = (c.st===st) ? '' : st;
   if((c.st||'')===target) return;
   c.st = target; c.stBy = session.staff; c.stAt = nowAt();
+  if(target !== '예약'){ c.resDate = ''; c.resTime = ''; }   /* v8.4(#17938): 예약 취소 시 날짜·시간도 지운다 */
   save();
   notifyBridge('댓글 상태 · '+(target? stLabel(target) : '미통화'), (c.author||'댓글')+' · '+shortText(c.text, 40));
   if(!target){ render(); toast('댓글 상태를 미통화로 되돌렸어요'); return; }
@@ -3482,6 +3668,8 @@ function inlineStatus(id, st, el){
       var html = ledgerBadgeHTML(c.link, isOpenSt(target) && !c.linkOff);
       if(lk) lk.outerHTML = html;
     }
+    /* v8.4(#17938): 예약이 풀렸는데 카드에 '⏰ 예약 …' 줄이 남지 않도록 다시 그린다 */
+    if(row.querySelector('.c-resv')){ updateCounts(); render(); toast(c.name+' · '+stLabel(target)); return; }
   }
   updateCounts();
   toast(c.name+' · '+stLabel(target));
@@ -3500,7 +3688,7 @@ function updateCounts(){
   var left = list.filter(function(c){ return !isDoneSt(c.status); }).length;
   var t2 = $('t2n'); if(t2) t2.textContent = left? left : '';
   var kb = document.querySelector('.keepbar .kb-n');
-  if(kb) kb.textContent = keepList().length;
+  if(kb) kb.textContent = absentCount('keep');   /* v8.4(#17983): 최근 3개월 부재·킵 */
   var days = document.querySelectorAll('.day[data-day]');
   for(var j=0;j<days.length;j++){
     var day = days[j].getAttribute('data-day');
@@ -3615,12 +3803,14 @@ document.addEventListener('click', function(e){
         /* v6: '전체'를 누르면 글들의 댓글을 한 번에 접기 (고정 공지는 그대로) */
         ui.filter = 'all';
         ui.dayShown = 6;
+        ui.feedAll = false;
         collapseAll(); render();
         toast('피드 댓글을 모두 접었어요');
         break;
       }
       ui.filter = (ui.filter===f && f!=='all')? 'all' : f;
       ui.dayShown = 6;
+      ui.feedAll = false;   /* v8.4: 필터를 바꾸면 '더 보기'는 접는다 */
       render(); break;
     case 'ledger-sync': ledgerSync(true); break;
     case 'mask': ui.mask = !ui.mask; render(); toast(ui.mask?'번호를 가렸어요':'번호를 표시해요'); break;
@@ -3688,7 +3878,16 @@ document.addEventListener('click', function(e){
       render(); break;
     case 'reply-close': ui.replyOpen = null; render(); break;
     case 'cust': openSheet({type:'cust', id: el.getAttribute('data-id')}); break;
-    case 'keep-open': openSheet({type:'keep'}); break;
+    case 'keep-open':
+      /* v8.4(#17927): 작은 창 대신 명단 탭 아래에 부재중 킵 목록을 바로 */
+      ui.tab = 'band'; ui.filter = 'keep'; render();
+      window.scrollTo({top:0, behavior:'smooth'});
+      break;
+    case 'resv-filter':
+      /* v8.4(#17927): ⏰ 예약 알람 → 명단 탭 아래에 예약 고객 목록(날짜·시간 순) */
+      ui.tab = 'band'; ui.filter = 's:예약'; render();
+      window.scrollTo({top:0, behavior:'smooth'});
+      break;
     case 'keep-toggle':
       var kc = findCust(el.getAttribute('data-id'));
       if(kc){
@@ -3795,11 +3994,13 @@ document.addEventListener('click', function(e){
     case 'cmp-photo-del':
       ui.composer.photos.splice(+el.getAttribute('data-i'),1); render(); break;
     case 'cmp-kind':
+      /* v8.4(#17808): 매장 공지 · 상담 · 사전예약 */
       var nk = el.getAttribute('data-k');
-      if(nk==='notice+pin'){ ui.composer.kind = 'notice'; ui.composer.pin = true; }
-      else if(nk==='notice'){ ui.composer.kind = 'notice'; ui.composer.pin = false; }
-      else if(nk==='reserve'){ ui.composer.kind = 'reserve'; ui.composer.pin = true; }
+      if(nk==='store' || nk==='consult' || nk==='reserve') ui.composer.kind = nk;
+      if(nk==='reserve') ui.composer.pin = true;
       render(); break;
+    case 'feed-all':
+      ui.feedAll = !ui.feedAll; render(); break;
     case 'cmt-status':
       setCmtStatus(el.getAttribute('data-pid'), el.getAttribute('data-cid'), el.getAttribute('data-st'), el);
       break;
@@ -3949,7 +4150,10 @@ document.addEventListener('submit', function(e){
       item.comments = item.comments||[];
       if(ctx==='cust') applyCustStatus(item, st);
       var ncm = {id:uid('c'), author:session.staff, at:nowAt(), text:text, st:st, photos:photos.slice(), replies:[]};
-      if(st==='예약' && rpick && rpick.resDate){ ncm.resDate = rpick.resDate; ncm.resTime = rpick.resTime||''; }
+      if(st==='예약' && rpick && rpick.resDate){
+        ncm.resDate = rpick.resDate; ncm.resTime = rpick.resTime||'';
+        if(rpick.memo){ ncm.memo = rpick.memo; if(ctx==='cust') item.memo = rpick.memo; }
+      }
       item.comments.push(ncm);
       ui.openCmts[item.id] = true;
       delete ui.drafts[fkey]; delete ui.attach[fkey]; delete ui.cmtStatus[fkey]; delete ui.cmtRes[fkey];
@@ -4002,12 +4206,13 @@ document.addEventListener('submit', function(e){
     var rd0 = new FormData(f);
     var rdate = String(rd0.get('date')||'').trim();
     var rtime = String(rd0.get('time')||'').trim();
+    var rmemo = String(rd0.get('memo')||'').trim();   /* v8.4(#17916) */
     var rtgt = f.getAttribute('data-target')||'cust';
     if(!rdate){ toast('예약 날짜를 골라 주세요.', true); return; }
     if(rtime && !/^\d{2}:\d{2}$/.test(rtime)) rtime = '';
     if(rtgt==='cmtnew'){
       var rkey = f.getAttribute('data-key')||'';
-      ui.cmtRes[rkey] = {resDate:rdate, resTime:rtime};
+      ui.cmtRes[rkey] = {resDate:rdate, resTime:rtime, memo:rmemo};
       ui.cmtStatus[rkey] = '예약';   /* 댓글 작성창 칩도 예약으로 켜 둔다 */
       closeSheet(); render();
       toast('예약 · '+resvText({resDate:rdate, resTime:rtime})+' — 댓글을 등록하면 함께 저장돼요');
@@ -4025,6 +4230,7 @@ document.addEventListener('submit', function(e){
     if(!rObj){ toast('대상을 찾지 못했어요.', true); return; }
     var prevSt = rtgt==='cust'? (rObj.status||'미통화') : (rObj.st||'');
     rObj.resDate = rdate; rObj.resTime = rtime;
+    rObj.memo = rmemo;   /* v8.4(#17916): 예약 메모를 고객 카드·댓글 메모로 함께 저장 */
     if(rtgt==='cust'){
       rObj.status = '예약';
       if(rObj.link) rObj.linkOff = true;
