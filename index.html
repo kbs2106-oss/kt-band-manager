@@ -1987,7 +1987,7 @@ function closeLB(){
   if(!sheetSpec) document.body.classList.remove('lock');
 }
 function sheetPanel(){ return document.querySelector('.sheet-panel'); }
-/* v8.9(#18595): [취소][확인] 두 버튼짜리 확인 창 — 이미 완료된 고객의 상태를 바꿀 때 */
+/* v8.9(#18595): [취소][확인] 두 버튼짜리 확인 창 — 이미 체크된 상태(부재·예약·완료·개통완료)를 바꿀 때 */
 function openConfirm(opts){
   opts = opts || {};
   /* 확인 창이 열리면 그 위에 겹쳐 보이던 토스트는 먼저 지운다 */
@@ -2085,7 +2085,7 @@ function renderSheet(){
     ttl.textContent = '관리자 모드';
     b.innerHTML = adminFormHTML();
   } else if(type==='confirm'){
-    /* v8.9(#18595): 이미 완료·개통완료인 고객의 상태를 바꿀 때만 나오는 확인 창 */
+    /* v8.9(#18595): 이미 체크된 상태를 해제·변경할 때만 나오는 확인 창 */
     ttl.textContent = sheetSpec.title || '확인';
     b.innerHTML = '<div class="confirmbox"><p>'+esc(sheetSpec.msg||'')+'</p>'
       + '<div class="formfoot"><button class="btn primary" type="button" data-act="confirm-ok">'+esc(sheetSpec.ok||'확인')+'</button>'
