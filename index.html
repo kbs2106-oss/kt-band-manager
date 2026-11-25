@@ -4042,6 +4042,7 @@ function keepRow(c){
     +   bkBadge(c.bucket)
     +   '<span class="k-day">'+fmtDayLabel(c.day)+'</span>'
     +   (tries? '<span class="k-tries">부재 '+tries+'회</span>' : '')
+    +   (isAdmin()? '<button class="c-del" data-act="cust-del" data-id="'+c.id+'" title="고객 삭제" aria-label="'+esc(c.name)+' 삭제">삭제</button>' : '')
     +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" aria-label="킵 고정">📌</button></div>'
     + '<div class="k-mid">'
     +   (digits(c.phone)
