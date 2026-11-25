@@ -2,7 +2,7 @@
 /* v8.7(#18345): 화면(HTML)은 HTTP 캐시까지 건너뛰고(cache:'no-store') 항상 네트워크에서 새로 받는다.
    GitHub Pages 가 index.html 을 10분(max-age=600) 캐시하기 때문에, 예전에는 한참 전 화면이 떠서
    "수정이 바로 반영되지 않는다"고 느껴졌다. 오프라인일 때만 캐시로 넘어간다. */
-var CACHE = 'kt-band-v8.10';
+var CACHE = 'kt-band-v8.11';
 var CACHE_PREFIX = 'kt-band-';
 var SHELL = [
   './',

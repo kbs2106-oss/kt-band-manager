@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.10">
+<meta name="app-version" content="v8.11">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -998,10 +998,6 @@
   }
 
 /* ===== v8.2 ===== */
-.adminbtn{height:36px;padding:0 11px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink-2);
-  font-size:12.5px;font-weight:800;display:inline-flex;align-items:center;gap:4px;margin-right:6px;white-space:nowrap}
-.adminbtn:hover{border-color:#D5DEE9;background:#F7F9FC}
-.adminbtn:active{transform:scale(.98)}
 .nc-head{gap:8px;flex-wrap:nowrap}
 .nc-all{height:30px;padding:0 10px;border-radius:999px;background:#E8F3FF;color:#1B64DA;border:1px solid #C9E0FF;
   font-size:11.5px;font-weight:800;white-space:nowrap;flex:none}
@@ -1252,7 +1248,6 @@
         </div>
       </div>
       <div class="topacts">
-        <button class="adminbtn" data-act="admin" aria-label="관리자 모드"><span>🔐</span> 관리자</button>
         <button class="who" data-act="menu" aria-label="설정 메뉴">
           <span class="av" id="whoAv" style="--c:#3182F6">김</span>
           <b id="whoName">김태양</b>
@@ -4142,7 +4137,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.9</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.11</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
