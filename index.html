@@ -3014,7 +3014,7 @@ function resvSortKey(o){ return String(o.resDate||'9999-99-99')+(o.resTime||'99:
 /* v8.8(#18395): 예약 목록 = 기간과 무관하게 명단 예약 + 상담 공지 댓글 예약 전부(오늘·지난·미래 12월 등) */
 function resvListHTML(){
   var list = resvAllList();
-  var h = flatHeadHTML('⏰', '예약 고객', list.length, '전체 기간 · 명단 + 상담 댓글 · 예약 날짜·시간 순');
+  var h = flatHeadHTML('⏰', '예약 고객', list.length, '기간 무관 · 명단+댓글 · 날짜순');
   if(!list.length) return h + '<div class="emptycard">지금 예약 잡힌 고객이 없어요.<br>명단에서 <b>예약</b>을 누르면 날짜·시간을 골라 바로 여기에 모입니다.</div>';
   return h + '<div class="resvlist">' + list.map(resvRowItem).join('') + '</div>';
 }
@@ -3023,12 +3023,12 @@ function resvRowItem(it){
   var act = it.kind==='cmt'
     ? ' data-act="resv-go" data-kind="cmt" data-pid="'+esc(it.pid)+'" data-cid="'+esc(it.cid)+'" title="공지 댓글로 열기"'
     : ' data-act="cust" data-id="'+esc(it.id)+'"';
-  var phone = it.kind==='cmt'? (it.ptitle? '상담 댓글 · '+shortText(it.ptitle, 18) : '상담 댓글')
+  var phone = it.kind==='cmt'? (it.ptitle? esc(shortText(it.ptitle, 20)) : '')
                              : (digits(it.phone)? '📞 '+esc(maskPhone(it.phone)) : '연락처 없음');
   return '<button class="rrowline"'+act+'>'
     + '<span class="rl-when'+(late?' late':'')+'">'+esc(resvText(it)||'날짜 없음')+'</span>'
     + '<span class="rl-main"><b class="rl-name">'+esc(it.name||'')+(it.kind==='cust'? bkBadge(it.bucket) : '<span class="k-src">상담 댓글</span>')+'</b>'
-    +   '<span class="rl-phone'+(it.kind==='cmt'?' quiet':'')+'">'+phone+'</span></span>'
+    +   (phone? '<span class="rl-phone'+(it.kind==='cmt'?' quiet':'')+'">'+phone+'</span>' : '')+'</span>'
     + (it.memo? '<span class="rl-memo">📝 '+esc(shortText(it.memo, 60))+'</span>' : '')
     + (late? '<span class="rl-late">지남</span>' : '')
     + '</button>';
@@ -3052,9 +3052,13 @@ function custListHTML(){
     }
     if(periodActive()){
       var rn = resvAllCount();
+      if(rn){
+        return '<div class="emptycard">'+esc(periodLabel())+'엔 명단이 없어요.<br>'
+          + '예약 <b>'+rn+'</b>건은 기간과 상관없이 상단 <b>예약</b> 칸에 모여 있어요.<br>'
+          + '<button class="linkbtn" data-act="resv-filter">⏰ 예약 '+rn+'건 보기</button><br>'
+          + '<button class="linkbtn" data-act="period-clear">전체 기간에서 보기</button></div>';
+      }
       return '<div class="emptycard">'+esc(periodLabel())+'에 조건에 맞는 명단이 없어요.<br>'
-        + (rn? '이 달엔 명단이 없어요 · 예약 <b>'+rn+'</b>건은 상단 <b>예약</b> 칸에서 보세요.<br>'
-             + '<button class="linkbtn" data-act="resv-filter">⏰ 예약 '+rn+'건 보기</button> ' : '')
         + '<button class="linkbtn" data-act="period-clear">전체 기간에서 보기</button></div>';
     }
     return '<div class="emptycard">조건에 맞는 명단이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 고객을 추가해보세요.</div>';
