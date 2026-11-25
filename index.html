@@ -1359,6 +1359,12 @@
     .ra-when{font-size:11.5px;letter-spacing:-.02em}
     .c-resv{font-size:11.5px;padding:4px 8px}
   }
+
+  /* v8.17: 고른 예약 날짜를 한국어로 — '2026년 11월 28일 (토) · 오후 2:00' */
+  .resvform .rf-when{margin:-2px 0 14px;padding:8px 11px;border-radius:10px;background:#E8F0FE;
+    color:var(--kt-blue);font-size:12.5px;font-weight:800;letter-spacing:-.01em;
+    display:flex;align-items:center;gap:6px}
+  .resvform .rf-when::before{content:'📅';font-size:13px;line-height:1}
 </style>
 </head>
 <body>
@@ -3510,6 +3516,7 @@ function resvDateHTML(sp){
         + '</div>'
         + '<label><span>예약 날짜</span><input type="date" name="date" id="resvDate" value="'+esc(d)+'"></label>'
         + '<label><span>시간 (선택 — 비우면 하루 종일)</span><input type="time" name="time" id="resvTime" value="'+esc(tm)+'"></label>'
+        + '<p class="rf-when" id="resvWhen">'+esc(fmtResvWhen(d, tm))+'</p>'
         /* v8.4(#17916): 예약 메모 — 고객 카드·⏰ 예약 알람에도 함께 보인다 */
         + '<label><span>예약 메모 (선택)</span>'
         +   '<textarea name="memo" id="resvMemo" rows="2" class="rf-memo" placeholder="예) 오전 10시 재통화 · S26 블랙 견적">'+esc(curMemo)+'</textarea></label>'
@@ -3521,6 +3528,23 @@ function resvDateHTML(sp){
   return h;
 }
 
+/* v8.17: 고른 예약 날짜를 한국어로 한 줄 — '2026년 11월 28일 (토) · 오후 2:00'.
+   폰 브라우저에 따라 달력 칸이 11/28/2026 처럼 보여도 어느 날인지 바로 알 수 있다. */
+function fmtResvWhen(ds, ts){
+  ds = String(ds||'');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(ds)) return '날짜를 골라 주세요';
+  var dt = new Date(ds+'T00:00:00');
+  var w = '일월화수목금토'[dt.getDay()];
+  var s = ds.slice(0,4)+'년 '+(+ds.slice(5,7))+'월 '+(+ds.slice(8,10))+'일 ('+w+')';
+  var tl = resvTimeLabel(ts);
+  return s + (tl? ' · '+tl : ' · 시간 없음');
+}
+function updateResvWhen(){
+  var el = $('resvWhen');
+  if(!el) return;
+  var d = $('resvDate'), t = $('resvTime');
+  el.textContent = fmtResvWhen(d? d.value : '', t? t.value : '');
+}
 /* v8.17: ⏰ 예약 추가 — 오른쪽 아래 + 로 일반 직원도 예약 고객을 바로 넣는다.
    저장하면 status '예약' 고객이 되어 ⏰ 예약 킵 · 예약 필터 · 예약 알람에 한꺼번에 잡히고,
    실시간 공유(band_push)로 전 직원 폰에도 바로 동기화된다. */
@@ -3549,6 +3573,7 @@ function resvAddForm(){
           return '<button type="button" data-act="resv-tquick" data-time="'+q[1]+'">'+q[0]+'</button>';
         }).join('')
     + '</div>'
+    + '<p class="rf-when" id="resvWhen">'+esc(fmtResvWhen(d, ''))+'</p>'
     + '<label><span>고객명 <b class="req">필수</b></span>'
     +   '<input name="name" required placeholder="예) 홍길동" autocomplete="off"></label>'
     + '<label><span>연락처 <b class="req">필수</b></span>'
@@ -3984,7 +4009,7 @@ function resvSortKey(o){ return String(o.resDate||'9999-99-99')+(o.resTime||'99:
 function resvListHTML(){
   var list = resvAllList();
   var h = flatHeadHTML('⏰', '예약 고객', list.length, '기간 무관 · 날짜순');
-  if(!list.length) return h + '<div class="emptycard">지금 예약 잡힌 고객이 없어요.<br>명단에서 <b>예약</b>을 누르면 날짜·시간을 골라 바로 여기에 모입니다.</div>';
+  if(!list.length) return h + '<div class="emptycard">지금 예약 잡힌 고객이 없어요.<br>오른쪽 아래 <b>＋</b> 로 예약을 바로 넣거나,<br>명단에서 <b>예약</b>을 누르면 날짜·시간을 골라 여기에 모입니다.</div>';
   return h + '<div class="resvlist">' + list.map(resvRowItem).join('') + '</div>';
 }
 function resvRowItem(it){
@@ -5199,6 +5224,7 @@ document.addEventListener('click', function(e){
       if(ri){ ri.value = el.getAttribute('data-date'); }
       var qb = el.parentNode ? el.parentNode.querySelectorAll('button') : [];
       for(var qi=0; qi<qb.length; qi++) qb[qi].classList.toggle('on', qb[qi]===el);
+      updateResvWhen();
       break;
     case 'resv-clear':
       var rc = sheetSpec && sheetSpec.target==='cust'? findCust(sheetSpec.id) : null;
@@ -5257,6 +5283,7 @@ document.addEventListener('click', function(e){
       if(rti){ rti.value = el.getAttribute('data-time')||''; }
       var tqb = el.parentNode ? el.parentNode.querySelectorAll('button') : [];
       for(var tqi=0; tqi<tqb.length; tqi++) tqb[tqi].classList.toggle('on', tqb[tqi]===el);
+      updateResvWhen();
       break;
     /* v8.12: 고객 삭제 — 관리자 모드에서만, 확인 후 전 직원에게도 반영 */
     case 'cust-del':
@@ -5332,6 +5359,8 @@ function updateCustList(){
 document.addEventListener('input', function(e){
   var t = e.target;
   if(t.id==='custSearch'){ ui.q = t.value; updateCustList(); return; }
+  /* v8.17: 예약 날짜·시간을 고르면 아래 한글 날짜 줄도 바로 바뀐다 */
+  if(t.id==='resvDate' || t.id==='resvTime'){ updateResvWhen(); return; }
   var dk = t.getAttribute && t.getAttribute('data-draft');
   if(dk){ ui.drafts[dk] = t.value; }
   if(t.name==='text'){
@@ -5354,6 +5383,7 @@ document.addEventListener('compositionend', function(e){
 });
 document.addEventListener('change', function(e){
   var t = e.target;
+  if(t.id==='resvDate' || t.id==='resvTime'){ updateResvWhen(); return; }   /* v8.17 */
   if(t.type==='file' && t.getAttribute('data-photo')){ handleFiles(t); return; }
   if(t.id==='cPin'){ ui.composer.pin = !!t.checked; return; }
   if(t.getAttribute && t.getAttribute('data-act')==='fyear'){
