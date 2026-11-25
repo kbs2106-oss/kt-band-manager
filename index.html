@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.13">
+<meta name="app-version" content="v8.14">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1267,6 +1267,20 @@
   .cust.is-done .c-memo.has{color:#4A3B12;opacity:.92}
   @media (max-width:400px){
     .c-memo{font-size:14px;min-height:38px;padding:8px 10px}
+  }
+
+  /* ================= v8.14: 담당자는 이름 옆(좌측 상단) · 메모는 카드 하단 한 줄 ================= */
+  .cust .c-top .c-name{flex:0 1 auto}
+  .c-topsp{flex:1 1 auto;min-width:0}
+  .c-owner.sm{height:32px;padding:0 8px;border-radius:9px;background:#F2F5FA;gap:5px;margin-top:0}
+  .c-owner.sm select{font-size:12px;font-weight:800;max-width:78px}
+  .c-owner.sm::after{font-size:8px;margin-left:-3px}
+  .c-owner.sm .ownerdot{width:6px;height:6px}
+  .c-memo{margin-top:9px}
+  @media (max-width:400px){
+    .c-owner.sm{height:30px;padding:0 7px}
+    .c-owner.sm select{font-size:11.5px;max-width:70px}
+    .c-memo{margin-top:8px}
   }
 </style>
 </head>
@@ -3997,11 +4011,12 @@ function dayCard(day){
 function custRow(c){
   var n = (c.comments||[]).length;
   var editing = ui.memoEdit===c.id;
-  var ownerOpts = STAFF.map(function(s){ return '<option '+(c.owner===s?'selected':'')+'>'+esc(s)+'</option>'; }).join('')
-    + (STAFF.indexOf(c.owner)<0? '<option selected>'+esc(c.owner||'미지정')+'</option>':'');
   var h = '<div class="cust '+(isDoneSt(c.status)?'is-done':'')+'" data-id="'+c.id+'" data-st="'+esc(c.status)+'">';
-  /* v8.6(#18220): 생년월일은 전화번호 바로 옆 같은 줄로 옮겼다(이름 줄에는 이름·구분만) */
+  /* v8.6(#18220): 생년월일은 전화번호 바로 옆 같은 줄로 옮겼다(이름 줄에는 이름·구분만)
+     v8.14: 담당자 드롭다운은 카드에서 걷앿다 — 730·550·3년은 매장 전체가 함께 보고,
+     누가 바꿔는지는 댓글 로그에 자동으로 남기 때문에 카드에는 이름·구분·핀·(관리자)삭제만 둔다. */
   h += '<div class="c-top"><span class="c-name">'+esc(c.name)+bkBadge(c.bucket)+'</span>'
+     +   '<span class="c-topsp"></span>'
      +   (isAdmin()? '<button class="c-del" data-act="cust-del" data-id="'+c.id+'" title="고객 삭제" aria-label="'+esc(c.name)+' 삭제">삭제</button>' : '')
      +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" title="부재중 킵" aria-label="부재중 킵">📌</button>'
      + '</div>';
@@ -4029,12 +4044,8 @@ function custRow(c){
        + '<button class="mini-ok" data-act="memo-save" data-id="'+c.id+'">저장</button>'
        + '<button class="mini-x" data-act="memo-cancel" aria-label="취소">✕</button></div>';
   } else {
-    h += '<div class="c-bottom"><span class="c-owner">'
-       +   '<span class="ownerdot" style="--c:'+colorOf(c.owner)+'"></span>'
-       +   '<select data-act="owner" data-id="'+c.id+'" aria-label="담당자">'+ownerOpts+'</select></span></div>'
-       /* v8.13: 메모를 카드 폭 전체 입력 박스로 — 빈 메모는 연한 테두리 '📝 메모 입력',
-          적힌 메모는 연노랑 박스 + 진한 글씨로 바로 읽히게 한다. */
-       + '<button class="c-memo '+(c.memo?'has':'empty')+'" data-act="memo-edit" data-id="'+c.id+'"'
+    /* v8.14: 담당자는 위 줄로 올렸으니 아래에는 메모 박스 한 줄만 — 카드 폭 전체 */
+    h += '<button class="c-memo '+(c.memo?'has':'empty')+'" data-act="memo-edit" data-id="'+c.id+'"'
        +   ' title="'+esc(c.memo||'메모 입력')+'">'
        +   '<span class="c-memo-ic">📝</span>'
        +   '<span class="c-memo-t">'+esc(c.memo||'메모 입력')+'</span>'
