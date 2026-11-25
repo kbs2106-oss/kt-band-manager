@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.9">
+<meta name="app-version" content="v8.10">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1198,6 +1198,24 @@
   @media (max-width:430px){
     .c-nums{gap:2px 14px}
     .c-nums .c-birth,.c-birth{font-size:15px;padding:10px 0}
+  }
+
+  /* ================= v8.10: 글 카드 통화 상태 집계 · 고객 시트 댓글 한 줄 ================= */
+  /* 처리완료 버튼을 뺀 자리 — 이 글 안 1단계 댓글의 상태별 건수를 칩으로 (건수 있는 것만) */
+  .post-actions{flex-wrap:wrap;row-gap:6px}
+  .pstat{margin-left:auto;display:inline-flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:5px}
+  .pst{display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 8px;border-radius:8px;
+    font-size:11.5px;font-weight:800;letter-spacing:-.02em;white-space:nowrap;
+    background:var(--gray-bg);color:var(--ink-2)}
+  .pst b{font-size:12px;font-weight:900}
+  .pst[data-st="미통화"]{background:var(--no-call-bg);color:var(--no-call-ink)}
+  .pst[data-st="부재"]{background:var(--absent-bg);color:var(--absent-ink)}
+  .pst[data-st="예약"]{background:#E8F0FE;color:var(--kt-blue)}
+  .pst[data-st="완료"]{background:#E9F6EF;color:var(--done-ink)}
+  .pst[data-st="개통완료"]{background:var(--open-bg);color:var(--open-ink)}
+  @media (max-width:430px){
+    .pst{height:23px;padding:0 7px;font-size:11px}
+    .pst b{font-size:11.5px}
   }
 </style>
 </head>
@@ -3386,8 +3404,6 @@ function pinItem(p){
   if(p.reserve){
     var rs = p.reservations||[]; var dn = rs.filter(function(r){return r.done;}).length;
     if(rs.length) right = dn+'/'+rs.length+' 개통';
-  } else if(p.kind==='consult'){
-    right = p.done? '처리완료' : '진행 중';
   }
   var title = String(p.title || p.body || '').replace(/^상담놓침\s*[:：]\s*/,'').split('\n')[0];
   return '<button class="pin-item k-'+kk+'" data-act="open-post" data-id="'+p.id+'">'
@@ -3403,7 +3419,7 @@ function postCard(p, opts){
   var cs = p.comments||[];
   var open = !!opts.sheet || !!ui.openThreads[p.id];
   var kk = kindOf(p);
-  var h = '<article class="post k-'+kk+(p.done?' isdone':'')+(open?' thread-open':'')+'" data-pid="'+p.id+'">';
+  var h = '<article class="post k-'+kk+(open?' thread-open':'')+'" data-pid="'+p.id+'">';
   h += '<div class="post-head">'
      +   '<span class="av" style="--c:'+colorOf(p.author)+'">'+esc(initial(p.author))+'</span>'
      +   '<div class="who"><div class="wname">'+esc(p.author)+'</div>'
@@ -3424,11 +3440,52 @@ function postCard(p, opts){
                      : (cs.length? '💬 댓글 <b class="cnt">'+cs.length+'</b>개 모두 보기 <span class="chev">▾</span>'
                                  : '💬 첫 댓글 남기기'))
               +   '</button>')
-     +   (p.kind==='consult' && !p.reserve? '<button class="act done-act '+(p.done?'on':'')+'" data-act="post-done" data-id="'+p.id+'">'+(p.done?'처리완료 취소':'처리완료')+'</button>':'')
+     +   postStatHTML(p)
      + '</div>';
   h += threadHTML(p, 'post', open);
   h += '</article>';
   return h;
+}
+
+/* v8.10: 글 카드·글 시트 하단 — 이 글 안 1단계 댓글의 통화 상태 집계와 사전예약 진척도.
+   상태가 바뀔 때마다 render()가 다시 그려서 자동으로 최신 숫자가 된다. */
+function postStatHTML(p){
+  var cnt = {'미통화':0,'부재':0,'예약':0,'완료':0,'개통완료':0};
+  (p.comments||[]).forEach(function(c){
+    if(c.sys) return;
+    var s = c.st || '미통화';
+    if(cnt[s] === undefined) return;
+    cnt[s]++;
+  });
+  var chips = '';
+  ['미통화','부재','예약','완료','개통완료'].forEach(function(s){
+    if(!cnt[s]) return;
+    chips += '<span class="pst" data-st="'+s+'">'+esc(stLabel(s))+' <b>'+cnt[s]+'</b></span>';
+  });
+  /* 사전예약 공지 — 예약자 명단의 예약/개통 진척 = 앞에 */
+  if(p.reservations && p.reservations.length){
+    var dn = p.reservations.filter(function(r){ return r.done; }).length;
+    var pend = p.reservations.length - dn;
+    chips = (pend? '<span class="pst" data-st="예약">예약자 <b>'+pend+'</b></span>' : '')
+          + (dn? '<span class="pst" data-st="개통완료">개통 <b>'+dn+'</b></span>' : '')
+          + chips;
+  }
+  return chips? '<span class="pstat">'+chips+'</span>' : '';
+}
+/* 댓글 상태를 바꿀 때(전체 render 없이) 그 글의 요약만 다시 그린다 */
+function refreshPostStat(pid){
+  var p = findPost(pid);
+  if(!p) return;
+  var html = postStatHTML(p);
+  var cards = document.querySelectorAll('article.post[data-pid="'+pid+'"]');
+  for(var i=0;i<cards.length;i++){
+    var act = cards[i].querySelector('.post-actions');
+    if(!act) continue;
+    var cur = act.querySelector('.pstat');
+    if(!html){ if(cur) cur.parentNode.removeChild(cur); continue; }
+    if(cur) cur.outerHTML = html;
+    else act.insertAdjacentHTML('beforeend', html);
+  }
 }
 
 function photoGrid(ps, size){
@@ -3493,10 +3550,9 @@ function reserveBlock(p){
   return h;
 }
 
-/* v5: 고객 시트의 통화 기록만 상태 선택이 필수 · v8.9(#18512): 글(공지·상담) 댓글창은
-   상태 선택 박스를 없애 [입력칸][📷][등록] 한 줄만 남긴다(상태는 댓글 아래 칩으로). */
+/* v8.10: 고객 정보 시트의 댓글창도 공지/상담처럼 [입력칸][📷][등록] 한 줄만 남긴다.
+   통화 상태는 시트 상단·명단 카드의 4칸 버튼으로 바꾸고, 댓글은 상태 선택 없이 바로 등록된다. */
 function cmtModeOf(item, ctx){
-  if(ctx==='cust') return 'req';
   return '';
 }
 function fmtReady(key, mode){
@@ -3506,19 +3562,6 @@ function fmtReady(key, mode){
   if(mode==='opt') return !!(text || st);
   return !!text;
 }
-function statusPickHTML(key, mode){
-  var sel = ui.cmtStatus[key]||'';
-  var tip = mode==='req'? '상태를 골라야 등록돼요' : '통화 결과를 함께 남겨보세요';
-  var h = '<div class="stpick"><div class="stpick-top">'
-        + '<span class="stpick-lbl">통화 상태'+(mode==='req'?'<em>필수</em>':'<em class="opt">선택</em>')+'</span>'
-        + '<span class="stpick-tip"'+(sel?' data-st="'+esc(sel)+'"':'')+' data-tip="'+esc(tip)+'">'+(sel? esc(stLabel(sel))+' 선택됨' : tip)+'</span>'
-        + '</div><div class="stpick-chips">';
-  ST_BTNS.forEach(function(s){
-    h += '<button type="button" class="st-chip sm '+(sel===s?'on':'')+'" data-st="'+s+'" data-act="cmt-st" data-key="'+key+'" data-st-for="'+s+'">'+esc(stLabel(s))+'</button>';
-  });
-  return h+'</div></div>';
-}
-
 function threadHTML(item, ctx, open){
   if(!open) return '';
   var cs = item.comments||[];
@@ -3544,7 +3587,6 @@ function threadHTML(item, ctx, open){
     ? '부재중·재통화 예정·상담 내용을 적어주세요'
     : '고객 번호·생년월일 남기기';
   h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'" data-key="'+key+'" data-mode="'+mode+'">'
-     + (mode? statusPickHTML(key, mode) : '')
      + '<div class="cbar-row">'
      + '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'" placeholder="'+ph+'" autocomplete="off">'
      + '<label class="icobtn" title="사진 첨부">📷<input type="file" accept="image/*" data-photo="cmt" data-key="'+key+'" hidden></label>'
@@ -4041,9 +4083,6 @@ function keepRow(c){
 
 function postMenuHTML(p){
   var h = '<div class="menu-list">';
-  if(p.kind==='consult'){
-    h += '<button class="menu-item" data-act="post-done" data-id="'+p.id+'"><span>'+(p.done?'처리완료 취소':'처리완료')+'</span><span class="arw">✓</span></button>';
-  }
   h += '<button class="menu-item" data-act="post-pin" data-id="'+p.id+'"><span>'+(p.pinned?'공지 고정 해제':'맨 위 공지로 고정')+'</span><span class="arw">📌</span></button>';
   if(p.reserve){
     h += '<button class="menu-item" data-act="resv-add" data-id="'+p.id+'"><span>사전예약 추가</span><span class="arw">＋</span></button>';
@@ -4168,9 +4207,8 @@ function render(){
   var tabs = document.querySelectorAll('#tabbar .tab');
   for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('on', tabs[i].getAttribute('data-tab')===ui.tab);
 
-  var openConsult = state.posts.filter(function(p){ return p.kind==='consult' && !p.done; }).length;
   var todayLeft = custsOfDay(todayStr()).filter(function(c){ return !isDoneSt(c.status); }).length;
-  $('t1n').textContent = openConsult || '';
+  $('t1n').textContent = '';
   $('t2n').textContent = todayLeft || '';
 
   $('whoName').textContent = session.staff;
@@ -4445,6 +4483,7 @@ function setCmtStatusNow(pid, cid, target, el){
   c.st = target; c.stBy = session.staff; c.stAt = nowAt();
   if(target !== '예약'){ c.resDate = ''; c.resTime = ''; }   /* v8.4(#17938): 예약 취소 시 날짜·시간도 지운다 */
   save();
+  refreshPostStat(pid);   /* v8.10: 글 카드의 상태 집계도 바로 */
   notifyBridge('댓글 상태 · '+(target? stLabel(target) : '미통화'), (c.author||'댓글')+' · '+shortText(c.text, 40));
   if(!target){ render(); toast('댓글 상태를 미통화로 되돌렸어요'); return; }
   var li = el && el.closest? el.closest('.cmt') : null;
@@ -4975,7 +5014,7 @@ document.addEventListener('change', function(e){
       (p.reservations||[]).forEach(function(r){ if(r.id===rid){ r.done = !!t.checked; if(r.link) r.linkOff = !r.done;
         if(t.checked) notifyBridge('사전예약 개통완료', (r.name||'예약자')+' · '+(r.model||''));
       } });
-      save(); render(); toast(t.checked?'개통완료로 체크했어요':'개통 체크를 해제했어요');
+      save(); refreshPostStat(p.id); render(); toast(t.checked?'개통완료로 체크했어요':'개통 체크를 해제했어요');
     }
     return;
   }
