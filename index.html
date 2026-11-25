@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.18">
+<meta name="app-version" content="v8.19">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1370,6 +1370,39 @@
     color:var(--kt-blue);font-size:12.5px;font-weight:800;letter-spacing:-.01em;
     display:flex;align-items:center;gap:6px}
   .resvform .rf-when::before{content:'📅';font-size:13px;line-height:1}
+
+  /* ================= v8.19(#20470): 피드 미리보기 댓글 → 댓글 창 ================= */
+  .cmt-preview{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .cmt-preview:active{background:#F3F7FD;border-radius:12px}
+  .cmt-preview .cp-go{margin-left:auto;flex:none;font-size:11.5px;font-weight:800;color:var(--kt-blue);
+    background:#EAF1FB;padding:2px 8px;border-radius:999px;white-space:nowrap;letter-spacing:-.02em}
+
+  /* ================= v8.19(#20482): 들어온 댓글까지 스크롤 + 잠깐 강조 ================= */
+  .cmt.cmt-flash{animation:cmtflash 2.4s ease-out;border-radius:12px}
+  @keyframes cmtflash{
+    0%{background:#FFF6D6;box-shadow:inset 0 0 0 2px #F0B429}
+    62%{background:#FFF6D6;box-shadow:inset 0 0 0 2px #F0B429}
+    100%{background:transparent;box-shadow:none}
+  }
+
+  /* ================= v8.19(#20499): 예약 고객 목록 필터 칩 · 정렬 전환 ================= */
+  .resvctl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-4px 0 10px}
+  .rchips{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+  .rchip{flex:none;height:32px;padding:0 11px;border-radius:999px;border:1px solid var(--line);background:#fff;
+    font-size:12.5px;font-weight:800;color:var(--sub);letter-spacing:-.02em;white-space:nowrap}
+  .rchip:hover{border-color:#D5E3F8}
+  .rchip.on{background:var(--kt-blue);border-color:var(--kt-blue);color:#fff}
+  .rsort{margin-left:auto;flex:none;height:32px;padding:0 10px;border-radius:999px;border:1px solid #CFE0F7;
+    background:#F0F6FF;font-size:12.5px;font-weight:800;color:var(--kt-blue);white-space:nowrap;letter-spacing:-.02em;
+    display:inline-flex;align-items:center;gap:4px}
+  .rsort .ric{font-size:13px;opacity:.85;line-height:1}
+  .resv-sep{display:flex;align-items:center;gap:8px;margin:12px 2px 2px;
+    font-size:11.5px;font-weight:800;color:var(--hint)}
+  .resv-sep:before,.resv-sep:after{content:'';flex:1;height:1px;background:var(--line)}
+  @media (max-width:380px){
+    .rchip{height:30px;padding:0 9px;font-size:12px}
+    .rsort{height:30px;padding:0 9px;font-size:12px}
+  }
 </style>
 </head>
 <body>
@@ -1548,13 +1581,15 @@ function resvAllList(){
   (state && state.customers || []).forEach(function(c){
     if(c.status!=='예약') return;
     out.push({kind:'cust', id:c.id, name:c.name, phone:c.phone, bucket:c.bucket,
-              resDate:c.resDate||'', resTime:c.resTime||'', memo:c.memo||''});
+              resDate:c.resDate||'', resTime:c.resTime||'', memo:c.memo||'',
+              at:c.stAt || c.at || ''});   /* v8.19: '최근 등록순' 정렬용 */
   });
   (state && state.posts || []).forEach(function(p){
     (p.comments||[]).forEach(function(cm){
       if(cm.st!=='예약') return;
       out.push({kind:'cmt', pid:p.id, cid:cm.id, name:cm.author||'댓글', phone:'',
-                ptitle:p.title||'', resDate:cm.resDate||'', resTime:cm.resTime||'', memo:cm.memo||''});
+                ptitle:p.title||'', resDate:cm.resDate||'', resTime:cm.resTime||'', memo:cm.memo||'',
+                at:cm.stAt || cm.at || ''});   /* v8.19: '최근 등록순' 정렬용 */
     });
   });
   out.sort(function(a,b){ return (a.resDate+(a.resTime||'99:99')).localeCompare(b.resDate+(b.resTime||'99:99')); });
@@ -1721,6 +1756,8 @@ var ui = {
   cmtStatus:{},
   cmtRes:{},        /* v8.3: 예약 날짜·시간(댓글 작성창) */
   resvAll:false,    /* v8.3: 예약 알람 전체 펼치기 */
+  resvF:'all',      /* v8.19: 예약 고객 목록 필터(all | today | 7d | past) */
+  resvSort:'near',  /* v8.19: 예약 고객 목록 정렬(near = 가까운 순 | reg = 최근 등록순) */
   feedAll:false,    /* v8.4: 홈 피드 '전체'에서 6건 더 보기 */
   keepMemo:null,
   memoEdit:null,
@@ -2511,6 +2548,9 @@ function ledgerApply(){
   var n = 0, nb = 0;
   (state.customers || []).forEach(function(c){
     if(c.linkOff) return;
+    /* v8.19(#20511): 예약에 수기로 올린 고객(＋ → ⏰ 예약 추가 · resOnly·bucket '예약')은
+       전화번호가 같아도 장부 자동 대조로 '개통완료' 처리하지 않는다. 예약 상태 그대로 둔다. */
+    if(c.resOnly || String(c.bucket || '') === '예약') return;
     var hit = ledgerMatch(c);
     if(!hit) return;
     if(!c.link || c.link.date !== hit.date || c.link.owner !== hit.owner || !!c.link.back !== !!hit.back){
@@ -3763,7 +3803,7 @@ function postCard(p, opts){
   if(p.body) h += '<p class="post-body">'+esc(p.body)+'</p>';
   h += photoGrid(p.photos);
   if(p.reserve) h += reserveBlock(p);
-  if(!open && !opts.sheet && cs.length) h += cmtPreview(cs);
+  if(!open && !opts.sheet && cs.length) h += cmtPreview(cs, p.id);
   h += '<div class="post-actions">'
      +   (opts.sheet
             ? '<span class="act cmt-act static">💬 댓글 <b class="cnt">'+cs.length+'</b></span>'
@@ -3840,16 +3880,69 @@ function photoGrid(ps, size){
   return out+'</div>';
 }
 
-/* v8.2: 접힌 카드에는 맨 위 댓글 1개만 미리 보여준다 (밴드와 같은 방식) */
-function cmtPreview(cs){
+/* v8.2: 접힌 카드에는 맨 위 댓글 1개만 미리 보여준다 (밴드와 같은 방식)
+   v8.19(#20470): 미리보기(글자·사진)를 누르면 그 글의 댓글 창이 바로 열린다.
+   → 댓글 창 안에서 사진을 누르면 크게 보기(lightbox)는 그대로 쓸 수 있다. */
+function cmtPreview(cs, pid){
   var c = cs[0];
   if(!c) return '';
-  var h = '<div class="cmt-preview">'
+  var h = '<div class="cmt-preview" data-act="preview-open" data-id="'+esc(pid)+'" data-cid="'+esc(c.id||'')+'"'
+        + ' role="button" tabindex="0" aria-label="댓글 '+cs.length+'개 — 댓글 창 열기">'
         + '<div class="cp-head"><span class="av xs" style="--c:'+colorOf(c.author)+'">'+esc(initial(c.author))+'</span>'
-        + '<b>'+esc(c.author)+'</b><time>'+fmtAt(c.at)+'</time></div>';
+        + '<b>'+esc(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
+        + '<span class="cp-go" aria-hidden="true">댓글 '+cs.length+' ›</span></div>';
   if(c.text) h += '<p>'+esc(c.text)+'</p>';
   h += photoGrid(c.photos, 'sm');
   return h + '</div>';
+}
+
+/* v8.19: 댓글 창을 열 때 그 댓글까지 스크롤 + 잠깐 강조
+   (예약 고객 목록의 '상담 댓글'·부재 목록의 '상담 댓글'·피드 미리보기에서 들어올 때) */
+function cmtElOf(pid, cid){
+  if(!pid || !cid) return null;
+  var q = 'article.post[data-pid="'+pid+'"] li.cmt[data-cid="'+cid+'"]';
+  var scopes = [$('sheetBody'), document.querySelector('.feed'), document];
+  for(var i=0;i<scopes.length;i++){
+    if(!scopes[i] || !scopes[i].querySelector) continue;
+    var el = scopes[i].querySelector(q);
+    if(el) return el;
+  }
+  return null;
+}
+function flashCmt(el){
+  if(!el) return;
+  el.classList.remove('cmt-flash');
+  void el.offsetWidth;        /* 같은 댓글을 다시 눌러도 강조가 처음부터 보이게 */
+  el.classList.add('cmt-flash');
+  clearTimeout(flashCmt._t);
+  flashCmt._t = setTimeout(function(){ el.classList.remove('cmt-flash'); }, 2600);
+}
+function scrollToCmt(pid, cid){
+  if(!pid || !cid) return;
+  var n = 0;
+  function go(){
+    var el = cmtElOf(pid, cid);
+    if(!el) return;
+    var r = el.getBoundingClientRect();
+    var off = Math.abs((r.top + r.height/2) - (window.innerHeight/2));
+    if(n===0 || off > 120){    /* 사진이 늦게 로딩돼 위치가 밀리면 한 번 더 맞춘다 */
+      try{ el.scrollIntoView({behavior: n===0? 'smooth' : 'auto', block:'center'}); }
+      catch(e){ el.scrollIntoView(); }
+    }
+    flashCmt(el);
+    n++;
+    if(n < 3) setTimeout(go, n===1? 600 : 700);
+  }
+  setTimeout(go, 80);
+}
+/* 댓글 창(글 상세 시트)을 열고 그 댓글까지 이동 */
+function openPostCmt(pid, cid){
+  var p = findPost(pid);
+  if(!p) return;
+  ui.openThreads[pid] = true;
+  ui.openCmts[pid] = true;
+  openSheet({type:'post', id: pid});
+  if(cid) scrollToCmt(pid, cid);
 }
 
 function reserveBlock(p){
@@ -3977,7 +4070,7 @@ function cmtHTML(c, parentId, ctx, mode){
   var isPost = ctx==='post' && !c.sys;   /* v5: 글의 1단계 댓글만 상태 관리 */
   var rOpen = ui.replyOpen===c.id;
   var rExp = !!ui.openReplies[c.id];
-  var h = '<li class="cmt '+(c.sys?'sys':'')+(isPost && isDoneSt(c.st)?' cmt-done':'')+'">'
+  var h = '<li class="cmt '+(c.sys?'sys':'')+(isPost && isDoneSt(c.st)?' cmt-done':'')+'" data-cid="'+esc(c.id||'')+'">'
         + '<div class="cmt-head"><span class="av xs" style="--c:'+colorOf(c.author)+'">'+esc(initial(c.author))+'</span>'
         + '<b>'+esc(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
         + (!isPost && c.st? '<span class="cst" data-st="'+esc(c.st)+'">'+esc(stLabel(c.st))+'</span>' : '')
@@ -4101,7 +4194,7 @@ function flatKeepHTML(mode){
   return h + '<div class="klist">' + items.map(function(it){ return it.kind==='cust'? keepRow(it.c) : cmtAbsentRow(it); }).join('') + '</div>';
 }
 function cmtAbsentRow(it){
-  return '<button class="krow cmtrow" data-act="open-post" data-id="'+esc(it.pid)+'">'
+  return '<button class="krow cmtrow" data-act="open-post" data-id="'+esc(it.pid)+'" data-cid="'+esc(it.cid||'')+'">'
     + '<div class="k-top"><b class="k-name">'+esc(it.name)+'</b><span class="k-src">상담 댓글</span>'
     +   '<span class="k-day">'+esc(String(it.at||'').slice(0,10))+'</span></div>'
     + '<div class="k-mid"><span class="k-phone quiet">'+esc(it.memo||'부재')+'</span>'
@@ -4109,12 +4202,80 @@ function cmtAbsentRow(it){
     + '</button>';
 }
 function resvSortKey(o){ return String(o.resDate||'9999-99-99')+(o.resTime||'99:99'); }
+/* v8.19(#20499): 예약 고객 목록 — 기본 '가까운 순'(오늘 이후 가장 임박한 예약이 맨 위, 지난 예약은 아래·최근 것부터)
+   + 헤더 아래 한 줄 필터(전체·오늘·7일 이내·지난 예약) + 정렬 전환(가까운 순 ⇅ / 최근 등록순) */
+var RESV_FILTERS = [['all','전체'],['today','오늘'],['7d','7일 이내'],['past','지난 예약']];
+function resvF(){ return ui.resvF || 'all'; }
+function resvSortOn(){ return ui.resvSort === 'reg' ? 'reg' : 'near'; }
+function resvWhen(it){
+  var d = String(it.resDate||'');
+  if(!d) return null;
+  var t = String(it.resTime||'');
+  if(!/^\d{2}:\d{2}$/.test(t)) t = '23:59';   /* 시간을 안 정한 예약은 그날 맨 뒤 */
+  var ms = Date.parse(d+'T'+t+':00');
+  return isNaN(ms)? null : ms;
+}
+function resvRegAt(it){ return String(it.stAt || it.at || ''); }
+function resvSortNear(a,b){
+  var now = Date.now(), A = resvWhen(a), B = resvWhen(b);
+  if(A===null && B===null) return 0;
+  if(A===null) return 1;
+  if(B===null) return -1;
+  var ap = A < now, bp = B < now;
+  if(ap !== bp) return ap? 1 : -1;    /* 다가오는 예약이 항상 지난 예약보다 위 */
+  return ap? (B - A) : (A - B);       /* 다가오는: 임박한 순 / 지난: 최근 것부터 */
+}
+function resvSortReg(a,b){
+  var A = resvRegAt(a), B = resvRegAt(b);
+  if(A !== B) return A < B ? 1 : -1;  /* 최근에 등록·바뀐 예약이 위 */
+  return resvSortNear(a,b);
+}
+function resvFilterMatch(it, f){
+  var d = String(it.resDate||''), t = todayStr();
+  if(f==='today') return d === t;
+  if(f==='7d') return !!d && d >= t && d <= shiftDay(7);
+  if(f==='past') return !!d && d < t;
+  return true;
+}
+function resvCtlHTML(){
+  var f = resvF(), reg = resvSortOn()==='reg';
+  var h = '<div class="resvctl"><div class="rchips">';
+  RESV_FILTERS.forEach(function(x){
+    h += '<button class="rchip '+(f===x[0]?'on':'')+'" data-act="resv-f" data-f="'+x[0]+'"'
+       + ' aria-pressed="'+(f===x[0]?'true':'false')+'">'+x[1]+'</button>';
+  });
+  h += '</div><button class="rsort" data-act="resv-sort" aria-label="정렬 바꾸기 — 지금 '+esc(reg?'최근 등록순':'가까운 순')+'">'
+     + esc(reg? '최근 등록순' : '가까운 순') + ' <span class="ric" aria-hidden="true">⇅</span></button></div>';
+  return h;
+}
 /* v8.8(#18395): 예약 목록 = 기간과 무관하게 명단 예약 + 상담 공지 댓글 예약 전부(오늘·지난·미래 12월 등) */
 function resvListHTML(){
-  var list = resvAllList();
-  var h = flatHeadHTML('⏰', '예약 고객', list.length, '기간 무관 · 날짜순');
-  if(!list.length) return h + '<div class="emptycard">지금 예약 잡힌 고객이 없어요.<br>오른쪽 아래 <b>＋</b> 로 예약을 바로 넣거나,<br>명단에서 <b>예약</b>을 누르면 날짜·시간을 골라 여기에 모입니다.</div>';
-  return h + '<div class="resvlist">' + list.map(resvRowItem).join('') + '</div>';
+  var all = resvAllList();
+  var f = resvF(), reg = resvSortOn()==='reg';
+  var list = all.filter(function(it){ return resvFilterMatch(it, f); });
+  list.sort(reg? resvSortReg : resvSortNear);
+  var fname = '';
+  RESV_FILTERS.forEach(function(x){ if(x[0]===f) fname = x[1]; });
+  var sub = '기간 무관 · ' + (reg? '최근 등록순' : '가까운 순') + (f==='all'? '' : ' · ' + fname);
+  var h = flatHeadHTML('⏰', '예약 고객', list.length, sub) + resvCtlHTML();
+  if(!all.length){
+    return h + '<div class="emptycard">지금 예약 잡힌 고객이 없어요.<br>오른쪽 아래 <b>＋</b> 로 예약을 바로 넣거나,<br>명단에서 <b>예약</b>을 누르면 날짜·시간을 골라 여기에 모입니다.</div>';
+  }
+  if(!list.length){
+    var msg = f==='today'? '오늘 잡힌 예약이 없어요.'
+            : (f==='7d'? '오늘부터 7일 안에 잡힌 예약이 없어요.' : '지난 예약이 없어요.');
+    return h + '<div class="emptycard">'+msg+'<br><button class="linkbtn" data-act="resv-f" data-f="all">예약 전체 보기</button></div>';
+  }
+  /* 전체 보기(가까운 순)에서만 '지난 예약' 줄을 넣어 다가오는 예약과 섞이지 않게 한다 */
+  var rows = '', sep = false, now = Date.now();
+  list.forEach(function(it){
+    if(f==='all' && !reg){
+      var w = resvWhen(it), isPast = (w!==null && w < now);
+      if(isPast && !sep){ sep = true; rows += '<div class="resv-sep">지난 예약</div>'; }
+    }
+    rows += resvRowItem(it);
+  });
+  return h + '<div class="resvlist">' + rows + '</div>';
 }
 function resvRowItem(it){
   var late = !!it.resDate && String(it.resDate) < todayStr();
@@ -4549,7 +4710,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.18</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.19</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -5234,7 +5395,21 @@ document.addEventListener('click', function(e){
       if(ui.openCmts[cmk]) delete ui.openCmts[cmk]; else ui.openCmts[cmk] = true;
       render();
       break;
-    case 'open-post': openSheet({type:'post', id: el.getAttribute('data-id')}); break;
+    case 'open-post':
+      /* v8.19: '상담 댓글' 목록(부재 등)에서 댓글 번호를 함께 넘기면 그 댓글까지 스크롤해 강조 */
+      var opid = el.getAttribute('data-id'), ocid = el.getAttribute('data-cid');
+      if(ocid){ openPostCmt(opid, ocid); break; }
+      openSheet({type:'post', id: opid}); break;
+    case 'preview-open':
+      /* v8.19(#20470): 홈 피드 미리보기 댓글(글자·사진)을 누르면 그 글의 댓글 창이 열린다 */
+      openPostCmt(el.getAttribute('data-id'), el.getAttribute('data-cid')); break;
+    case 'resv-f':
+      ui.resvF = el.getAttribute('data-f') || 'all'; render(); break;
+    case 'resv-sort':
+      ui.resvSort = (resvSortOn()==='reg')? 'near' : 'reg';
+      render();
+      toast(ui.resvSort==='reg'? '최근 등록순으로 정렬했어요' : '예약이 가까운 순으로 정렬했어요');
+      break;
     case 'post-menu': openSheet({type:'postmenu', id: el.getAttribute('data-id')}); break;
     case 'post-done':
       var pd = findPost(el.getAttribute('data-id'));
@@ -5255,6 +5430,10 @@ document.addEventListener('click', function(e){
       }
       break;
     case 'photo':
+      /* v8.19(#20470): 미리보기 댓글 안의 작은 사진은 크게 보기 대신 댓글 창으로 연다
+         (댓글 창 안에서 사진을 누르면 크게 보기는 그대로 된다) */
+      var pbox = el.closest? el.closest('.cmt-preview') : null;
+      if(pbox){ openPostCmt(pbox.getAttribute('data-id'), pbox.getAttribute('data-cid')); break; }
       var img = el.querySelector('img') || el;
       /* v8.12: 목록은 썸네일(thumbs/...), 크게 볼 때는 원본 주소 */
       openLB(img.getAttribute('data-full') || img.getAttribute('src'));
@@ -5351,9 +5530,8 @@ document.addEventListener('click', function(e){
       break;
     case 'resv-go':
       if(el.getAttribute('data-kind')==='cust'){ openSheet({type:'cust', id: el.getAttribute('data-id')}); break; }
-      var gpid = el.getAttribute('data-pid');
-      ui.openThreads[gpid] = true; ui.openCmts[gpid] = true;
-      openSheet({type:'post', id: gpid});
+      /* v8.19(#20482): '상담 댓글' 예약 → 그 글의 댓글 창을 열고 그 댓글까지 스크롤 + 강조 */
+      openPostCmt(el.getAttribute('data-pid'), el.getAttribute('data-cid'));
       break;
     case 'resv-all': ui.resvAll = !ui.resvAll; render(); break;
     case 'status':
