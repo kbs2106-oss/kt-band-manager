@@ -3014,7 +3014,7 @@ function resvSortKey(o){ return String(o.resDate||'9999-99-99')+(o.resTime||'99:
 /* v8.8(#18395): 예약 목록 = 기간과 무관하게 명단 예약 + 상담 공지 댓글 예약 전부(오늘·지난·미래 12월 등) */
 function resvListHTML(){
   var list = resvAllList();
-  var h = flatHeadHTML('⏰', '예약 고객', list.length, '기간 무관 · 명단+댓글 · 날짜순');
+  var h = flatHeadHTML('⏰', '예약 고객', list.length, '기간 무관 · 날짜순');
   if(!list.length) return h + '<div class="emptycard">지금 예약 잡힌 고객이 없어요.<br>명단에서 <b>예약</b>을 누르면 날짜·시간을 골라 바로 여기에 모입니다.</div>';
   return h + '<div class="resvlist">' + list.map(resvRowItem).join('') + '</div>';
 }
