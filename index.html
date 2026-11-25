@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.21">
+<meta name="app-version" content="v8.22">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -3496,7 +3496,9 @@ function segHTML(c){
   return h+'</div>';
 }
 
-/* v8.16: 📵 부재중 킵 · ⏰ 예약 킵 반반(2열) 배너 — 홈 피드·명단 탭 공통.
+/* v8.16: 📵 부재중 킵 · ⏰ 예약 킵 반반(2열) 배너 — 홈 피드 전용.
+   v8.22(#20983·#21009): 명단 탭에서는 이 배너를 그리지 않는다 — 위 '예약 킵'과 아래 '⏰ 예약 고객'
+   알람이 같은 고객을 두 번 보여줘 겹쳤다. 명단 탭은 상단 요약 5칸 + 상태 칩으로만 조회한다.
    왼쪽 = 부재중 킵(부재 + 📌킵, 최근 3개월) · 오른쪽 = 예약 킵(명단 + 상담 댓글 예약 전체, 날짜·시간 순) */
 function keepSplitHTML(){
   var keeps = absentCount('keep');
@@ -4446,7 +4448,8 @@ function bandView(){
   });
   h += '</div>';
 
-  h += keepSplitHTML();   /* v8.16: 부재중 킵 · 예약 킵 반반 */
+  /* v8.22(#20983·#21009): 명단 탭에서는 keepSplitHTML() 을 그리지 않는다(홈 피드에만 유지).
+     위 '예약 킵'과 아래 '⏰ 예약 고객' 알람이 겹쳐 보이던 중복 배너 제거 — 상단 요약 5칸 + 상태 칩으로 조회. */
 
   h += periodHTML();
 
