@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.14">
+<meta name="app-version" content="v8.15">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -3285,11 +3285,20 @@ function noticeView(){
     if(isTablePost(p)) return false;
     /* v8.13: 고정 공지도 위 박스에 그대로 두면서 아래 '전체'에서도 빠지지 않고 함께 보인다. */
     return true;
-  }).sort(byAtDesc);
-  /* v8.4(#17280): '전체'는 최신 6건만 — 나머지는 '더 보기'로 펼친다 */
+  }).sort(function(a,b){
+    /* v8.15: 📌 고정 공지는 날짜가 오래됐어도 일반 글보다 항상 먼저(최상단) — 그 안에서 최신순 */
+    var pa = a.pinned ? 1 : 0, pb = b.pinned ? 1 : 0;
+    if(pa !== pb) return pb - pa;
+    return byAtDesc(a,b);
+  });
+  /* v8.4(#17280): '전체'는 최신 6건만 — 나머지는 '더 보기'로 펼친다
+     v8.15: 이 6건은 '일반 글' 기준. 고정 공지는 몇 건이든 최상단에 전부 남기고 6건 자르기에서 빼지 않는다. */
   var FEED_MAX = 6;
-  var canFold = ui.filter==='all' && feedAllList.length > FEED_MAX;
-  var feed = (canFold && !ui.feedAll)? feedAllList.slice(0, FEED_MAX) : feedAllList;
+  var pinnedFeed = feedAllList.filter(function(p){ return !!p.pinned; });
+  var normalFeed = feedAllList.filter(function(p){ return !p.pinned; });
+  var canFold = ui.filter==='all' && normalFeed.length > FEED_MAX;
+  var feed = (canFold && !ui.feedAll)? pinnedFeed.concat(normalFeed.slice(0, FEED_MAX)) : feedAllList;
+  var feedMoreN = feedAllList.length - feed.length;
   /* v7: '모두 접기' 대상은 피드 글의 댓글만 — 고정 공지는 자기 '접기' 버튼으로만 접힌다 */
   var openN = state.posts.filter(function(p){ return !!ui.openThreads[p.id]; }).length;
   var anyOpen = openN>0;
@@ -3317,7 +3326,7 @@ function noticeView(){
     h += '<div class="feed">' + (feed.length? feed.map(function(p){ return postCard(p); }).join('')
        : '<div class="emptycard">'+emptyTxt+'</div>');
     if(canFold) h += '<button class="feedmore" data-act="feed-all">'
-       + (ui.feedAll? '접기 ▴' : '글 '+(feedAllList.length-FEED_MAX)+'건 더 보기 ▾') + '</button>';
+       + (ui.feedAll? '접기 ▴' : '글 '+feedMoreN+'건 더 보기 ▾') + '</button>';
     h += '</div>';
   }
   return h;
