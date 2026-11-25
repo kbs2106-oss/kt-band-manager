@@ -6,7 +6,6 @@
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
 <meta name="app-version" content="v8.7">
-<!-- selftest:auto-update-b1 -->
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1359,6 +1358,26 @@ function resvDueList(){
   out.sort(function(a,b){ return (a.resDate+(a.resTime||'99:99')).localeCompare(b.resDate+(b.resTime||'99:99')); });
   return out;
 }
+/* v8.8(#18395): 예약은 기간(연·월)과 무관하게 전부 모은다 —
+   명단 고객 예약 + 상담 공지 댓글 예약, 오늘·지난·미래(12월 등) 모든 날짜 포함. */
+function resvAllList(){
+  var out = [];
+  (state && state.customers || []).forEach(function(c){
+    if(c.status!=='예약') return;
+    out.push({kind:'cust', id:c.id, name:c.name, phone:c.phone, bucket:c.bucket,
+              resDate:c.resDate||'', resTime:c.resTime||'', memo:c.memo||''});
+  });
+  (state && state.posts || []).forEach(function(p){
+    (p.comments||[]).forEach(function(cm){
+      if(cm.st!=='예약') return;
+      out.push({kind:'cmt', pid:p.id, cid:cm.id, name:cm.author||'댓글', phone:'',
+                ptitle:p.title||'', resDate:cm.resDate||'', resTime:cm.resTime||'', memo:cm.memo||''});
+    });
+  });
+  out.sort(function(a,b){ return (a.resDate+(a.resTime||'99:99')).localeCompare(b.resDate+(b.resTime||'99:99')); });
+  return out;
+}
+function resvAllCount(){ return resvAllList().length; }
 /* 알람은 하루 한 번, 같은 예약(고객·날짜·시간)에 두 번 울리지 않는다 */
 var RESV_NKEY = 'kt_band_resv_notified_v1';
 function resvNotifyDue(){
@@ -2992,22 +3011,31 @@ function cmtAbsentRow(it){
     + '</button>';
 }
 function resvSortKey(o){ return String(o.resDate||'9999-99-99')+(o.resTime||'99:99'); }
+/* v8.8(#18395): 예약 목록 = 기간과 무관하게 명단 예약 + 상담 공지 댓글 예약 전부(오늘·지난·미래 12월 등) */
 function resvListHTML(){
-  var list = state.customers.filter(function(c){ return c.status==='예약'; })
-    .sort(function(a,b){ return resvSortKey(a).localeCompare(resvSortKey(b)); });
-  var h = flatHeadHTML('⏰', '예약 고객', list.length, '전체 기간 · 예약 날짜·시간 순');
+  var list = resvAllList();
+  var h = flatHeadHTML('⏰', '예약 고객', list.length, '전체 기간 · 명단 + 상담 댓글 · 예약 날짜·시간 순');
   if(!list.length) return h + '<div class="emptycard">지금 예약 잡힌 고객이 없어요.<br>명단에서 <b>예약</b>을 누르면 날짜·시간을 골라 바로 여기에 모입니다.</div>';
-  return h + '<div class="resvlist">' + list.map(resvRowHTML).join('') + '</div>';
+  return h + '<div class="resvlist">' + list.map(resvRowItem).join('') + '</div>';
 }
-function resvRowHTML(c){
-  var late = String(c.resDate||'') < todayStr();
-  return '<button class="rrowline" data-act="cust" data-id="'+c.id+'">'
-    + '<span class="rl-when'+(late?' late':'')+'">'+esc(resvText(c)||'날짜 없음')+'</span>'
-    + '<span class="rl-main"><b class="rl-name">'+esc(c.name)+bkBadge(c.bucket)+'</b>'
-    +   '<span class="rl-phone">'+(digits(c.phone)? '📞 '+esc(maskPhone(c.phone)) : '연락처 없음')+'</span></span>'
-    + (c.memo? '<span class="rl-memo">📝 '+esc(shortText(c.memo, 60))+'</span>' : '')
+function resvRowItem(it){
+  var late = !!it.resDate && String(it.resDate) < todayStr();
+  var act = it.kind==='cmt'
+    ? ' data-act="resv-go" data-kind="cmt" data-pid="'+esc(it.pid)+'" data-cid="'+esc(it.cid)+'" title="공지 댓글로 열기"'
+    : ' data-act="cust" data-id="'+esc(it.id)+'"';
+  var phone = it.kind==='cmt'? (it.ptitle? '상담 댓글 · '+shortText(it.ptitle, 18) : '상담 댓글')
+                             : (digits(it.phone)? '📞 '+esc(maskPhone(it.phone)) : '연락처 없음');
+  return '<button class="rrowline"'+act+'>'
+    + '<span class="rl-when'+(late?' late':'')+'">'+esc(resvText(it)||'날짜 없음')+'</span>'
+    + '<span class="rl-main"><b class="rl-name">'+esc(it.name||'')+(it.kind==='cust'? bkBadge(it.bucket) : '<span class="k-src">상담 댓글</span>')+'</b>'
+    +   '<span class="rl-phone'+(it.kind==='cmt'?' quiet':'')+'">'+phone+'</span></span>'
+    + (it.memo? '<span class="rl-memo">📝 '+esc(shortText(it.memo, 60))+'</span>' : '')
     + (late? '<span class="rl-late">지남</span>' : '')
     + '</button>';
+}
+function resvRowHTML(c){
+  return resvRowItem({kind:'cust', id:c.id, name:c.name, phone:c.phone, bucket:c.bucket,
+                      resDate:c.resDate||'', resTime:c.resTime||'', memo:c.memo||''});
 }
 function custListHTML(){
   if(ui.filter==='keep') return flatKeepHTML('keep');
@@ -3022,8 +3050,13 @@ function custListHTML(){
     if(!arch.ready && (ui.year!=='all' || ui.q)){
       return '<div class="emptycard">과거 명단을 불러오는 중이에요…<br>잠시 뒤 다시 보여드릴게요.</div>';
     }
-    if(periodActive()) return '<div class="emptycard">'+esc(periodLabel())+'에 조건에 맞는 명단이 없어요.<br>'
-      + '<button class="linkbtn" data-act="period-clear">전체 기간에서 보기</button></div>';
+    if(periodActive()){
+      var rn = resvAllCount();
+      return '<div class="emptycard">'+esc(periodLabel())+'에 조건에 맞는 명단이 없어요.<br>'
+        + (rn? '이 달엔 명단이 없어요 · 예약 <b>'+rn+'</b>건은 상단 <b>예약</b> 칸에서 보세요.<br>'
+             + '<button class="linkbtn" data-act="resv-filter">⏰ 예약 '+rn+'건 보기</button> ' : '')
+        + '<button class="linkbtn" data-act="period-clear">전체 기간에서 보기</button></div>';
+    }
     return '<div class="emptycard">조건에 맞는 명단이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 고객을 추가해보세요.</div>';
   }
   if(hits.length > limit){
@@ -3051,7 +3084,9 @@ function periodHTML(){
     if(ui.year==='all' || d.slice(0,4)===ui.year) months[d.slice(5,7)] = 1;
   });
   var yl = Object.keys(years).sort().reverse();
-  var ml = Object.keys(months).sort();
+  /* v8.8(#18395): 연도를 고르면 1~12월을 모두 연다 — 12월처럼 아직 명단이 없는 달도 고를 수 있게 */
+  var ml = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+  if(ui.year==='all'){ ml = Object.keys(months).sort(); }
   /* v8.4: 지금 고른 연·월이 자료에 없어도 드롭다운이 비지 않게 목록에 넣어 둔다 */
   if(ui.year!=='all' && yl.indexOf(ui.year)<0){ yl.push(ui.year); yl.sort().reverse(); }
   if(ui.month!=='all' && ml.indexOf(ui.month)<0){ ml.push(ui.month); ml.sort(); }
@@ -3064,9 +3099,7 @@ function periodHTML(){
         +   '<option value="all"'+(ui.month==='all'?' selected':'')+'>전체 월</option>'
         +   ml.map(function(m){ return '<option value="'+m+'"'+(ui.month===m?' selected':'')+'>'+(+m)+'월</option>'; }).join('')
         + '</select></label>';
-  if(periodActive()){
-    h += '<button class="pb-on" data-act="period-clear" aria-label="기간 초기화">'+periodLabel()+' 기준 <span class="pb-x">✕</span></button>';
-  }
+  /* v8.8(#18425): `2026년 11월 기준 ✕` 파란 알약은 띄우지 않는다 — 전체 보기는 연·월 드롭다운에서 고른다 */
   if(!arch.ready){
     h += '<div class="archline'+(arch.err?' err':'')+'">'
        + (arch.err? '📚 과거 명단을 불러오지 못했어요 · '+esc(arch.err)
@@ -3112,6 +3145,8 @@ function bandView(){
   var cnt = {};
   STATUSES.forEach(function(s){ cnt[s] = todays.filter(function(c){return c.status===s;}).length; });
   cnt['부재'] = absentCount('absent');   /* v8.4(#17983): 부재는 최근 3개월(명단+상담 댓글) 기준 */
+  /* v8.8(#18395): 예약도 기간과 무관하게 — 명단 예약 + 상담 댓글 예약을 오늘·지난·미래 달까지 전부 센다 */
+  cnt['예약'] = resvAllCount();
 
   var h = ledgerBar();
   h += resvAlarmHTML();   /* v8.3: 오늘·지난 예약 알람을 맨 위에 따로 */
@@ -4143,11 +4178,7 @@ document.addEventListener('change', function(e){
   if(t.type==='file' && t.getAttribute('data-photo')){ handleFiles(t); return; }
   if(t.id==='cPin'){ ui.composer.pin = !!t.checked; return; }
   if(t.getAttribute && t.getAttribute('data-act')==='fyear'){
-    ui.year = t.value;
-    if(ui.year!=='all' && ui.month!=='all'){
-      var hasM = custIndex().days.some(function(d){ return d.slice(0,4)===ui.year && d.slice(5,7)===ui.month; });
-      if(!hasM) ui.month = 'all';
-    }
+    ui.year = t.value;   /* v8.8(#18395): 1~12월을 모두 열어 두어 고른 달을 임의로 바꾸지 않는다 */
     render();
     toast(ui.year==='all'? '전체 연도로 봅니다' : ui.year+'년만 봅니다');
     return;
