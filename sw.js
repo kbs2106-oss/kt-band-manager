@@ -1,8 +1,8 @@
-/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 (v8.7) */
+/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 (v8.8) */
 /* v8.7(#18345): 화면(HTML)은 HTTP 캐시까지 건너뛰고(cache:'no-store') 항상 네트워크에서 새로 받는다.
    GitHub Pages 가 index.html 을 10분(max-age=600) 캐시하기 때문에, 예전에는 한참 전 화면이 떠서
    "수정이 바로 반영되지 않는다"고 느껴졌다. 오프라인일 때만 캐시로 넘어간다. */
-var CACHE = 'kt-band-v8.7';
+var CACHE = 'kt-band-v8.8';
 var CACHE_PREFIX = 'kt-band-';
 var SHELL = [
   './',
