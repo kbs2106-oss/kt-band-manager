@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.16">
+<meta name="app-version" content="v8.17">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1144,6 +1144,8 @@
   .resvform .rf-quick button.on{background:var(--blue-weak);border-color:#A8C7FA;color:var(--kt-blue);font-weight:800}
   .resvform label{display:block;margin-bottom:12px}
   .resvform label > span{display:block;font-size:12.5px;font-weight:800;color:var(--hint);margin-bottom:6px}
+  /* v8.17: 글자 입력·선택·메모도 폭을 꽉 채운다(예전엔 기본 폭이라 반만 차지했다) */
+  .resvform label > input,.resvform label > select,.resvform label > textarea{width:100%}
   .resvform input[type=date],.resvform input[type=time]{width:100%;height:46px;border:1px solid var(--line);
     border-radius:12px;padding:0 12px;font-size:15px;font-weight:700;color:var(--ink);background:#fff}
   .resvform input:focus{outline:none;border-color:var(--blue)}
@@ -1310,6 +1312,53 @@
     .c-owner.sm select{font-size:11.5px;max-width:70px}
     .c-memo{margin-top:8px}
   }
+
+  /* ================= v8.17: + 로 예약 추가(전 직원) · 예약 구분 배지 ================= */
+  /* 구분 '예약' — 730(파랑)·550(초록)·3년(보라)과 겹치지 않는 하늘색 */
+  .bresv{--bk-bg:#E8F0FE;--bk-ink:#0B57D0;--bk-line:#A8C7FA}
+
+  /* 관리자 + 창 상단 탭: ⏰ 예약 추가 | 📋 명단 추가 */
+  .addtabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 16px}
+  .addtab{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ico lb" "ico sm";
+    align-items:center;column-gap:8px;min-width:0;padding:10px 12px;border-radius:13px;
+    border:1px solid var(--line);background:#fff;text-align:left;font-size:14px;font-weight:800;
+    color:var(--ink-2);letter-spacing:-.02em;transition:background .12s,border-color .12s}
+  .addtab i{grid-area:ico;font-style:normal;font-size:19px;line-height:1}
+  .addtab small{grid-area:sm;font-size:11px;font-weight:700;color:var(--hint);letter-spacing:-.01em}
+  .addtab:hover{background:#FAFBFC}
+  .addtab.on{background:var(--blue-weak);border-color:#8FB6F0;color:var(--blue-deep)}
+  .addtab.on small{color:var(--blue-deep)}
+  @media (max-width:400px){
+    .addtab{padding:9px 10px;font-size:13px;column-gap:6px}
+    .addtab i{font-size:17px}
+    .addtab small{font-size:10.5px}
+  }
+
+  /* 필수 표시 · 시간 빠른 선택 · 안내 한 줄 */
+  .resvform .req{display:inline-block;margin-left:4px;padding:1px 6px;border-radius:6px;
+    background:#FEE2E2;color:#B91C1C;font-size:10.5px;font-weight:800;vertical-align:1px}
+  .resvform .rf-quick + .fgrid{margin-top:-4px}
+  .resvform .rf-tquick{margin:-4px 0 14px}
+  .resvform .rf-tquick button.on{background:var(--blue-weak);border-color:#A8C7FA;color:var(--kt-blue);font-weight:800}
+  .resvform .rf-tip{margin:2px 0 12px;padding:9px 11px;border-radius:11px;background:#F4F8FF;
+    border:1px solid #DCE8FA;font-size:12px;font-weight:600;color:#3B5578;line-height:1.5}
+  .resvform .rf-tip b{color:var(--kt-blue)}
+  @media (max-width:400px){
+    .resvform .fgrid{grid-template-columns:1fr;gap:0}
+  }
+
+  /* 검색 결과 상단 — 기간 밖 예약 */
+  .srchresv{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 2px 8px}
+  .srchresv b{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--kt-blue)}
+  .srchresv .n{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:19px;
+    padding:0 6px;border-radius:999px;background:var(--kt-blue);color:#fff;font-size:11.5px;font-weight:800}
+  .srchresv small{font-size:11px;font-weight:700;color:var(--hint)}
+
+  @media (max-width:400px){
+    .rl-when{font-size:12.5px;letter-spacing:-.02em}
+    .ra-when{font-size:11.5px;letter-spacing:-.02em}
+    .c-resv{font-size:11.5px;padding:4px 8px}
+  }
 </style>
 </head>
 <body>
@@ -1456,12 +1505,12 @@ function resvTimeLabel(t){
   var hh = h%12; if(!hh) hh = 12;
   return ap+' '+hh+':'+mi;
 }
-/* 예약 표기 — '11/27(오후 2:00)'. v8.13: 해가 다르면 '2027-01-05(오전 9:00)' 처럼 연도를 붙인다 */
+/* 예약 표기 — '26.11.27(오후 2:00)'. v8.17: 해를 항상 함께 보여 준다('11/27'만 보이면 어느 해 예약인지 모른다).
+   두 자리 해(26 = 2026)로 짧게 — 360px 폰에서도 한 줄에 들어간다. */
 function resvText(o){
   if(!o || !o.resDate) return '';
   var s = String(o.resDate);
-  var y = s.slice(0,4), cy = String(new Date().getFullYear());
-  var md = (y && y!==cy? y+'-' : '') + s.slice(5,7)+'/'+s.slice(8,10);
+  var md = s.slice(2,4)+'.'+s.slice(5,7)+'.'+s.slice(8,10);
   var tt = resvTimeLabel(o.resTime);
   return md + (tt? '('+tt+')' : '');
 }
@@ -1670,7 +1719,8 @@ var ui = {
   phoneOnly:false,
   drafts:{},
   attach:{},
-  composer:{kind:'store', photos:[], pin:false}   /* v8.4: 매장 공지·상담·사전예약 */
+  composer:{kind:'store', photos:[], pin:false},   /* v8.4: 매장 공지·상담·사전예약 */
+  addPick:'resv'    /* v8.17: 관리자 + 창에서 고른 종류(resv | cust) */
 };
 var sheetSpec = null;
 var toastTimer = null;
@@ -2126,6 +2176,14 @@ function renderSheet(){
   } else if(type==='resvdate'){
     ttl.textContent = '예약 날짜 · 시간';
     b.innerHTML = resvDateHTML(sheetSpec);
+  } else if(type==='resvnew'){
+    /* v8.17: 오른쪽 아래 + → ⏰ 예약 추가 (전 직원) */
+    ttl.textContent = '⏰ 예약 추가';
+    b.innerHTML = resvAddForm();
+  } else if(type==='addpick'){
+    /* v8.17: 관리자 모드의 + → 예약 추가 / 명단 추가 선택 */
+    ttl.textContent = '추가';
+    b.innerHTML = addPickHTML();
   } else if(type==='menu'){
     ttl.textContent = '설정';
     b.innerHTML = menuHTML();
@@ -3240,8 +3298,8 @@ function isTablePost(p){
 }
 
 /* ---------- v4: 구분(730/550/3년) 고유 색상 ---------- */
-var BUCKET_CLS = {'730':'b730','550':'b550','3년':'b3y'};
-function bkCls(b){ return BUCKET_CLS[b] || 'b730'; }
+var BUCKET_CLS = {'730':'b730','550':'b550','3년':'b3y','예약':'bresv'};   /* v8.17: 직접 추가한 예약은 '예약' 구분 */
+function bkCls(b){ return BUCKET_CLS[b] || ''; }
 function bkBadge(b){ return '<span class="bk '+bkCls(b)+'">'+esc(b)+'</span>'; }
 
 /* v6: 글 종류별 배지·왼쪽 컬러 바 — v8.4: 사전예약이 아닌 공지는 '상담' */
@@ -3460,6 +3518,62 @@ function resvDateHTML(sp){
         +   (curText? '<button class="rf-cancel" type="button" data-act="resv-clear">예약 취소 (미통화로)</button>' : '')
         +   '<button class="btn ghost" type="button" data-act="close">닫기</button>'
         + '</div></form>';
+  return h;
+}
+
+/* v8.17: ⏰ 예약 추가 — 오른쪽 아래 + 로 일반 직원도 예약 고객을 바로 넣는다.
+   저장하면 status '예약' 고객이 되어 ⏰ 예약 킵 · 예약 필터 · 예약 알람에 한꺼번에 잡히고,
+   실시간 공유(band_push)로 전 직원 폰에도 바로 동기화된다. */
+function resvAddForm(){
+  function addDay(n){ var t=new Date(); t.setDate(t.getDate()+n);
+    return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2); }
+  var d = addDay(0);
+  var quick = [['오늘',0],['내일',1],['모레',2],['3일 뒤',3],['1주 뒤',7]];
+  var tq = [['오전 10시','10:00'],['오후 2시','14:00'],['오후 6시','18:00'],['시간 없음','']];
+  return '<form class="form resvform" data-form="resvnew" data-act="resv-noop">'
+    + '<p class="rf-who">⏰ 예약을 추가합니다 · '+esc(session.staff)+'</p>'
+    + '<div class="rf-quick">'
+    +   quick.map(function(q){
+          var dd = addDay(q[1]);
+          return '<button type="button" data-act="resv-quick" data-date="'+dd+'" class="'+(dd===d?'on':'')+'">'+q[0]+'</button>';
+        }).join('')
+    + '</div>'
+    + '<div class="fgrid">'
+    +   '<label><span>예약 날짜 <b class="req">필수</b></span>'
+    +     '<input type="date" name="date" id="resvDate" value="'+esc(d)+'" required></label>'
+    +   '<label><span>예약 시간 (선택)</span>'
+    +     '<input type="time" name="time" id="resvTime" value=""></label>'
+    + '</div>'
+    + '<div class="rf-quick rf-tquick">'
+    +   tq.map(function(q){
+          return '<button type="button" data-act="resv-tquick" data-time="'+q[1]+'">'+q[0]+'</button>';
+        }).join('')
+    + '</div>'
+    + '<label><span>고객명 <b class="req">필수</b></span>'
+    +   '<input name="name" required placeholder="예) 홍길동" autocomplete="off"></label>'
+    + '<label><span>연락처 <b class="req">필수</b></span>'
+    +   '<input name="phone" inputmode="tel" required placeholder="010-1234-5678" autocomplete="off"></label>'
+    + '<label><span>담당자</span><select name="owner">'
+    +   STAFF.map(function(s){ return '<option '+(session.staff===s?'selected':'')+'>'+esc(s)+'</option>'; }).join('')
+    + '</select></label>'
+    + '<label><span>메모 (선택)</span>'
+    +   '<textarea name="memo" rows="2" placeholder="예) S26 기변 + 인터넷 결합 상담"></textarea></label>'
+    + '<p class="rf-tip">저장하면 <b>⏰ 예약 킵</b>·<b>예약 알람</b>에 바로 들어가고, 전 직원 폰에도 공유돼요.</p>'
+    + '<div class="rf-btns">'
+    +   '<button class="btn primary lg" type="submit">예약 저장</button>'
+    +   '<button class="btn ghost" type="button" data-act="close">취소</button>'
+    + '</div></form>';
+}
+/* v8.17: 관리자 모드의 + — 위 탭에서 ⏰ 예약 추가 / 📋 명단 추가(730·550·3년)를 골라 입력 */
+function addPickHTML(){
+  var mode = ui.addPick==='cust' ? 'cust' : 'resv';
+  var h = '<div class="addtabs" role="tablist">'
+        + '<button type="button" role="tab" aria-selected="'+(mode==='resv'?'true':'false')+'" class="addtab'+(mode==='resv'?' on':'')+'" data-act="add-pick" data-k="resv">'
+        +   '<i>⏰</i>예약 추가<small>예약 킵 · 알람</small></button>'
+        + '<button type="button" role="tab" aria-selected="'+(mode==='cust'?'true':'false')+'" class="addtab'+(mode==='cust'?' on':'')+'" data-act="add-pick" data-k="cust">'
+        +   '<i>📋</i>명단 추가<small>730 · 550 · 3년</small></button>'
+        + '</div>';
+  h += mode==='cust' ? custAddForm(todayStr()) : resvAddForm();
   return h;
 }
 
@@ -3892,6 +4006,26 @@ function resvRowHTML(c){
   return resvRowItem({kind:'cust', id:c.id, name:c.name, phone:c.phone, bucket:c.bucket,
                       resDate:c.resDate||'', resTime:c.resTime||'', memo:c.memo||''});
 }
+/* v8.17: 검색할 때는 기간(연·월) 밖에 잡아 둔 직접 예약도 함께 찾아 준다 —
+   예약 날짜가 다음 달·내년이어도 이름·번호로 검색하면 나온다. */
+function resvSearchHTML(shownDays){
+  var q0 = String(ui.q||'').replace(/[\s-]+/g,'').toLowerCase();
+  if(!q0) return '';
+  var out = [];
+  (state.customers||[]).forEach(function(c){
+    if(!c.resOnly) return;
+    var day = String(c.day||'').slice(0,10);
+    if(shownDays && shownDays.indexOf(day)>=0) return;      /* 기간 안 목록에 이미 나옴 */
+    var hay = (c.name+' '+digits(c.phone)+' '+(c.memo||'')+' '+(c.resDate||'')).toLowerCase();
+    if(hay.indexOf(q0)<0 && hay.replace(/[\s-]+/g,'').indexOf(q0)<0) return;
+    out.push(c);
+  });
+  if(!out.length) return '';
+  out.sort(function(a,b){ return resvSortKey(a).localeCompare(resvSortKey(b)); });
+  return '<div class="srchresv"><b>⏰ 예약 (기간 밖) <span class="n">'+out.length+'</span></b>'
+       + '<small>직접 추가한 예약 · 날짜순</small></div>'
+       + '<div class="resvlist" style="margin-bottom:10px">' + out.map(resvRowHTML).join('') + '</div>';
+}
 function custListHTML(){
   if(ui.filter==='keep') return flatKeepHTML('keep');
   if(ui.filter==='s:부재') return flatKeepHTML('absent');
@@ -3901,6 +4035,7 @@ function custListHTML(){
   var hits = [], i;
   for(i=0;i<days.length;i++){ if(dayHasMatch(days[i])) hits.push(days[i]); }
   var cards = hits.slice(0, limit).map(dayCard).filter(Boolean).join('');
+  if(ui.q) cards = resvSearchHTML(hits) + cards;   /* v8.17: 기간 밖 예약도 검색에 */
   if(!cards){
     if(!arch.ready && (ui.year!=='all' || ui.q)){
       return '<div class="emptycard">과거 명단을 불러오는 중이에요…<br>잠시 뒤 다시 보여드릴게요.</div>';
@@ -3970,7 +4105,7 @@ function periodHTML(){
   return h+'</div>';
 }
 var SORT_RANK = {'미통화':0,'부재':1,'예약':2,'완료':3,'개통완료':4};
-var BUCKET_RANK = {'730':0,'550':1,'3년':2};
+var BUCKET_RANK = {'예약':0,'730':1,'550':2,'3년':3};   /* v8.17: 그 날 예약 고객이 맨 위 */
 function sortCust(a,b){
   var ba = BUCKET_RANK[a.bucket], bb = BUCKET_RANK[b.bucket];
   var br = (ba==null?9:ba)-(bb==null?9:bb);
@@ -4281,7 +4416,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.12</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.17</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -4358,11 +4493,14 @@ function render(){
 
   var fab = $('fab');
   if(fab){
-    /* v8.12: 730·550·3년 명단의 새 고객 추가(+)는 관리자 모드에서만 — 직원은 댓글·메모·상태만 */
-    var addCust = ui.tab==='band';
-    fab.hidden = addCust && !isAdmin();
-    fab.setAttribute('data-act', addCust?'add-cust':'compose');
-    fab.setAttribute('aria-label', addCust?'명단 추가':'새 글 쓰기');
+    /* v8.17: 730·550·3년 탭의 + 는 전 직원에게 보인다.
+       · 일반 직원 → ⏰ 예약 추가  · 관리자 → ⏰ 예약 추가 / 📋 명단 추가 중 골라 입력
+       (명단 추가·삭제 자체는 계속 관리자 전용) · 홈 피드는 그대로 새 글 쓰기 */
+    var onBand = ui.tab==='band';
+    fab.hidden = false;
+    fab.setAttribute('data-act', onBand? 'staff-add' : 'compose');
+    fab.setAttribute('aria-label', onBand? (isAdmin()? '추가 — 예약 또는 730·550·3년 명단' : '예약 추가') : '새 글 쓰기');
+    fab.classList.toggle('fab-resv', onBand);
   }
 
   if(sheetSpec) renderSheet();
@@ -5105,6 +5243,21 @@ document.addEventListener('click', function(e){
       /* v8.12: 명단 추가는 관리자 모드(PIN 0525)에서만 */
       if(!isAdmin()){ toast('고객 추가는 관리자 모드에서만 할 수 있어요', true); break; }
       openSheet({type:'custadd', day: el.getAttribute('data-day') || todayStr()}); break;
+    /* v8.17: 오른쪽 아래 + — 직원은 ⏰ 예약 추가, 관리자는 예약/명단 선택 창 */
+    case 'staff-add':
+      if(isAdmin()){ ui.addPick = 'resv'; openSheet({type:'addpick'}); }
+      else openSheet({type:'resvnew'});
+      break;
+    case 'add-pick':
+      ui.addPick = el.getAttribute('data-k')==='cust' ? 'cust' : 'resv';
+      renderSheet();
+      break;
+    case 'resv-tquick':
+      var rti = $('resvTime');
+      if(rti){ rti.value = el.getAttribute('data-time')||''; }
+      var tqb = el.parentNode ? el.parentNode.querySelectorAll('button') : [];
+      for(var tqi=0; tqi<tqb.length; tqi++) tqb[tqi].classList.toggle('on', tqb[tqi]===el);
+      break;
     /* v8.12: 고객 삭제 — 관리자 모드에서만, 확인 후 전 직원에게도 반영 */
     case 'cust-del':
       if(!isAdmin()){ toast('고객 삭제는 관리자 모드에서만 할 수 있어요', true); break; }
@@ -5337,6 +5490,38 @@ document.addEventListener('submit', function(e){
     save(); closeSheet(); render();
     toast(autoDone? name+'님 — 장부에서 개통 확인, 개통완료로 표시했어요' : name+'님을 명단에 추가했어요');
     notifyBridge('명단 추가', name+' · '+day+' · '+c.bucket);
+    return;
+  }
+
+  /* v8.17: ⏰ 예약 추가 — 날짜·시간을 잡은 '예약' 고객을 명단에 바로 넣는다.
+     · 구분(bucket)은 '예약' → 730·550·3년 필터를 어지럽히지 않는다
+     · day = 예약 날짜 → 그 날짜가 되면 명단(오늘 남은 콜)에도 자연스럽게 올라온다
+     · 예약 킵·예약 필터·예약 알람은 모두 status '예약' + resDate 를 읽으므로 세 곳에 함께 잡힌다 */
+  if(kind==='resvnew'){
+    var nf = new FormData(f);
+    var rn2 = String(nf.get('name')||'').trim();
+    var rp2 = String(nf.get('phone')||'').trim();
+    var rd2 = String(nf.get('date')||'').trim();
+    var rt2 = String(nf.get('time')||'').trim();
+    var rm2 = String(nf.get('memo')||'').trim();
+    var ro2 = String(nf.get('owner')||session.staff);
+    if(!rd2){ toast('예약 날짜를 골라 주세요.', true); return; }
+    if(!rn2){ toast('고객명을 입력해 주세요.', true); return; }
+    if(!digits(rp2)){ toast('연락처를 입력해 주세요.', true); return; }
+    if(rt2 && !/^\d{2}:\d{2}$/.test(rt2)) rt2 = '';
+    var nc = { id: uid('c'), day: rd2, name: rn2, phone: rp2, bucket: '예약', owner: ro2,
+               status: '예약', resDate: rd2, resTime: rt2, memo: rm2,
+               keep: false, tries: 0, resOnly: true, at: nowAt(), comments: [] };
+    nc.comments.push(sysCmt('예약 추가 · '+resvText(nc)));
+    state.customers.push(nc);
+    custIdxDirty();
+    save();
+    /* 저장한 예약이 바로 보이게 예약 목록으로 */
+    ui.tab = 'band'; ui.filter = 's:예약';
+    closeSheet(); render();
+    toast(rn2+'님 예약 · '+resvText(nc)+' — 예약 킵에 담았어요');
+    notifyBridge('⏰ 예약 추가', rn2+' · '+resvText(nc));
+    scheduleResvAlarm(rd2, rt2, '⏰ 예약 알람', rn2+' · '+resvText(nc));
     return;
   }
 
