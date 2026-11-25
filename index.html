@@ -930,6 +930,7 @@
     background:#E7F7EF;color:#0E7C5A;font-size:11.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis}
   .lk-badge.off{background:var(--gray-bg);color:var(--sub)}
+  .lk-badge.back{background:#FFF3E0;color:#8A5300}
   .lk-row{margin:0 14px 4px;font-size:11.5px;font-weight:800;color:#0E7C5A;letter-spacing:-.01em;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cust.is-done .lk-badge{opacity:.95}
@@ -2081,8 +2082,13 @@ function pressKey(k){}   /* v8.2: 자판 없음 (비밀번호 입력 제거) */
    · 자동 확인은 30분에 한 번, 먼저 ping(작은 응답)으로 건수만 보고
      건수가 달라졌을 때만 목록(약 5MB)을 받습니다. 6시간이 지나면 건수가 같아도 한 번 새로 받습니다.
    · 받은 목록은 [전화번호 숫자, 개통일, 담당자] 3칸만 남겨 이 기기에 캐시합니다.
-   · 매칭 기준 : 전화번호 뒤 8자리 일치 + 개통일 >= 가망고객 날짜(당일 포함).
-     [정산이관] 과거 이관 건도 개통일이 그 날짜 이후면 그대로 매칭합니다. */
+   · 매칭 기준 (v8.5) : 전화번호 뒤 8자리 일치 + 아래 둘 중 하나
+     ① 새 개통 : 개통일 >= 가망고객 날짜(당일 포함) → '장부 자동개통완료'
+     ② 기개통(재약정) : 원 개통일 이후 다시 개통한 기록이 있으면 → '기개통'
+        (원 개통일 = 명단 날짜 - (약정기간-1)일 · 730→729일 전, 550→549일 전, 3년→1094일 전)
+        원 개통 건 자기 자신을 잡지 않도록 그보다 15일 뒤부터만 본다(730: -715일, 550: -535일, 3년: -1080일).
+     ①이 있으면 ①을 먼저 쓴다(그 고객은 지금 새로 개통한 것).
+     [정산이관] 과거 이관 건도 개통일이 기준일 이후면 그대로 매칭합니다. */
 var LEDGER_URL = 'https://script.google.com/macros/s/AKfycbz502Kzj6P_p3ku_i-91a4nIKtPKk2xzfpXv5qbJ2XYESroO5BKHpNjIK_fItNirVpaNw/exec';
 var LEDGER_PIN = '5001';
 var LKEY = 'kt_band_ledger_v1';
@@ -2090,7 +2096,7 @@ var LEDGER_CD = 60 * 1000;              /* '지금 확인' 최소 간격 */
 var LEDGER_TTL = 30 * 60 * 1000;        /* 자동 확인 주기 */
 var LEDGER_FULL = 6 * 60 * 60 * 1000;   /* 이 시간이 지나면 건수가 같아도 목록을 새로 받는다 */
 var LEDGER_TMO = 25000;                 /* 요청 제한 시간 */
-var ledger = {at:0, checked:0, count:0, rows:[], map:null, busy:false, err:'', lastNew:0, lastRun:0};
+var ledger = {at:0, checked:0, count:0, rows:[], map:null, busy:false, err:'', lastNew:0, lastBack:0, lastRun:0};
 
 function ledgerBase(){
   return LEDGER_URL + (LEDGER_URL.indexOf('?') < 0 ? '?' : '&') + 'pin=' + LEDGER_PIN;
@@ -2184,6 +2190,44 @@ function ledgerIndex(){
   ledger.map = m;
   return m;
 }
+/* ---- v8.5: 원 개통일·기개통(재약정) 대조 ---- */
+var LEDGER_TERM = {'730':730, '550':550, '3년':1095};   /* 명단 날짜 = 원 개통일 + (기간-1)일 */
+var LEDGER_SELF = 15;                                   /* 원 개통 건 자기 자신을 피하는 여유(일) */
+function ledgerAddDays(day, n){
+  var p = String(day || '').slice(0,10).split('-');
+  if(p.length !== 3) return '';
+  var d = new Date(+p[0], (+p[1])-1, +p[2]);
+  if(isNaN(d.getTime())) return '';
+  d.setDate(d.getDate() + n);
+  return todayStr(d);
+}
+function ledgerTerm(c){ return LEDGER_TERM[String((c && c.bucket) || '')] || 730; }
+function ledgerOrigDay(c){ return ledgerAddDays(c && c.day, -(ledgerTerm(c) - 1)); }   /* 원 개통일(역산) */
+function ledgerSince(c){ return ledgerAddDays(c && c.day, -(ledgerTerm(c) - LEDGER_SELF)); }   /* 기개통 대조 시작일 */
+/* 전화번호 뒤 8자리 + fromDay <= 개통일 < beforeDay 중 가장 최근 건 */
+function ledgerFindBack(phone, fromDay, beforeDay){
+  var d = digits(phone);
+  if(d.length < 7 || !fromDay) return null;
+  var hit = ledgerIndex()[d.slice(-8)];
+  if(!hit) return null;
+  var best = null;
+  for(var i=0;i<hit.length;i++){
+    var r = ledger.rows[hit[i]];
+    var dt = r && r[1] || '';
+    if(!dt || dt < fromDay || (beforeDay && dt >= beforeDay)) continue;
+    if(!best || dt > best.date) best = {date:dt, owner:(r[2] || '')};
+  }
+  return best;
+}
+/* 가망고객 1명 → 장부 매칭 {date, owner, back}. ①새 개통이 있으면 ①, 없으면 ②기개통 */
+function ledgerMatch(c){
+  var fwd = ledgerFind(c.phone, c.day);
+  if(fwd) return {date:fwd.date, owner:fwd.owner, back:false};
+  var from = ledgerSince(c);
+  if(!from || from >= String(c.day || '')) return null;
+  var bk = ledgerFindBack(c.phone, from, String(c.day || '').slice(0,10));
+  return bk ? {date:bk.date, owner:bk.owner, back:true} : null;
+}
 /* 전화번호 뒤 8자리 + 개통일(>= minDay) 로 장부 건을 찾는다 */
 function ledgerFind(phone, minDay){
   var d = digits(phone);
@@ -2205,17 +2249,25 @@ function ledgerCmt(hit){
           text:'개통장부에서 개통 확인 — ' + hit.date + (hit.owner ? ' · 담당 ' + hit.owner : '') + ' · 자동 개통완료',
           photos:[], replies:[]};
 }
+/* v8.5: 기개통(재약정) — 원 개통일 이후 다시 개통한 기록이 있는 고객 */
+function ledgerBackCmt(hit, c){
+  var orig = ledgerOrigDay(c);
+  return {id:uid('s'), author:'장부 연동', at:nowAt(), sys:true,
+          text:'🔗 기개통 — ' + hit.date + '에 재개통' + (hit.owner ? ' (담당 ' + hit.owner + ')' : '')
+             + (orig ? ' · 원 개통 ' + orig : '') + ' 이후라 자동 개통완료',
+          photos:[], replies:[]};
+}
 /* 캐시/새 목록을 명단·사전예약에 반영. 새로 개통완료로 바꾼 수를 돌려준다. */
 function ledgerApply(){
   if(!state) return 0;
   if(!ledger.rows.length) return 0;
-  var n = 0;
+  var n = 0, nb = 0;
   (state.customers || []).forEach(function(c){
     if(c.linkOff) return;
-    var hit = ledgerFind(c.phone, c.day);
+    var hit = ledgerMatch(c);
     if(!hit) return;
-    if(!c.link || c.link.date !== hit.date || c.link.owner !== hit.owner){
-      c.link = {date:hit.date, owner:hit.owner, at:nowAt()};
+    if(!c.link || c.link.date !== hit.date || c.link.owner !== hit.owner || !!c.link.back !== !!hit.back){
+      c.link = {date:hit.date, owner:hit.owner, at:nowAt(), back:!!hit.back};
     }
     /* v8: 장부에서 실개통이 확인된 고객은 '개통완료'(통화만 끝난 '완료'와 구분) */
     if(c.status !== '개통완료'){
@@ -2223,12 +2275,14 @@ function ledgerApply(){
       c.resDate = ''; c.resTime = '';   /* v8.4(#17938): 실제 개통 확인되면 예약 정보는 정리 */
       c.keep = false;
       c.comments = c.comments || [];
-      c.comments.push(ledgerCmt(hit));
+      c.comments.push(hit.back ? ledgerBackCmt(hit, c) : ledgerCmt(hit));
       n++;
+      if(hit.back) nb++;
     } else if(c.keep){
       c.keep = false;   /* 개통완료면 부재중 킵에서 빼낸다 */
     }
   });
+  ledger.lastBack = nb;
   (state.posts || []).forEach(function(p){
     (p.reservations || []).forEach(function(r){
       if(r.linkOff) return;
@@ -2241,7 +2295,7 @@ function ledgerApply(){
       if(!r.done){ r.done = true; n++; }
     });
   });
-  if(n) notifyBridge('개통완료 자동 반영', n+'명을 장부와 대조해 개통완료로 표시했어요');
+  if(n) notifyBridge('개통완료 자동 반영', n+'명을 장부와 대조해 개통완료로 표시했어요' + (nb ? ' (기개통 ' + nb + '명)' : ''));
   return n;
 }
 
@@ -2298,7 +2352,8 @@ function ledgerSync(force){
     if(added) save();
     ledgerSave();
     refreshLedgerUI();
-    if(added) toast('장부에서 ' + added + '명 개통완료로 자동 반영했어요');
+    if(added) toast('장부에서 ' + added + '명 개통완료로 자동 반영했어요'
+                   + (ledger.lastBack ? ' (기개통 ' + ledger.lastBack + '명)' : ''));
   }, function(e){
     ledger.busy = false;
     ledger.err = (e && e.message) || '연결 실패';
@@ -2345,11 +2400,14 @@ function ledgerBar(){
 }
 /* 개통일 표기 : 2026-11-24 → 11-24 */
 function ledgerMd(date){ return String(date || '').slice(5, 10) || '—'; }
+/* v8.5: 기개통은 최대 3년 전 날짜라 연도까지 — 2025-06-05 → 25-06-05 */
+function ledgerYmd2(date){ var s = String(date || ''); return s.length >= 10 ? s.slice(2, 10) : (s || '—'); }
 function ledgerBadgeHTML(link, auto){
   if(!link) return '';
-  var when = ledgerMd(link.date) + (link.owner ? ' · ' + link.owner : '');
-  return '<span class="lk-badge' + (auto ? '' : ' off') + '">🔗 '
-    + (auto ? '장부 자동개통완료' : '장부 개통') + ' (' + esc(when) + ')</span>';
+  var when = (link.back ? ledgerYmd2(link.date) : ledgerMd(link.date)) + (link.owner ? ' · ' + link.owner : '');
+  var label = link.back ? '기개통' : (auto ? '장부 자동개통완료' : '장부 개통');
+  return '<span class="lk-badge' + (link.back ? ' back' : (auto ? '' : ' off')) + '">🔗 '
+    + label + ' (' + esc(when) + ')</span>';
 }
 
 /* ================= views ================= */
