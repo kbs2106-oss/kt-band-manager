@@ -4374,10 +4374,10 @@ function handleFiles(input){
 
 /* v8.13(#카메라): 댓글 줄의 📷 — 작은 메뉴로 [바로 촬영]·[앨범에서 선택].
    숨은 file 입력을 그대로 눌러 주므로 안드로이드 APK·브라우저 모두 카메라/앨범이 바로 뜬다. */
-var photoMenu = null, photoMenuForm = null;
+var photoMenu = null, photoMenuForm = null, photoMenuAt = 0;
 function closePhotoMenu(){
   if(photoMenu && photoMenu.parentNode) photoMenu.parentNode.removeChild(photoMenu);
-  photoMenu = null; photoMenuForm = null;
+  photoMenu = null; photoMenuForm = null; photoMenuAt = 0;
 }
 function openPhotoMenu(btn){
   closePhotoMenu();
@@ -4389,7 +4389,7 @@ function openPhotoMenu(btn){
   menu.innerHTML = '<button type="button" data-act="photo-cap" role="menuitem"><i>📷</i><span>바로 촬영</span></button>'
                  + '<button type="button" data-act="photo-album" role="menuitem"><i>🖼</i><span>앨범에서 선택</span></button>';
   document.body.appendChild(menu);
-  photoMenu = menu; photoMenuForm = form;
+  photoMenu = menu; photoMenuForm = form; photoMenuAt = Date.now();
   /* 사진 버튼 위에 띄우고(자리가 없으면 아래), 화면 오른쪽 끝을 맞춘다 */
   var r = btn.getBoundingClientRect();
   var mw = menu.offsetWidth || 172, mh = menu.offsetHeight || 104;
@@ -4407,8 +4407,11 @@ function pickPhoto(cap){
   if(!inp){ toast('사진 버튼을 다시 눌러 주세요.', true); return; }
   try{ inp.click(); }catch(e){ toast('사진을 열지 못했어요.', true); }
 }
-/* 화면이 움직이면 메뉴는 닫기 (버튼 자리를 따라가지 않도록) */
-window.addEventListener('scroll', function(){ if(photoMenu) closePhotoMenu(); }, true);
+/* 화면이 움직이면 메뉴는 닫기 (버튼 자리를 따라가지 않도록).
+   여는 순간의 미세한 스크롤(포커스·브라우저 보정)은 무시한다. */
+window.addEventListener('scroll', function(){
+  if(photoMenu && Date.now() - photoMenuAt > 500) closePhotoMenu();
+}, true);
 window.addEventListener('resize', function(){ if(photoMenu) closePhotoMenu(); });
 document.addEventListener('keydown', function(e){ if(e.key==='Escape' && photoMenu) closePhotoMenu(); });
 
