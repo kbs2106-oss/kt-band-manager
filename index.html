@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.15">
+<meta name="app-version" content="v8.16">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -285,19 +285,43 @@
 
   /* ---------- home: todo bar ---------- */
   .todobar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-  .todo{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 16px;border:1px solid var(--line);
+  .todo{display:flex;align-items:center;gap:8px;padding:13px 15px;border:1px solid var(--line);
     border-radius:var(--r);background:#fff;text-align:left;transition:.12s}
   .todo:hover{border-color:#DDE5F0;background:#FBFCFE}
-  .todo span{font-size:12.5px;font-weight:600;color:var(--hint);letter-spacing:-.01em}
-  .todo b{font-size:26px;font-weight:700;letter-spacing:-.04em;line-height:1.15;color:var(--ink)}
-  .todo em{font-style:normal;font-size:12px;font-weight:600;color:var(--faint)}
+  .todo span{font-size:12.5px;font-weight:700;color:var(--hint);letter-spacing:-.01em;white-space:nowrap}
+  .todo b{font-size:24px;font-weight:800;letter-spacing:-.045em;line-height:1.12;color:var(--ink);white-space:nowrap}
+  .todo em{font-style:normal;font-size:12px;font-weight:700;color:var(--faint)}
   .todo:first-child b{color:#D14343}
-  .todo:last-child b{color:var(--blue-deep)}
-  .todo.keep{grid-column:1/-1;flex-direction:row;align-items:center;gap:9px;border-color:#FBD8A8;background:#FFFDF8}
-  .todo.keep:hover{background:#FFF7E8;border-color:#F5B96A}
-  .todo.keep span{font-size:13px;font-weight:800;color:var(--absent-ink)}
-  .todo.keep em{flex:1;text-align:left;color:var(--hint)}
-  .todo.keep b{font-size:22px;color:#D97706;margin-left:auto}
+  .todo.tfull{grid-column:1/-1}
+  .todo.tfull em{white-space:nowrap}
+  .todo.tfull .tf-go{font-style:normal;margin-left:auto;font-size:12px;font-weight:800;color:var(--blue-deep);white-space:nowrap}
+
+  /* ---------- v8.16: 부재중 킵 · 예약 킵 반반(2열) ---------- */
+  .k2bar{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .k2{display:grid;gap:5px;padding:11px 12px;border:1px solid;border-radius:14px;text-align:left;
+    font-family:inherit;transition:.12s}
+  .k2-abs{border-color:#F6CCCC;background:linear-gradient(180deg,#FFF8F8,#FFFDFD)}
+  .k2-abs:hover{border-color:#EDA9A9;background:#FFF1F1}
+  .k2-resv{border-color:#FBD8A8;background:linear-gradient(180deg,#FFF9EF,#FFFDF8)}
+  .k2-resv:hover{border-color:#F5B96A;background:#FFF7E8}
+  .k2-head{display:flex;align-items:center;gap:5px;min-width:0}
+  .k2-ico{flex:none;width:25px;height:25px;border-radius:8px;display:grid;place-items:center;font-size:14px;line-height:1}
+  .k2-abs .k2-ico{background:#FDE6E6}
+  .k2-resv .k2-ico{background:#FDEFD8}
+  .k2-lb{flex:1 1 auto;min-width:0;font-size:13px;font-weight:800;letter-spacing:-.035em;white-space:nowrap;color:#1F2937}
+  .k2-abs .k2-lb{color:#A32B2B}
+  .k2-resv .k2-lb{color:#8A4B0B}
+  .k2-n{flex:none;min-width:26px;height:23px;padding:0 7px;border-radius:8px;color:#fff;
+    font-size:13px;font-weight:800;letter-spacing:-.02em;line-height:1;display:grid;place-items:center;white-space:nowrap}
+  .k2-abs .k2-n{background:var(--no-call)}
+  .k2-resv .k2-n{background:#B45309}
+  .k2.zero .k2-n{background:#E6E9EE;color:#8B97A6}
+  .k2-foot{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+  .k2-abs .k2-foot{color:#9C5A5A}
+  .k2-resv .k2-foot{color:#97601F}
+  .k2-go{font-style:normal;margin-left:auto;font-weight:800}
+  .k2-abs .k2-go{color:#A32B2B}
+  .k2-resv .k2-go{color:#8A4B0B}
 
   /* ---------- band: summary ---------- */
   .statstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:#fff;border:1px solid var(--line);
@@ -330,25 +354,34 @@
     .sstat{padding:12px 11px 10px;min-height:66px}
     .sstat b{font-size:21px}
     .sstat span{font-size:11.5px}
-    .todo{padding:12px 13px}
+    .todo{padding:11px 13px}
     .todo b{font-size:23px}
   }
 
   /* ---------- band: filters ---------- */
-  .keepbar{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 14px;padding:11px 14px;
-    border:1px solid #FBD8A8;border-radius:14px;background:linear-gradient(180deg,#FFF9EF,#FFFDF8);text-align:left;transition:.12s}
-  .keepbar:hover{border-color:#F5B96A;background:#FFF7E8}
-  .keepbar .kb-ico{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#FDEFD8;font-size:17px}
-  .keepbar .kb-txt{display:block;flex:1;min-width:0}
-  .keepbar .kb-txt b{display:block;font-size:14px;font-weight:800;letter-spacing:-.02em;color:#8A4B0B}
-  .keepbar .kb-txt small{display:block;font-size:11.5px;font-weight:600;color:#B0722F;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .keepbar .kb-n{flex:none;min-width:28px;height:28px;padding:0 7px;border-radius:9px;background:var(--no-call);color:#fff;
-    font-size:14px;font-weight:800;display:grid;place-items:center}
-  .keepbar .kb-go{flex:none;font-size:12.5px;font-weight:800;color:var(--absent-ink)}
-  .keepbar.zero .kb-n{background:#E9DCC8;color:#8A6A45}
   @media (max-width:430px){
-    .keepbar{padding:10px 12px;gap:9px}
-    .keepbar .kb-txt small{font-size:11px}
+    .k2{padding:10px 11px;gap:4px}
+    .k2-ico{width:23px;height:23px;font-size:13px}
+    .k2-lb{font-size:12.5px}
+    .k2-n{min-width:24px;height:22px;padding:0 6px;font-size:12.5px}
+    .k2-foot{font-size:10.5px;gap:4px}
+  }
+  @media (max-width:359px){
+    .k2{padding:9px 10px}
+    .k2-ico{width:21px;height:21px;font-size:12px}
+    .k2-lb{font-size:11.5px;letter-spacing:-.04em}
+    .k2-n{min-width:22px;height:21px;padding:0 5px;font-size:11.5px}
+    .k2-foot{font-size:10px}
+    .ra-head{flex-wrap:wrap;row-gap:2px}
+    .ra-sub{white-space:nowrap}
+  }
+  /* 넓은 화면(PC)에서는 두 칸을 한 줄 스트립으로 — 빈 공간 없이 */
+  @media (min-width:700px){
+    .k2{display:flex;align-items:center;gap:10px;padding:12px 14px}
+    .k2-head{flex:none;gap:6px}
+    .k2-lb{flex:none}
+    .k2-foot{margin-left:auto;gap:8px;font-size:11.5px}
+    .k2-go{margin-left:2px}
   }
 
   .keepnote{margin:0 0 10px;font-size:12.5px;font-weight:600;color:var(--hint)}
@@ -827,22 +860,17 @@
   .fchip{font-weight:700}
   .fchip.on{font-weight:800}
 
-  /* --- 홈: 오늘 할 일 --- */
-  .todo span{font-size:13px;font-weight:700;color:var(--sub);letter-spacing:-.01em}
-  .todo b{font-size:29px;font-weight:800;letter-spacing:-.045em}
+  /* --- 홈: 오늘 할 일 (v8.16: 한 줄 스트립 + 반반 킵 타일) --- */
+  .todo span{font-size:13px;font-weight:700;color:var(--sub);letter-spacing:-.01em;white-space:nowrap}
+  .todo b{font-size:25px;font-weight:800;letter-spacing:-.045em}
   .todo em{font-size:12.5px;font-weight:700;color:var(--hint)}
-  .todo.keep span{font-size:13.5px;font-weight:800}
-  .todo.keep em{font-size:12.5px;font-weight:700;color:#9A5E14}
-  .todo.keep b{font-size:23px;font-weight:800}
+  .todo.tfull{gap:9px;padding:12px 16px}
 
   /* --- 명단: 상단 숫자 --- */
   .statstrip{margin-bottom:14px}
   .sstat span{font-size:12.5px;font-weight:700;color:var(--sub)}
   .sstat b{font-size:27px;font-weight:800}
   .sstat.done b{color:var(--done-ink)}
-  .keepbar .kb-txt b{font-size:14.5px;font-weight:800}
-  .keepbar .kb-txt small{font-size:12px;font-weight:700;color:#9A5E14}
-  .keepbar .kb-n{font-size:15px;font-weight:800}
 
   /* --- 명단: 날짜 카드 · 고객 줄 --- */
   .day-head .bk{background:#E8F3FF;color:var(--blue-deep);border:1px solid #CFE2FB;
@@ -908,7 +936,7 @@
     .c-phone{font-size:15px}
     .sstat b{font-size:23px}
     .sstat span{font-size:12px}
-    .todo b{font-size:25px}
+    .todo b{font-size:22px}
     .pi-title{font-size:14.5px}
     .pi-kind{min-width:33px}
     .dh-done{font-size:13.5px}
@@ -3261,16 +3289,35 @@ function segHTML(c){
   return h+'</div>';
 }
 
+/* v8.16: 📵 부재중 킵 · ⏰ 예약 킵 반반(2열) 배너 — 홈 피드·명단 탭 공통.
+   왼쪽 = 부재중 킵(부재 + 📌킵, 최근 3개월) · 오른쪽 = 예약 킵(명단 + 상담 댓글 예약 전체, 날짜·시간 순) */
+function keepSplitHTML(){
+  var keeps = absentCount('keep');
+  var resv = resvAllCount();
+  return '<section class="k2bar">'
+    + '<button type="button" class="k2 k2-abs'+(keeps?'':' zero')+'" data-act="keep-open"'
+    +   ' aria-label="부재중 킵 '+keeps+'명 목록 열기">'
+    +   '<span class="k2-head"><span class="k2-ico" aria-hidden="true">📵</span><span class="k2-lb">부재중 킵</span>'
+    +     '<b class="k2-n" data-k2="keep">'+keeps+'</b></span>'
+    +   '<span class="k2-foot">부재·킵 고객<i class="k2-go">열기 ›</i></span>'
+    + '</button>'
+    + '<button type="button" class="k2 k2-resv'+(resv?'':' zero')+'" data-act="resv-filter"'
+    +   ' aria-label="예약 킵 '+resv+'건 날짜·시간 순 목록 열기">'
+    +   '<span class="k2-head"><span class="k2-ico" aria-hidden="true">⏰</span><span class="k2-lb">예약 킵</span>'
+    +     '<b class="k2-n" data-k2="resv">'+resv+'</b></span>'
+    +   '<span class="k2-foot">날짜·시간 순<i class="k2-go">열기 ›</i></span>'
+    + '</button>'
+    + '</section>';
+}
+
 function todoBar(){
   var t = todayStr();
   var left = custsOfDay(t).filter(function(c){ return !isDoneSt(c.status); }).length;
   var noCall = custsOfDay(t).filter(function(c){ return c.status==='미통화'; }).length;
-  var keeps = absentCount('keep');   /* v8.4(#17983): 최근 3개월 부재·킵 */
   return '<section class="todobar">'
-    + '<button class="todo" data-act="tab" data-tab="band">'
-    +   '<span>오늘 남은 콜</span><b>'+left+'</b><em>미통화 '+noCall+'</em></button>'
-    + '<button class="todo keep" data-act="keep-open">'
-    +   '<span>📵 부재중 킵</span><em>부재·킵 고객 모아 바로 통화</em><b>'+keeps+'</b></button>'
+    + '<button class="todo tfull" data-act="tab" data-tab="band">'
+    +   '<span>오늘 남은 콜</span><b>'+left+'</b><em>미통화 '+noCall+'</em><i class="tf-go">명단 ›</i></button>'
+    + keepSplitHTML()
     + '</section>';
 }
 
@@ -3974,12 +4021,7 @@ function bandView(){
   });
   h += '</div>';
 
-  var keeps = absentItems('keep');
-  h += '<button class="keepbar '+(keeps.length?'':'zero')+'" data-act="filter" data-f="keep">'
-     +   '<span class="kb-ico">📵</span>'
-     +   '<span class="kb-txt"><b>부재중 킵</b><small>부재중·킵 고객만 모아 바로 통화</small></span>'
-     +   '<span class="kb-n">'+keeps.length+'</span>'
-     +   '<span class="kb-go">열기 ›</span></button>';
+  h += keepSplitHTML();   /* v8.16: 부재중 킵 · 예약 킵 반반 */
 
   h += periodHTML();
 
@@ -4746,8 +4788,11 @@ function updateCounts(){
   }
   var left = list.filter(function(c){ return !isDoneSt(c.status); }).length;
   var t2 = $('t2n'); if(t2) t2.textContent = left? left : '';
-  var kb = document.querySelector('.keepbar .kb-n');
-  if(kb) kb.textContent = absentCount('keep');   /* v8.4(#17983): 최근 3개월 부재·킵 */
+  /* v8.16: 홈·명단 상단 반반 킵 타일 숫자도 같이 새로 */
+  var kk = document.querySelector('.k2-n[data-k2="keep"]');
+  if(kk){ var kn = absentCount('keep'); kk.textContent = kn; var kt = kk.parentNode.parentNode; if(kt) kt.className = 'k2 k2-abs'+(kn?'':' zero'); }
+  var rk = document.querySelector('.k2-n[data-k2="resv"]');
+  if(rk){ var rn2 = resvAllCount(); rk.textContent = rn2; var rt = rk.parentNode.parentNode; if(rt) rt.className = 'k2 k2-resv'+(rn2?'':' zero'); }
   var days = document.querySelectorAll('.day[data-day]');
   for(var j=0;j<days.length;j++){
     var day = days[j].getAttribute('data-day');
