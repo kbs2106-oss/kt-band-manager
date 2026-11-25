@@ -2504,6 +2504,7 @@ var sync = {
   loopT: null,
   pushT: null,
   lastAt: 0,
+  dirty: false,
   lastErr: '',
   fails: 0,
   baseSent: false,
@@ -2629,6 +2630,7 @@ function syncCustTouched(c){
 /* v8.8까지는 기기마다 따로 저장돼서, 이미 눌러 둔 완료·부재·메모가 서버에 없습니다.
    실시간 공유가 처음 켜질 때 '시드와 달라진 칸'만 한 번 올려 전 직원 폰을 같은 상태로 맞춥니다. */
 function syncBaseline(){
+  sync.dirty = true;
   if(sync.baseSent || !state) return;
   sync.baseSent = true;
   try{ if(localStorage.getItem(SYNC_BASE_KEY) === '1') return; }catch(e){}
@@ -2793,8 +2795,9 @@ function syncPull(full){
     return 0;
   });
 }
-function syncPush(){
+function syncPush(force){
   if(!session || !state || sync.pushBusy || sync.mode !== 'live') return;
+  if(!sync.dirty && !force) return;      /* 바뀐 게 없으면 전체 훑지 않는다 */
   var items = syncScan();
   if(!items.length) return;
   var chunks = [], cur = [], size = 0;
@@ -2826,6 +2829,7 @@ function syncPush(){
   });
   chain.then(function(){
     sync.pushBusy = false;
+    sync.dirty = false;
     syncChip();
   }, function(e){
     sync.pushBusy = false;
@@ -2839,7 +2843,8 @@ function syncFlush(delay){
 /* 저장(save) 뒤에 부른다 — 바뀐 칸이 있으면 묶어서 곧바로 올린다 */
 function syncChanged(){
   if(!session || !state || sync.applying || !sync.primed) return;
-  if(sync.mode !== 'live') return;   /* 서버 준비 전에는 기다렸다가 켜질 때 한꺼번에 */
+  sync.dirty = true;
+  if(sync.mode !== 'live') return;   /* 서버 준비 전에 바꾼 것도 켜질 때 함께 올라간다 */
   syncFlush();
 }
 
@@ -3055,7 +3060,7 @@ function syncWake(){
   if(!session) return;
   if(!sync.primed) syncPrime();
   syncPull(sync.since ? false : true);
-  syncPush();
+  syncPush(true);
 }
 function syncLoop(){
   clearTimeout(sync.loopT);
