@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.19">
+<meta name="app-version" content="v8.20">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -2269,7 +2269,7 @@ function renderSheet(){
   } else if(type==='resv'){
     var pp = findPost(id);
     if(!pp){ closeSheet(); return; }
-    ttl.textContent = '사전예약 추가';
+    ttl.textContent = '사전예약 확정건 추가';
     b.innerHTML = resvForm(pp.id);
   } else if(type==='postmenu'){
     var pm = findPost(id);
@@ -3839,11 +3839,11 @@ function postStatHTML(p){
     if(!cnt[s]) return;
     chips += '<span class="pst" data-st="'+s+'">'+esc(stLabel(s))+' <b>'+cnt[s]+'</b></span>';
   });
-  /* 사전예약 공지 — 예약자 명단의 예약/개통 진척 = 앞에 */
+  /* 사전예약 공지 — 확정건 명단의 예약/개통 진척 = 앞에 (v8.20: '예약자' → '확정건') */
   if(p.reservations && p.reservations.length){
     var dn = p.reservations.filter(function(r){ return r.done; }).length;
     var pend = p.reservations.length - dn;
-    chips = (pend? '<span class="pst" data-st="예약">예약자 <b>'+pend+'</b></span>' : '')
+    chips = (pend? '<span class="pst" data-st="예약">확정건 <b>'+pend+'</b></span>' : '')
           + (dn? '<span class="pst" data-st="개통완료">개통 <b>'+dn+'</b></span>' : '')
           + chips;
   }
@@ -3948,10 +3948,10 @@ function openPostCmt(pid, cid){
 function reserveBlock(p){
   var rs = p.reservations||[];
   var done = rs.filter(function(r){return r.done;}).length;
-  var h = '<div class="resv"><div class="resv-head"><b>사전예약 명단</b>'
+  var h = '<div class="resv"><div class="resv-head"><b>사전예약 확정건</b>'
         + '<span class="pill">'+done+'/'+rs.length+' 개통</span></div><div class="rtable">';
   if(!rs.length){
-    h += '<div class="day-empty">아직 접수된 예약이 없어요. 아래 <b>＋ 예약 추가</b>로 첫 예약을 받아보세요.</div>';
+    h += '<div class="day-empty">아직 확정된 예약이 없어요. 아래 <b>＋ 확정건 추가</b>로 등록해 보세요.</div>';
   } else {
     h += '<div class="rrow rhead"><span class="rn">고객</span><span class="rp">연락처</span><span class="rm">희망기종</span><span class="ro">담당</span><span class="rc">개통</span><span class="rx"></span></div>';
     rs.forEach(function(r){
@@ -3981,7 +3981,7 @@ function reserveBlock(p){
       h += '</div>';
     });
   }
-  h += '</div><div class="resv-foot"><button class="btn ghost sm" data-act="resv-add" data-id="'+p.id+'">＋ 예약자 추가</button></div></div>';
+  h += '</div><div class="resv-foot"><button class="btn ghost sm" data-act="resv-add" data-id="'+p.id+'">＋ 확정건 추가</button></div></div>';
   return h;
 }
 
@@ -4549,7 +4549,7 @@ function composerHTML(){
             }).join('')
         + '</div>'
         + (isConsult? '<div class="resvbanner cmtbanner"><b>📞 상담</b><span>통화 결과·전달사항을 남기는 글입니다. 홈 피드 <b>상담</b> 탭에 모입니다.</span></div>' : '')
-        + (isRes? '<div class="resvbanner"><b>📢 사전예약 공지</b><span>등록하면 <b>상단 고정 공지</b> + <b>사전예약 탭</b>에 바로 뜹니다. 예약자는 글 안에서 <b>＋ 예약자 추가</b>로 받고 <b>개통 체크</b>로 관리하세요.</span></div>' : '')
+        + (isRes? '<div class="resvbanner"><b>📢 사전예약 공지</b><span>등록하면 <b>상단 고정 공지</b> + <b>사전예약 탭</b>에 바로 뜹니다. 확정된 예약은 글 안에서 <b>＋ 확정건 추가</b>로 받고 <b>개통 체크</b>로 관리하세요.</span></div>' : '')
         + '<input class="inp inp-title" id="cTitle" data-draft="cmp:title" value="'+esc(ui.drafts['cmp:title']||'')+'" placeholder="'+(isRes?'제목 (선택) — 예) S26 사전예약 접수 중':'제목 (선택)')+'">'
         + '<textarea class="inp" id="cBody" data-draft="cmp:body" rows="7" placeholder="'+ph+'">'+esc(ui.drafts['cmp:body']||'')+'</textarea>'
         + '<div class="cmp-photos">'
@@ -4649,7 +4649,7 @@ function postMenuHTML(p){
   var h = '<div class="menu-list">';
   h += '<button class="menu-item" data-act="post-pin" data-id="'+p.id+'"><span>'+(p.pinned?'공지 고정 해제':'맨 위 공지로 고정')+'</span><span class="arw">📌</span></button>';
   if(p.reserve){
-    h += '<button class="menu-item" data-act="resv-add" data-id="'+p.id+'"><span>사전예약 추가</span><span class="arw">＋</span></button>';
+    h += '<button class="menu-item" data-act="resv-add" data-id="'+p.id+'"><span>사전예약 확정건 추가</span><span class="arw">＋</span></button>';
   }
   /* v8.18: 글(공지) 삭제 — 관리자 모드에서만 */
   if(isAdmin()){
@@ -4757,7 +4757,7 @@ function resvForm(pid){
     + '<label>희망기종<input name="model" placeholder="예) S26 / S26 울트라" autocomplete="off"></label>'
     + '<label>담당자<select name="owner">'+STAFF.map(function(s){return '<option '+(session.staff===s?'selected':'')+'>'+esc(s)+'</option>';}).join('')+'</select></label>'
     + '<label>메모 한 줄<input name="memo" placeholder="예) 오전 10시 재통화 · 색상 블랙 희망" autocomplete="off"></label>'
-    + '<div class="formfoot"><button class="btn primary" type="submit">예약자 추가</button>'
+    + '<div class="formfoot"><button class="btn primary" type="submit">확정건 추가</button>'
     + '<button class="btn ghost" type="button" data-act="close">취소</button></div></form>';
 }
 
@@ -5007,6 +5007,95 @@ function saveKeepMemo(id){
   toast('메모를 저장했어요');
   notifyBridge('메모 저장', (c.name||'고객')+' · '+shortText(c.memo||'', 60));
 }
+
+/* ================= v8.20(#20658): 접어도 보던 글이 화면에서 튀지 않게 ================= */
+/* 상단에 붙어 있는 바(.topbar + .feedbar)의 아래 끝 — 글 카드를 이 아래로 맞춘다 */
+function feedBarBottom(){
+  var y = 0;
+  var tb = document.querySelector('.topbar');
+  if(tb){ var tr = tb.getBoundingClientRect(); if(tr.height > 0 && tr.bottom > y) y = tr.bottom; }
+  var fb = document.querySelector('.feedbar');
+  if(fb){
+    var fr = fb.getBoundingClientRect();
+    /* 필터 줄이 아직 위에 붙기 전(화면 아래쪽에 있을 때)에는 쓰지 않는다 */
+    if(fr.height > 0 && fr.top < Math.min(window.innerHeight * 0.45, 320)) y = Math.max(y, fr.bottom);
+  }
+  return y;
+}
+/* 지금 화면에서 읽고 있는 글 — 상단 바 아래에 처음 걸치는 카드 */
+function feedPostAtTop(){
+  var barB = feedBarBottom();
+  var cards = document.querySelectorAll('.feed article.post[data-pid]');
+  var first = null;
+  for(var i = 0; i < cards.length; i++){
+    if(!first) first = cards[i];
+    if(cards[i].getBoundingClientRect().bottom > barB + 8) return cards[i].getAttribute('data-pid');
+  }
+  return first ? first.getAttribute('data-pid') : null;
+}
+/* 다시 그린 뒤 그 카드의 위를 상단 바 바로 아래(여유 14px)에 맞춘다 */
+function keepPostInView(pid){
+  if(!pid) return;
+  var card = document.querySelector('.feed article.post[data-pid="' + pid + '"]');
+  if(!card) return;
+  var target = feedBarBottom() + 14;
+  var y = window.pageYOffset + card.getBoundingClientRect().top - target;
+  window.scrollTo(0, Math.max(0, Math.round(y)));
+}
+
+/* ================= v8.20(#20646): 앱을 껐다 다시 켜면 홈 피드는 접힌 기본 상태 ================= */
+/* 앱 안에서 펼쳤다 접는 동작은 그대로 두고, 화면을 떠났다가 돌아올 때(홈·최근앱·잠금 해제)만 초기화한다. */
+var feedAwayAt = 0;     /* 화면을 떠난 시각 */
+var feedPickAt = 0;     /* 사진·파일 고르는 중이면 이 시각 기준 3분간은 건드리지 않는다 */
+function feedDefault(){
+  collapseAll();
+  ui.feedAll = false;
+  ui.dayShown = 6;
+}
+function feedAnyOpen(){
+  var k;
+  for(k in ui.openThreads){ if(ui.openThreads.hasOwnProperty(k)) return true; }
+  for(k in ui.openCmts){ if(ui.openCmts.hasOwnProperty(k)) return true; }
+  for(k in ui.openReplies){ if(ui.openReplies.hasOwnProperty(k)) return true; }
+  return !!ui.feedAll || (+ui.dayShown || 6) > 6;
+}
+function feedResumeReset(){
+  var away = feedAwayAt ? Date.now() - feedAwayAt : 0;
+  feedAwayAt = 0;
+  if(!session || !state) return;
+  if(!$('app') || $('app').hidden) return;
+  if(away && away < 1500) return;                 /* 잠깐 다녀온 것(알림 확인 등)은 그대로 둔다 */
+  if(feedPickAt && Date.now() - feedPickAt < 180000) return;   /* 사진·파일 고르고 돌아오는 중 */
+  if(sheetSpec) return;                            /* 댓글 창·입력 창이 열려 있으면 건드리지 않는다 */
+  var ae = document.activeElement;
+  if(ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return;
+  if(!feedAnyOpen()) return;
+  /* 홈 피드에서 보고 있었을 때만 화면을 다시 그리고, 보던 글 자리를 지킨다(명단 탭이면 상태만 조용히 비운다) */
+  var onFeed = (ui.tab === 'notice');
+  var pid = onFeed ? feedPostAtTop() : null;
+  feedDefault();
+  if(!onFeed) return;
+  render();
+  keepPostInView(pid);
+}
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden){ feedAwayAt = Date.now(); return; }
+  feedResumeReset();
+});
+/* 앱(WebView)을 다녀왔을 때 visibilitychange 가 오지 않는 경우도 있어 창 포커스도 같이 본다 */
+window.addEventListener('blur', function(){ if(!feedAwayAt) feedAwayAt = Date.now(); });
+window.addEventListener('focus', function(){ setTimeout(feedResumeReset, 60); });
+/* 브라우저가 화면을 얼려 두었다 되살린 경우(뒤로가기 캐시)도 같은 기본 상태로 */
+window.addEventListener('pageshow', function(e){ if(e && e.persisted) feedResumeReset(); });
+/* 사진·파일 선택창을 여는 순간을 표시 — 돌아올 때 피드를 접지 않는다 */
+document.addEventListener('click', function(e){
+  var t = e.target;
+  if(t && t.tagName === 'INPUT' && t.type === 'file') feedPickAt = Date.now();
+}, true);
+document.addEventListener('change', function(e){
+  var t = e.target;
+  if(t && t.tagName === 'INPUT' && t.type === 'file') feedPickAt = 0;
+}, true);
 
 /* v6: 홈 피드 모두 접기 / 모두 펼치기 — v7부터 고정 공지는 건드리지 않는다 */
 function collapseAll(){
@@ -5344,7 +5433,11 @@ document.addEventListener('click', function(e){
     case 'reset': resetData(); break;
     case 'pin-toggle': ui.pinOpen = !ui.pinOpen; render(); break;
     case 'collapse-all':
+      /* v8.20(#20658): 접기 전에 보던 글을 기억했다가 그 자리에 다시 맞춘다 */
+      var cpid = feedPostAtTop();
       collapseAll(); render();
+      keepPostInView(cpid);
+      if(sheetSpec){ var csb = $('sheetBody'); if(csb) csb.scrollTop = 0; }
       toast('모든 글의 댓글을 접었어요');
       break;
     case 'expand-all':
@@ -5358,7 +5451,9 @@ document.addEventListener('click', function(e){
         ui.filter = 'all';
         ui.dayShown = 6;
         ui.feedAll = false;
+        var fpid = feedPostAtTop();
         collapseAll(); render();
+        keepPostInView(fpid);
         toast('피드 댓글을 모두 접었어요');
         break;
       }
@@ -5385,8 +5480,11 @@ document.addEventListener('click', function(e){
       toast('기간을 초기화했어요'); break;
     case 'thread-toggle':
       var tid = el.getAttribute('data-id');
-      if(ui.openThreads[tid]) delete ui.openThreads[tid]; else ui.openThreads[tid]=true;
-      render(); break;
+      var tclosing = !!ui.openThreads[tid];
+      if(tclosing) delete ui.openThreads[tid]; else ui.openThreads[tid]=true;
+      render();
+      if(tclosing) keepPostInView(tid);   /* v8.20(#20658): 접은 글은 그 자리에 */
+      break;
     case 'photo-menu': openPhotoMenu(el); break;
     case 'photo-cap': pickPhoto(true); break;
     case 'photo-album': pickPhoto(false); break;
