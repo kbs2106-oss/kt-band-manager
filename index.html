@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.11">
+<meta name="app-version" content="v8.12">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -177,8 +177,9 @@
   .pgrid.one{grid-template-columns:minmax(0,1fr)}
   .pgrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pgrid.one .pcell img{aspect-ratio:16/10;max-height:300px}
-  .pcell{position:relative;padding:0;border:0;border-radius:12px;overflow:hidden;background:var(--line-soft);display:block;width:100%}
-  .pcell img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+  .pcell{position:relative;padding:0;border:0;border-radius:12px;overflow:hidden;background:#F1F3F5;display:block;width:100%}
+  /* v8.12: 사진 자리 확보(흔들림 없음) + 로드 전 회색 판 */
+  .pcell img{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:#F1F3F5}
   .pgrid.sm{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .pgrid.sm .pcell{width:76px;border-radius:10px}
 
@@ -410,6 +411,8 @@
   /* ---------- band: day cards / customers ---------- */
   .daylist{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
   .day{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  /* v8.12: 날짜 카드가 화면 밖이면 레이아웃·그리기를 건너뛴다 — 명단 탭 첫 렌더 3~4배 빠름 */
+  .day{content-visibility:auto;contain-intrinsic-size:auto 1200px}
   .day-head{display:flex;align-items:center;gap:8px;padding:15px 16px 10px}
   .dh-date{display:flex;align-items:center;gap:7px;font-size:15.5px;font-weight:700;letter-spacing:-.03em}
   .dh-done{font-size:13px;font-weight:600;color:var(--hint);white-space:nowrap;margin-left:auto}
@@ -457,6 +460,10 @@
     line-height:1.45;padding:12px 0;min-height:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .c-memo.quiet{color:var(--faint)}
   .c-memo:hover{color:var(--blue-deep)}
+  /* v8.12: 관리자 모드에서만 보이는 고객 삭제 버튼 */
+  .c-del{flex:none;height:34px;padding:0 9px;border-radius:9px;border:1px solid #F3C6C1;background:#FFF6F5;color:#C0392B;
+    font-size:12px;font-weight:700;letter-spacing:-.02em}
+  .c-del:hover{background:#FFE3E0}
   .c-edit{display:flex;align-items:center;gap:6px;margin-top:6px}
   .c-edit input{flex:1;min-width:0;height:42px;border-radius:10px;border:1px solid var(--blue);padding:0 12px;font-size:14px}
   .c-edit input:focus{outline:none}
@@ -563,6 +570,10 @@
   .cd-memo .btn{height:38px;margin-top:8px;border-radius:10px;font-size:13px}
   .cd-threads{padding-top:6px}
   .cd-threads h4{margin:0;padding:14px 0 2px;font-size:13px;font-weight:700;color:var(--hint)}
+  /* v8.12: 관리자 모드 고객 시트 아래 삭제 영역 */
+  .cd-del{margin:18px 0 6px;padding-top:14px;border-top:1px solid var(--line-soft)}
+  .cd-del .btn.del{width:100%;height:44px;color:#C0392B;border-color:#F3C6C1;background:#FFF6F5;font-weight:700}
+  .cd-del .hint{margin:9px 0 0;text-align:center;font-size:12px;color:var(--faint)}
   .ownerdot{width:7px;height:7px;border-radius:50%;background:var(--c,#B0B8C1);flex:none}
 
   /* lightbox */
@@ -1448,6 +1459,23 @@ function esc(s){
 }
 function uid(p){ return (p||'x')+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function hash(s){ var v=5381,i; for(i=0;i<s.length;i++){ v=((v*33)+s.charCodeAt(i))>>>0; } return ('0000000'+v.toString(16)).slice(-8); }
+/* v8.12: 밴드 사진 썸네일 — thumbs/<해시>.jpg (tools/make_thumbs.py 와 같은 FNV-1a 32bit → base36)
+   목록·댓글에서는 300px 축소본(5~12KB)을 먼저 띄우고, 사진을 탭해 크게 볼 때만 원본을 받는다.
+   썸네일이 없는 새 사진(다음 날 올라온 글 등)은 thumbURL 이 '' 을 돌려줘 원본으로 자동 폴백한다. */
+var THUMB_HOST = 'https://coresos-phinf.pstatic.net/';
+function thumbHash(s){
+  var h = 2166136261;
+  for(var i=0;i<s.length;i++){
+    h ^= s.charCodeAt(i);
+    h = (h + ((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24))) >>> 0;   /* ×16777619 */
+  }
+  return h.toString(36);
+}
+function thumbURL(src){
+  src = String(src||'');
+  if(src.indexOf(THUMB_HOST) !== 0) return '';
+  return 'thumbs/' + thumbHash(src) + '.jpg';
+}
 function todayStr(d){ d=d||new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function shiftDay(n){ var d=new Date(); d.setDate(d.getDate()+n); return todayStr(d); }
 function nowAt(){ var d=new Date(); return todayStr(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); }
@@ -1507,8 +1535,11 @@ function setAdmin(on, quiet){
   applyCapture();
   var b = $('adminBadge');
   if(b) b.hidden = !on;
+  /* v8.12: 관리자 모드에서만 명단 추가(+)·고객 삭제가 보이므로 화면을 바로 다시 그린다 */
+  var app = $('app');
+  if(session && app && !app.hidden) render();
   if(sheetSpec && (sheetSpec.type==='menu' || sheetSpec.type==='admin')) renderSheet();
-  if(!quiet) toast(on ? '관리자 모드 · 10분 동안 화면 캡처를 허용합니다' : '관리자 모드 종료 · 화면 캡처를 다시 막았습니다');
+  if(!quiet) toast(on ? '관리자 모드 · 명단 추가·삭제 가능 (10분)' : '관리자 모드 종료 · 명단 추가·삭제 잠김');
 }
 /* 10분이 지나면 스스로 잠근다 */
 function adminTick(){
@@ -1612,13 +1643,14 @@ function normalizeSeed(d){
 function seed(){ return normalizeSeed(seedRaw()); }
 
 /* 매일 09:00 새 시드(오늘 명단·오늘 올린 밴드 글)가 배포돼도, 이 기기에 이미 저장된 상태·메모는 그대로 두고
-   저장본에 없는 글·고객만 덧붙인다(같은 id 는 손대지 않음, 삭제 없음). */
+   저장본에 없는 글·고객만 덧붙인다(같은 id 는 손대지 않음, 삭제 없음).
+   v8.12: 관리자가 삭제한 고객은 다시 살아나지 않게 건너뛴다. */
 function mergeSeed(d, s){
   var pids = {}, cids = {}, added = 0;
   (d.posts||[]).forEach(function(p){ pids[p.id] = 1; });
   (d.customers||[]).forEach(function(c){ cids[c.id] = 1; });
   (s.posts||[]).forEach(function(p){ if(!pids[p.id]){ d.posts.push(p); added++; } });
-  (s.customers||[]).forEach(function(c){ if(!cids[c.id]){ d.customers.push(c); added++; } });
+  (s.customers||[]).forEach(function(c){ if(!cids[c.id] && !isCustDeleted(c.id, d)){ d.customers.push(c); added++; } });
   return added;
 }
 /* v8.3: 예전에 저장된 명단(같은 id)에 비어 있는 생년월일만 시드 값으로 채운다. 한 번만. */
@@ -1633,137 +1665,9 @@ function syncBirth(d, s){
   return n;
 }
 /* v8.2: 공지사항(중요공지·일반공지)은 새 시드로 글·댓글·대댓글·사진까지 새로 맞춘다.
-   직원이 찍어 둔 1단계 댓글 상태(st)는 시간·내용이 같은 댓글에 그대로 옮겨 둔다. */
-var NOTICE_SYNC = '2026-11-25.3';
-function syncNotices(d, s){
-  if(d.noticeSync === NOTICE_SYNC) return 0;
-  var idx = {};
-  (d.posts||[]).forEach(function(p,i){ idx[p.id] = i; });
-  var n = 0;
-  (s.posts||[]).forEach(function(sp){
-    if(!sp.isNotice) return;
-    var i = idx[sp.id];
-    if(i == null){ d.posts.push(sp); n++; return; }
-    var old = d.posts[i], st = {};
-    (old.comments||[]).forEach(function(c){
-      if(c.st) st[(c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'')] = c.st;
-    });
-    var cp = JSON.parse(JSON.stringify(sp));
-    (cp.comments||[]).forEach(function(c){
-      var k = (c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'');
-      if(st[k]) c.st = st[k];
-    });
-    d.posts[i] = cp; n++;
-  });
-  d.noticeSync = NOTICE_SYNC;
-  return n;
-}
-/* v8.2: 공지사항(중요공지·일반공지)은 새 시드로 글·댓글·대댓글·사진까지 새로 맞춘다.
-   직원이 찍어 둔 1단계 댓글 상태(st)는 시간·내용이 같은 댓글에 그대로 옮겨 둔다. */
-var NOTICE_SYNC = '2026-11-25.3';
-function syncNotices(d, s){
-  if(d.noticeSync === NOTICE_SYNC) return 0;
-  var idx = {};
-  (d.posts||[]).forEach(function(p,i){ idx[p.id] = i; });
-  var n = 0;
-  (s.posts||[]).forEach(function(sp){
-    if(!sp.isNotice) return;
-    var i = idx[sp.id];
-    if(i == null){ d.posts.push(sp); n++; return; }
-    var old = d.posts[i], st = {};
-    (old.comments||[]).forEach(function(c){
-      if(c.st) st[(c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'')] = c.st;
-    });
-    var cp = JSON.parse(JSON.stringify(sp));
-    (cp.comments||[]).forEach(function(c){
-      var k = (c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'');
-      if(st[k]) c.st = st[k];
-    });
-    d.posts[i] = cp; n++;
-  });
-  d.noticeSync = NOTICE_SYNC;
-  return n;
-}
-/* v8.2: 공지사항(중요공지·일반공지)은 새 시드로 글·댓글·대댓글·사진까지 새로 맞춘다.
-   직원이 찍어 둔 1단계 댓글 상태(st)는 시간·내용이 같은 댓글에 그대로 옮겨 둔다. */
-var NOTICE_SYNC = '2026-11-25.2';
-function syncNotices(d, s){
-  if(d.noticeSync === NOTICE_SYNC) return 0;
-  var idx = {};
-  (d.posts||[]).forEach(function(p,i){ idx[p.id] = i; });
-  var n = 0;
-  (s.posts||[]).forEach(function(sp){
-    if(!sp.isNotice) return;
-    var i = idx[sp.id];
-    if(i == null){ d.posts.push(sp); n++; return; }
-    var old = d.posts[i], st = {};
-    (old.comments||[]).forEach(function(c){
-      if(c.st) st[(c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'')] = c.st;
-    });
-    var cp = JSON.parse(JSON.stringify(sp));
-    (cp.comments||[]).forEach(function(c){
-      var k = (c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'');
-      if(st[k]) c.st = st[k];
-    });
-    d.posts[i] = cp; n++;
-  });
-  d.noticeSync = NOTICE_SYNC;
-  return n;
-}
-/* v8.2: 공지사항(중요공지·일반공지)은 새 시드로 글·댓글·대댓글·사진까지 새로 맞춘다.
-   직원이 찍어 둔 1단계 댓글 상태(st)는 시간·내용이 같은 댓글에 그대로 옮겨 둔다. */
-var NOTICE_SYNC = '2026-11-25.1';
-function syncNotices(d, s){
-  if(d.noticeSync === NOTICE_SYNC) return 0;
-  var idx = {};
-  (d.posts||[]).forEach(function(p,i){ idx[p.id] = i; });
-  var n = 0;
-  (s.posts||[]).forEach(function(sp){
-    if(!sp.isNotice) return;
-    var i = idx[sp.id];
-    if(i == null){ d.posts.push(sp); n++; return; }
-    var old = d.posts[i], st = {};
-    (old.comments||[]).forEach(function(c){
-      if(c.st) st[(c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'')] = c.st;
-    });
-    var cp = JSON.parse(JSON.stringify(sp));
-    (cp.comments||[]).forEach(function(c){
-      var k = (c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'');
-      if(st[k]) c.st = st[k];
-    });
-    d.posts[i] = cp; n++;
-  });
-  d.noticeSync = NOTICE_SYNC;
-  return n;
-}
-/* v8.2: 공지사항(중요공지·일반공지)은 새 시드로 글·댓글·대댓글·사진까지 새로 맞춘다.
-   직원이 찍어 둔 1단계 댓글 상태(st)는 시간·내용이 같은 댓글에 그대로 옮겨 둔다. */
-var NOTICE_SYNC = '2026-11-25.1';
-function syncNotices(d, s){
-  if(d.noticeSync === NOTICE_SYNC) return 0;
-  var idx = {};
-  (d.posts||[]).forEach(function(p,i){ idx[p.id] = i; });
-  var n = 0;
-  (s.posts||[]).forEach(function(sp){
-    if(!sp.isNotice) return;
-    var i = idx[sp.id];
-    if(i == null){ d.posts.push(sp); n++; return; }
-    var old = d.posts[i], st = {};
-    (old.comments||[]).forEach(function(c){
-      if(c.st) st[(c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'')] = c.st;
-    });
-    var cp = JSON.parse(JSON.stringify(sp));
-    (cp.comments||[]).forEach(function(c){
-      var k = (c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'');
-      if(st[k]) c.st = st[k];
-    });
-    d.posts[i] = cp; n++;
-  });
-  d.noticeSync = NOTICE_SYNC;
-  return n;
-}
-/* v8.2: 공지사항(중요공지·일반공지)은 새 시드로 글·댓글·대댓글·사진까지 새로 맞춘다.
-   직원이 찍어 둔 1단계 댓글 상태(st)는 시간·내용이 같은 댓글에 그대로 옮겨 둔다. */
+   직원이 찍어 둔 1단계 댓글 상태(st)는 시간·내용이 같은 댓글에 그대로 옮겨 둔다.
+   v8.12: 같은 함수·선언이 6번 겹쳐 있던 것을 한 벌로 정리. (겹친 사본 중 마지막 '25.1' 이 실제로 쓰이고 있어
+   기기 저장본에 이미 '25.1' 이 찍혀 있으므로, 키는 그대로 두어 공지 글이 불필요하게 다시 덮이지 않게 한다.) */
 var NOTICE_SYNC = '2026-11-25.1';
 function syncNotices(d, s){
   if(d.noticeSync === NOTICE_SYNC) return 0;
@@ -1800,14 +1704,15 @@ function loadState(){
           try{ localStorage.setItem(KEY, JSON.stringify(fresh)); }catch(e){}
           return fresh;
         }
-        if(syncNotices(d, seed())){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
-        if(syncNotices(d, seed())){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
-        if(syncNotices(d, seed())){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
-        if(syncNotices(d, seed())){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
-        if(syncNotices(d, seed())){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
-        if(syncNotices(d, seed())){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
-        if(mergeSeed(d, seed())){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
-        if(syncBirth(d, seed())){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }   /* v8.3 */
+        /* v8.12: save the seed once and reuse it — seed() parses the 650KB JSON and normalizes every call,
+           so six seed() calls at every launch were a big part of the slow start. */
+        var s = seed();
+        if(!d.delCust) d.delCust = {};          /* v8.12: 삭제 표시(가입 시드·과거 명단에서 다시 살아나지 않게) */
+        var dirty = false;
+        if(syncNotices(d, s)) dirty = true;
+        if(mergeSeed(d, s)) dirty = true;
+        if(syncBirth(d, s)) dirty = true;       /* v8.3 */
+        if(dirty){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
         return d;
       }
     }
@@ -1825,6 +1730,45 @@ function save(){
   try{ if(typeof syncChanged === 'function') syncChanged(); }catch(e){}
 }
 function findPost(id){ for(var i=0;i<state.posts.length;i++){ if(state.posts[i].id===id) return state.posts[i]; } return null; }
+
+/* ================= v8.12: 고객 삭제(관리자) · 삭제 표시 ================= */
+/* 삭제는 명단에서 빼고 '삭제 표시(state.delCust)'를 남긴다.
+   · 다음 실행 때 시드·과거 명단(archive)에서 같은 id 가 다시 살아나지 않게 하고,
+   · 전 직원 폰에도 band_push(f.deleted=true)로 같은 표시를 보내 함께 사라지게 한다. */
+function isCustDeleted(id, d){
+  d = d || state;   /* loadState 처럼 state 가 아직 없을 때는 저장본(d)을 직접 넘긴다 */
+  return !!(d && d.delCust && d.delCust[String(id||'')]);
+}
+function custTombstone(id, at, by, name){
+  if(!state) return false;
+  id = String(id||'');
+  if(!id) return false;
+  state.delCust = state.delCust || {};
+  at = +at || Date.now();
+  var prev = state.delCust[id];
+  if(prev && (+prev.at||0) > at) return false;   /* 더 새로운 삭제 표시가 이미 있음 */
+  state.delCust[id] = {at:at, by:by||'', name:name||(prev&&prev.name)||''};
+  var before = state.customers.length;
+  state.customers = state.customers.filter(function(c){ return c && c.id!==id; });
+  custIdxDirty();
+  /* 삭제 표시가 끝없이 쌓이지 않게 최근 400건만 남긴다 */
+  var ids = Object.keys(state.delCust);
+  if(ids.length > 400){
+    ids.sort(function(a,b){ return (state.delCust[a].at||0)-(state.delCust[b].at||0); });
+    ids.slice(0, ids.length-400).forEach(function(k){ delete state.delCust[k]; });
+  }
+  return before !== state.customers.length || !prev;
+}
+function deleteCust(id){
+  var c = findCust(id);
+  if(!c) return false;
+  var nm = c.name || '';
+  if(!custTombstone(id, Date.now(), (session && session.staff) || '', nm)) return false;
+  if(sheetSpec) closeSheet();
+  save(); render();
+  toast(nm + ' 님을 명단에서 지웠어요 · 전 직원에게도 반영됩니다');
+  return true;
+}
 function sysCmt(text){
   return {id:uid('s'), author:session?session.staff:'시스템', at:nowAt(), sys:true, text:text, photos:[], replies:[]};
 }
@@ -1951,7 +1895,7 @@ function allCustomers(){
   if(!arch.items || !arch.items.length) return st;
   var seen = {}, out = st.slice();
   for(var i=0;i<st.length;i++){ seen[st[i].id] = 1; }
-  for(var j=0;j<arch.items.length;j++){ var c = arch.items[j]; if(!seen[c.id]) out.push(c); }
+  for(var j=0;j<arch.items.length;j++){ var c = arch.items[j]; if(!seen[c.id] && !isCustDeleted(c.id)) out.push(c); }
   return out;
 }
 function custIndex(){
@@ -1966,6 +1910,7 @@ function custIndex(){
 }
 function custsOfDay(day){ return custIndex().byDay[day] || []; }
 function findCust(id){
+  if(isCustDeleted(id)) return null;   /* v8.12: 삭제한 고객은 어디에서도 찾지 않는다 */
   for(var i=0;i<state.customers.length;i++){ if(state.customers[i].id===id) return state.customers[i]; }
   return archCustById(id);
 }
@@ -2168,7 +2113,7 @@ var LEDGER_URL = 'https://script.google.com/macros/s/AKfycbz502Kzj6P_p3ku_i-91a4
 var LEDGER_PIN = '5001';
 var LKEY = 'kt_band_ledger_v1';
 var LEDGER_CD = 60 * 1000;              /* '지금 확인' 최소 간격 */
-var LEDGER_TTL = 30 * 60 * 1000;        /* 자동 확인 주기 */
+var LEDGER_TTL = 4 * 60 * 1000;         /* v8.12: 자동 확인 주기 4분 — 화면을 오갈 때마다 5MB 를 받지 않는다 */
 var LEDGER_FULL = 6 * 60 * 60 * 1000;   /* 이 시간이 지나면 건수가 같아도 목록을 새로 받는다 */
 var LEDGER_TMO = 25000;                 /* 요청 제한 시간 */
 var ledger = {at:0, checked:0, count:0, rows:[], map:null, busy:false, err:'', lastNew:0, lastBack:0, lastRun:0};
@@ -2407,6 +2352,7 @@ function ledgerCheck(){
 }
 function ledgerSync(force){
   if(!session || ledger.busy) return;
+  if(document.hidden && !force) return;   /* v8.12: 화면이 꺼져 있으면 대조하지 않는다 */
   var now = Date.now();
   if(!force){
     if(ledger.checked && (now - ledger.checked) < LEDGER_TTL) return;
@@ -2418,7 +2364,7 @@ function ledgerSync(force){
   ledger.err = '';
   ledger.lastNew = 0;
   ledger.lastRun = now;
-  refreshLedgerUI();
+  refreshLedgerUI(true);
   (force ? ledgerPull() : ledgerCheck()).then(function(){
     ledger.busy = false;
     var added = ledgerApply();
@@ -2426,20 +2372,27 @@ function ledgerSync(force){
     ledger.checked = Date.now();
     if(added) save();
     ledgerSave();
-    refreshLedgerUI();
+    /* v8.12: 실제로 바뀐 고객이 있을 때만 화면 전체를 다시 그린다 — 상태 줄만 바뀌면 그 줄만 갱신 */
+    if(added) render(); else refreshLedgerUI(true);
     if(added) toast('장부에서 ' + added + '명 개통완료로 자동 반영했어요'
                    + (ledger.lastBack ? ' (기개통 ' + ledger.lastBack + '명)' : ''));
   }, function(e){
     ledger.busy = false;
     ledger.err = (e && e.message) || '연결 실패';
-    refreshLedgerUI();
+    refreshLedgerUI(true);
     if(force) toast('장부를 확인하지 못했어요 — ' + ledger.err, true);
   });
 }
-function refreshLedgerUI(){
+function refreshLedgerUI(light){
   if(!session) return;
   if($('app').hidden) return;
   if(sheetSpec) return;   /* 시트에서 입력 중이면 화면을 다시 그리지 않는다 */
+  if(light){
+    /* v8.12: 장부 상태 줄만 바꾼다(명단·사진을 다시 그리지 않아 즉시 반응) */
+    var bar = document.querySelector('.ledgerbar');
+    if(bar) bar.outerHTML = ledgerBar();
+    return;
+  }
   render();
 }
 function ledgerAgeText(){
@@ -2713,6 +2666,14 @@ function syncScan(){
       items.push(it);
     }
   });
+  /* v8.12: 삭제 표시 — 이 기기에서 지운 고객은 f.deleted 로 한 번 올려 전 직원 폰에서도 사라지게 */
+  for(var did in (state.delCust || {})){
+    if(!state.delCust.hasOwnProperty(did)) continue;
+    var drec = syncRec('c:' + did);
+    if(drec.f.deleted && drec.f.deleted.v === true) continue;
+    var dt = state.delCust[did] || {};
+    items.push({t: 'c', id: did, f: {deleted: true}, u: +dt.at || now});
+  }
   return items;
 }
 function syncMarkSent(items, at){
@@ -2897,6 +2858,17 @@ function syncMergeCmts(arr, list, rec){
 }
 function syncApplyCust(it){
   var rec = syncRec('c:' + it.id);
+  /* v8.12: 삭제 표시 — 다른 직원이 지운 고객은 이 폰에서도 명단에서 빼고, 다시 살아나지 않게 표시를 남긴다 */
+  if(it.f && it.f.deleted === true){
+    var du = +it.u || 0, pd = rec.f.deleted;
+    if(pd && (+pd.u || 0) > du) return 0;
+    rec.f.deleted = {v: true, u: du};
+    if(isCustDeleted(it.id)) return 0;
+    var knownDel = findCust(it.id);
+    custTombstone(it.id, du || Date.now(), it.st || '', knownDel ? (knownDel.name || '') : '');
+    return 1;
+  }
+  if(isCustDeleted(it.id)) return 0;   /* 이미 지운 고객 — 늦게 도착한 다른 칸 변경은 무시 */
   var c = null, i, created = false;
   for(i = 0; i < state.customers.length; i++){ if(state.customers[i].id === it.id){ c = state.customers[i]; break; } }
   if(!c){
@@ -2973,6 +2945,10 @@ function syncApplyItem(it){
 function syncNoteOf(it){
   var who = it.st || '';
   if(syncItemKind(it) === 'c'){
+    if(it.f && it.f.deleted === true){
+      var dd = state && state.delCust && state.delCust[it.id];
+      return (who ? who + ' · ' : '') + ((dd && dd.name) || '고객') + ' 삭제';
+    }
     var c = findCust(it.id);
     var nm = (it.f && it.f.name) || (c && c.name) || '고객';
     var st = it.f && it.f.status;
@@ -3488,7 +3464,12 @@ function photoGrid(ps, size){
   var cls = ps.length===1?'one':(ps.length===2?'two':'');
   var out = '<div class="pgrid '+(size||'')+' '+cls+'">';
   for(var i=0;i<ps.length;i++){
-    out += '<button class="pcell" data-act="photo" aria-label="사진 크게 보기"><img src="'+esc(ps[i].src)+'" alt="'+esc(ps[i].name||'첨부 사진')+'" loading="lazy"></button>';
+    var src = ps[i].src || '';
+    var th = thumbURL(src);       /* v8.12: 목록은 축소본, 크게 보기는 원본 */
+    out += '<button class="pcell" data-act="photo" aria-label="사진 크게 보기">'
+         + '<img src="'+esc(th||src)+'" data-full="'+esc(src)+'"'+(th?' data-thumb="1"':'')
+         + ' alt="'+esc(ps[i].name||'첨부 사진')+'" loading="lazy" decoding="async">'
+         + '</button>';
   }
   return out+'</div>';
 }
@@ -3778,7 +3759,9 @@ function custListHTML(){
       return '<div class="emptycard">'+esc(periodLabel())+'에 조건에 맞는 명단이 없어요.<br>'
         + '<button class="linkbtn" data-act="period-clear">전체 기간에서 보기</button></div>';
     }
-    return '<div class="emptycard">조건에 맞는 명단이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 고객을 추가해보세요.</div>';
+    return '<div class="emptycard">조건에 맞는 명단이 없어요.<br>'
+      + (isAdmin()? '오른쪽 아래 <b>＋</b> 버튼으로 고객을 추가해보세요.'
+                   : '새 고객 추가는 <b>관리자 모드</b>(프로필 → 관리자 PIN)에서만 할 수 있어요.') + '</div>';
   }
   if(hits.length > limit){
     cards += '<button class="morebar" data-act="more-days">이전 날짜 더 보기 <b>'+(hits.length-limit)+'</b>일 <span class="chev">▾</span></button>';
@@ -3917,7 +3900,7 @@ function dayCard(day){
         + '<div class="day-head">'
         +   '<div class="dh-date"><b>'+fmtDayLabel(day)+'</b>'+tag+'</div>'
         +   '<div class="dh-done '+(left?'':'all-done')+'">'+(left? '남은 <b>'+left+'</b>' : '모두 완료')+'</div>'
-        +   '<button class="day-add" data-act="add-cust" data-day="'+day+'" aria-label="이 날짜에 명단 추가">＋</button>'
+        +   (isAdmin()? '<button class="day-add" data-act="add-cust" data-day="'+day+'" aria-label="이 날짜에 명단 추가">＋</button>' : '')
         + '</div><div class="cust-list">'
         + list.map(custRow).join('')
         + '</div></section>';
@@ -3932,6 +3915,7 @@ function custRow(c){
   var h = '<div class="cust '+(isDoneSt(c.status)?'is-done':'')+'" data-id="'+c.id+'" data-st="'+esc(c.status)+'">';
   /* v8.6(#18220): 생년월일은 전화번호 바로 옆 같은 줄로 옮겼다(이름 줄에는 이름·구분만) */
   h += '<div class="c-top"><span class="c-name">'+esc(c.name)+bkBadge(c.bucket)+'</span>'
+     +   (isAdmin()? '<button class="c-del" data-act="cust-del" data-id="'+c.id+'" title="고객 삭제" aria-label="'+esc(c.name)+' 삭제">삭제</button>' : '')
      +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" title="부재중 킵" aria-label="부재중 킵">📌</button>'
      + '</div>';
   /* v8.3: 예약 날짜가 있으면 이름 바로 아래에 한 줄로 — 오늘·지난 예약은 빨갛게 */
@@ -4030,6 +4014,11 @@ function custSheetHTML(c){
   h += '<div class="cd-memo"><form data-form="memo" data-id="'+c.id+'"><textarea name="memo" rows="3" placeholder="상담 내용 · 재통화 약속 · 전달사항">'+esc(c.memo||'')+'</textarea>'
      + '<button class="btn ghost" type="submit">메모 저장</button></form></div>';
   h += '<div class="cd-threads"><h4>댓글 · 통화 기록</h4>'+threadHTML(c,'cust',true)+'</div>';
+  /* v8.12: 고객 삭제는 관리자 모드에서만 — 삭제하면 전 직원 폰에서도 함께 사라진다 */
+  if(isAdmin()){
+    h += '<div class="cd-del"><button class="btn ghost del" data-act="cust-del" data-id="'+c.id+'" type="button">이 고객 삭제</button>'
+       + '<p class="hint">삭제하면 전 직원 폰의 730·550·3년 명단에서도 함께 사라집니다.</p></div>';
+  }
   return h;
 }
 
@@ -4137,7 +4126,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.11</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.12</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -4213,8 +4202,11 @@ function render(){
 
   var fab = $('fab');
   if(fab){
-    fab.setAttribute('data-act', ui.tab==='band'?'add-cust':'compose');
-    fab.setAttribute('aria-label', ui.tab==='band'?'명단 추가':'새 글 쓰기');
+    /* v8.12: 730·550·3년 명단의 새 고객 추가(+)는 관리자 모드에서만 — 직원은 댓글·메모·상태만 */
+    var addCust = ui.tab==='band';
+    fab.hidden = addCust && !isAdmin();
+    fab.setAttribute('data-act', addCust?'add-cust':'compose');
+    fab.setAttribute('aria-label', addCust?'명단 추가':'새 글 쓰기');
   }
 
   if(sheetSpec) renderSheet();
@@ -4674,6 +4666,15 @@ function cancelInlineEdit(){
   render();
   return true;
 }
+/* v8.12: 썸네일이 없거나 깨진 사진은 원본 주소로 조용히 넘어간다(새 날짜 글·다음 업로드분) */
+document.addEventListener('error', function(e){
+  var t = e.target;
+  if(!t || t.tagName !== 'IMG' || !t.getAttribute || !t.getAttribute('data-thumb')) return;
+  t.removeAttribute('data-thumb');
+  var full = t.getAttribute('data-full');
+  if(full) t.src = full;
+}, true);
+
 document.addEventListener('click', function(e){
   if((ui.memoEdit || ui.resvMemo || ui.keepMemo)
      && !(e.target.closest && e.target.closest('.c-edit,.rmemo-edit,.k-edit'))){
@@ -4776,7 +4777,8 @@ document.addEventListener('click', function(e){
       break;
     case 'photo':
       var img = el.querySelector('img') || el;
-      openLB(img.getAttribute('src'));
+      /* v8.12: 목록은 썸네일(thumbs/...), 크게 볼 때는 원본 주소 */
+      openLB(img.getAttribute('data-full') || img.getAttribute('src'));
       break;
     case 'close-lb': closeLB(); break;
     case 'reply-open':
@@ -4891,7 +4893,20 @@ document.addEventListener('click', function(e){
       break;
     case 'memo-save': saveMemo(el.getAttribute('data-id')); break;
     case 'memo-cancel': ui.memoEdit = null; render(); break;
-    case 'add-cust': openSheet({type:'custadd', day: el.getAttribute('data-day') || todayStr()}); break;
+    case 'add-cust':
+      /* v8.12: 명단 추가는 관리자 모드(PIN 0525)에서만 */
+      if(!isAdmin()){ toast('고객 추가는 관리자 모드에서만 할 수 있어요', true); break; }
+      openSheet({type:'custadd', day: el.getAttribute('data-day') || todayStr()}); break;
+    /* v8.12: 고객 삭제 — 관리자 모드에서만, 확인 후 전 직원에게도 반영 */
+    case 'cust-del':
+      if(!isAdmin()){ toast('고객 삭제는 관리자 모드에서만 할 수 있어요', true); break; }
+      var delId = el.getAttribute('data-id'), delC = findCust(delId);
+      if(!delC) break;
+      openConfirm({title:'고객 삭제',
+        msg:(delC.name||'이 고객')+' 님을 명단에서 지울까요?\n전 직원 폰의 730·550·3년 명단에서도 함께 사라집니다.',
+        ok:'삭제', cancel:'추소',
+        onOk:function(){ deleteCust(delId); }});
+      break;
     case 'resv-add': openSheet({type:'resv', id: el.getAttribute('data-id')}); break;
     case 'resv-del':
       var rp = findPost(el.getAttribute('data-pid'));
@@ -5308,7 +5323,13 @@ function init(){
     ui.loginStaff = session.staff;
     render();
     var pi = $('pinInput'); if(pi) try{ pi.blur(); }catch(e){}
-    ledgerSync(false);
+    /* v8.12: 장부(5.2MB) 대조는 첫 화면을 그린 뒤 한가할 때 — 앱이 바로 뜨고, 스크롤·사진이 먼저다.
+       실제 조회는 4분에 한 번만 하고, 바뀐 고객이 있을 때만 화면을 다시 그린다. */
+    if(window.requestIdleCallback){
+      requestIdleCallback(function(){ ledgerSync(false); }, {timeout: 3000});
+    } else {
+      setTimeout(function(){ ledgerSync(false); }, 1500);
+    }
     syncStart();   /* v8.9: 전 직원 실시간 공유 — 앱을 열 때 바로 한 번 받아온다 */
     setTimeout(resvNotifyDue, 1200);   /* v8.3: 오늘·지난 예약은 앱을 열 때 한 번 알림 */
   } else {

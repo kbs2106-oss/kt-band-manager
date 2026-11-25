@@ -1,8 +1,10 @@
-/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 (v8.10) */
+/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 (v8.12) */
 /* v8.7(#18345): 화면(HTML)은 HTTP 캐시까지 건너뛰고(cache:'no-store') 항상 네트워크에서 새로 받는다.
    GitHub Pages 가 index.html 을 10분(max-age=600) 캐시하기 때문에, 예전에는 한참 전 화면이 떠서
-   "수정이 바로 반영되지 않는다"고 느껴졌다. 오프라인일 때만 캐시로 넘어간다. */
-var CACHE = 'kt-band-v8.11';
+   "수정이 바로 반영되지 않는다"고 느껴졌다. 오프라인일 때만 캐시로 넘어간다.
+   v8.12: 사진 썸네일(thumbs/)은 따로 캐시에 담아 한 번 뜬 사진은 다시 받지 않는다(0ms). */
+var CACHE = 'kt-band-v8.12';
+var IMG = 'kt-band-img-v1';          /* 썸네일 전용 — 앱 버전이 올라가도 그대로 쓴다(주소가 내용 해시라 안전) */
 var CACHE_PREFIX = 'kt-band-';
 var SHELL = [
   './',
@@ -29,9 +31,10 @@ self.addEventListener('activate', function(e){
     caches.keys().then(function(keys){
       /* v8.7: 이 앱(kt-band-*)의 옛 캐시만 지운다.
          같은 도메인(kbs2106-oss.github.io)에 개통장부(kt-ledger-*) 캐시가 함께 있어서,
-         예전처럼 전부 지우면 장부 앱의 오프라인 캐시·SheetJS 를 매번 다시 받아 느려졌다. */
+         예전처럼 전부 지우면 장부 앱의 오프라인 캐시·SheetJS 를 매번 다시 받아 느려졌다.
+         v8.12: 썸네일 캐시(IMG)는 버전과 무관하게 남긴다. */
       return Promise.all(keys.filter(function(k){
-        return k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE;
+        return k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE && k !== IMG;
       }).map(function(k){ return caches.delete(k); }));
     }).then(function(){ return self.clients.claim(); })
   );
@@ -62,6 +65,21 @@ function networkFirstDoc(req){
   });
 }
 
+/* v8.12: 사진 썸네일 — 캐시 우선. 주소가 내용(원본 주소) 해시라 한 번 받으면 바뀌지 않는다. */
+function cacheFirstThumb(req){
+  return caches.open(IMG).then(function(c){
+    return c.match(req).then(function(hit){
+      if(hit) return hit;
+      return fetch(req).then(function(res){
+        if(res && res.ok){
+          try{ c.put(req, res.clone()).catch(function(){}); }catch(e){}
+        }
+        return res;
+      });
+    });
+  });
+}
+
 self.addEventListener('fetch', function(e){
   var req = e.request;
   if(req.method !== 'GET') return;
@@ -75,6 +93,12 @@ self.addEventListener('fetch', function(e){
   /* 문서는 항상 네트워크에서 새로(캐시 무시), 오프라인일 때만 캐시 */
   if(isDocRequest(req, url)){
     e.respondWith(networkFirstDoc(req));
+    return;
+  }
+
+  /* v8.12: 썸네일(thumbs/*.jpg)은 전용 캐시에서 바로 — 목록을 다시 열어도 사진이 즉시 뜬다 */
+  if(/\/thumbs\/[^/]+\.(jpg|jpeg|png|webp)$/i.test(url.pathname)){
+    e.respondWith(cacheFirstThumb(req));
     return;
   }
 
