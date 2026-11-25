@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.22">
+<meta name="app-version" content="v8.23">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -3496,9 +3496,8 @@ function segHTML(c){
   return h+'</div>';
 }
 
-/* v8.16: 📵 부재중 킵 · ⏰ 예약 킵 반반(2열) 배너 — 홈 피드 전용.
-   v8.22(#20983·#21009): 명단 탭에서는 이 배너를 그리지 않는다 — 위 '예약 킵'과 아래 '⏰ 예약 고객'
-   알람이 같은 고객을 두 번 보여줘 겹쳤다. 명단 탭은 상단 요약 5칸 + 상태 칩으로만 조회한다.
+/* v8.16: 📵 부재중 킵 · ⏰ 예약 킵 반반(2열) 배너 — 홈 피드·명단 탭 공통.
+   v8.22(#21031·#21042): 배너는 양쪽 다 그대로 둔다(사용자 확정).
    왼쪽 = 부재중 킵(부재 + 📌킵, 최근 3개월) · 오른쪽 = 예약 킵(명단 + 상담 댓글 예약 전체, 날짜·시간 순) */
 function keepSplitHTML(){
   var keeps = absentCount('keep');
@@ -4205,7 +4204,9 @@ function cmtAbsentRow(it){
 }
 function resvSortKey(o){ return String(o.resDate||'9999-99-99')+(o.resTime||'99:99'); }
 /* v8.19(#20499): 예약 고객 목록 — 기본 '가까운 순'(오늘 이후 가장 임박한 예약이 맨 위, 지난 예약은 아래·최근 것부터)
-   + 헤더 아래 한 줄 필터(전체·오늘·7일 이내·지난 예약) + 정렬 전환(가까운 순 ⇅ / 최근 등록순) */
+   + 헤더 아래 한 줄 필터(전체·오늘·7일 이내·지난 예약) + 정렬 전환(가까운 순 ⇅ / 최근 등록순)
+   v8.22(#21031·#21042): 위 '⏰ 예약 고객 N' 제목 박스는 그리지 않는다 — 명단 탭 위 '예약 킵' 배너와
+   제목이 겹쳐 같은 목록을 두 번 보여줬다. 필터 줄(전체·오늘·7일 이내·지난 예약)부터 바로 예약 카드가 나온다. */
 var RESV_FILTERS = [['all','전체'],['today','오늘'],['7d','7일 이내'],['past','지난 예약']];
 function resvF(){ return ui.resvF || 'all'; }
 function resvSortOn(){ return ui.resvSort === 'reg' ? 'reg' : 'near'; }
@@ -4256,10 +4257,7 @@ function resvListHTML(){
   var f = resvF(), reg = resvSortOn()==='reg';
   var list = all.filter(function(it){ return resvFilterMatch(it, f); });
   list.sort(reg? resvSortReg : resvSortNear);
-  var fname = '';
-  RESV_FILTERS.forEach(function(x){ if(x[0]===f) fname = x[1]; });
-  var sub = '기간 무관 · ' + (reg? '최근 등록순' : '가까운 순') + (f==='all'? '' : ' · ' + fname);
-  var h = flatHeadHTML('⏰', '예약 고객', list.length, sub) + resvCtlHTML();
+  var h = resvCtlHTML();   /* v8.22: 제목 박스 없이 필터 줄부터 */
   if(!all.length){
     return h + '<div class="emptycard">지금 예약 잡힌 고객이 없어요.<br>오른쪽 아래 <b>＋</b> 로 예약을 바로 넣거나,<br>명단에서 <b>예약</b>을 누르면 날짜·시간을 골라 여기에 모입니다.</div>';
   }
@@ -4448,8 +4446,7 @@ function bandView(){
   });
   h += '</div>';
 
-  /* v8.22(#20983·#21009): 명단 탭에서는 keepSplitHTML() 을 그리지 않는다(홈 피드에만 유지).
-     위 '예약 킵'과 아래 '⏰ 예약 고객' 알람이 겹쳐 보이던 중복 배너 제거 — 상단 요약 5칸 + 상태 칩으로 조회. */
+  h += keepSplitHTML();   /* v8.16: 부재중 킵 · 예약 킵 반반 — v8.22(#21031)에도 홈·명단 모두 유지 */
 
   h += periodHTML();
 
