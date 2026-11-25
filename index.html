@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.17">
+<meta name="app-version" content="v8.18">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -583,7 +583,7 @@
   .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   /* v8.9(#18595): 확인 창 */
   .confirmbox{padding:10px 2px 2px}
-  .confirmbox p{margin:0 0 20px;font-size:14.5px;line-height:1.75;color:var(--ink-2);font-weight:600;letter-spacing:-.01em}
+  .confirmbox p{margin:0 0 20px;font-size:14.5px;line-height:1.75;color:var(--ink-2);font-weight:600;letter-spacing:-.01em;white-space:pre-line}
   .formfoot{display:flex;gap:8px;margin-top:4px}
   .formfoot .btn{flex:1}
   .hint{font-size:12.5px;color:var(--faint);font-weight:500;line-height:1.6}
@@ -821,6 +821,10 @@
   .act.done-act:hover{background:#E6F6EE;border-color:#AFDCC6}
   .act.done-act.on{background:var(--done-ink);border-color:var(--done-ink);color:#fff}
   .act.done-act.on:hover{background:#0A6449;border-color:#0A6449}
+  /* v8.18: 관리자 모드에서만 보이는 글(공지) 삭제 버튼 */
+  .act.post-del{height:38px;padding:0 12px;border-radius:10px;border:1px solid #F3C6C1;background:#FFF6F5;
+    color:#C0392B;font-size:13.5px;font-weight:800;letter-spacing:-.02em}
+  .act.post-del:hover{background:#FFE3E0;border-color:#EBB2AC}
 
   /* 열린 댓글 영역 */
   .thread.open{border-top:1px solid var(--line-soft);padding-top:6px}
@@ -929,6 +933,7 @@
     .kbadge{height:22px;padding:0 7px;font-size:11px}
     .act.cmt-act{height:37px;padding:0 11px;font-size:13px}
     .act.done-act{height:37px;padding:0 12px;font-size:13px}
+    .act.post-del{height:37px;padding:0 10px;font-size:12.5px}
     .collapsebtn{height:36px;padding:0 11px;font-size:12.5px}
     .feedbar{top:99px;padding:6px 0 8px}
     .feedbar .filterbar{gap:6px}
@@ -1680,11 +1685,11 @@ function setAdmin(on, quiet){
   applyCapture();
   var b = $('adminBadge');
   if(b) b.hidden = !on;
-  /* v8.12: 관리자 모드에서만 명단 추가(+)·고객 삭제가 보이므로 화면을 바로 다시 그린다 */
+  /* v8.12: 관리자 모드에서만 글 삭제·명단 추가·고객 삭제가 보이므로 화면을 바로 다시 그린다 */
   var app = $('app');
   if(session && app && !app.hidden) render();
   if(sheetSpec && (sheetSpec.type==='menu' || sheetSpec.type==='admin')) renderSheet();
-  if(!quiet) toast(on ? '관리자 모드 · 명단 추가·삭제 가능 (10분)' : '관리자 모드 종료 · 명단 추가·삭제 잠김');
+  if(!quiet) toast(on ? '관리자 모드 · 글 삭제·명단 추가 가능 (10분)' : '관리자 모드 종료 · 글 삭제·명단 추가 잠금');
 }
 /* 10분이 지나면 스스로 잠근다 */
 function adminTick(){
@@ -1795,7 +1800,7 @@ function mergeSeed(d, s){
   var pids = {}, cids = {}, added = 0;
   (d.posts||[]).forEach(function(p){ pids[p.id] = 1; });
   (d.customers||[]).forEach(function(c){ cids[c.id] = 1; });
-  (s.posts||[]).forEach(function(p){ if(!pids[p.id]){ d.posts.push(p); added++; } });
+  (s.posts||[]).forEach(function(p){ if(!pids[p.id] && !isPostDeleted(p.id, d)){ d.posts.push(p); added++; } });
   (s.customers||[]).forEach(function(c){ if(!cids[c.id] && !isCustDeleted(c.id, d)){ d.customers.push(c); added++; } });
   return added;
 }
@@ -1854,9 +1859,11 @@ function loadState(){
            so six seed() calls at every launch were a big part of the slow start. */
         var s = seed();
         if(!d.delCust) d.delCust = {};          /* v8.12: 삭제 표시(가입 시드·과거 명단에서 다시 살아나지 않게) */
+        if(!d.delPost) d.delPost = {};          /* v8.18: 지운 글 표시(새 시드·전 직원 공유에서 다시 살아나지 않게) */
         var dirty = false;
         if(syncNotices(d, s)) dirty = true;
         if(mergeSeed(d, s)) dirty = true;
+        if(pruneDeletedPosts(d)) dirty = true;  /* v8.18: 지운 글은 시드·동기화로 다시 들어와도 화면에 남기지 않는다 */
         if(syncBirth(d, s)) dirty = true;       /* v8.3 */
         if(dirty){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
         return d;
@@ -1913,6 +1920,53 @@ function deleteCust(id){
   if(sheetSpec) closeSheet();
   save(); render();
   toast(nm + ' 님을 명단에서 지웠어요 · 전 직원에게도 반영됩니다');
+  return true;
+}
+/* ================= v8.18: 글(공지) 삭제(관리자) · 삭제 표시 ================= */
+/* 고객 삭제(v8.12)와 같은 방식 —
+   · state.posts 에서 빼고 '삭제 표시(state.delPost)'를 남겨 다음 실행·새 시드·전 직원 공유에서 다시 살아나지 않게 하고,
+   · 전 직원 폰에도 band_push(f.deleted=true)로 같은 표시를 보내 함께 사라지게 한다. */
+function isPostDeleted(id, d){
+  d = d || state;   /* loadState 처럼 state 가 아직 없을 때는 저장본(d)을 직접 넘긴다 */
+  return !!(d && d.delPost && d.delPost[String(id||'')]);
+}
+/* 시드·저장본에서 지운 글을 걷어낸다 — loadState 의 syncNotices·mergeSeed 뒤에 한 번 */
+function pruneDeletedPosts(d){
+  if(!d || !d.delPost) return 0;
+  var before = (d.posts||[]).length;
+  d.posts = (d.posts||[]).filter(function(p){ return p && !isPostDeleted(p.id, d); });
+  return before - d.posts.length;
+}
+function postTombstone(id, at, by, title){
+  if(!state) return false;
+  id = String(id||'');
+  if(!id) return false;
+  state.delPost = state.delPost || {};
+  at = +at || Date.now();
+  var prev = state.delPost[id];
+  if(prev && (+prev.at||0) > at) return false;   /* 더 새로운 삭제 표시가 이미 있음 */
+  state.delPost[id] = {at:at, by:by||'', title:title||(prev&&prev.title)||''};
+  var before = state.posts.length;
+  state.posts = state.posts.filter(function(p){ return p && p.id!==id; });
+  /* 그 글에 열어 둔 댓글 칸·글 시트가 남아 있지 않게 */
+  if(ui.openThreads) delete ui.openThreads[id];
+  if(ui.openCmts) delete ui.openCmts[id];
+  /* 삭제 표시가 끝없이 쌓이지 않게 최근 400건만 남긴다 */
+  var ids = Object.keys(state.delPost);
+  if(ids.length > 400){
+    ids.sort(function(a,b){ return (state.delPost[a].at||0)-(state.delPost[b].at||0); });
+    ids.slice(0, ids.length-400).forEach(function(k){ delete state.delPost[k]; });
+  }
+  return before !== state.posts.length || !prev;
+}
+function deletePost(id){
+  var p = findPost(id);
+  if(!p) return false;
+  var ttl = p.title || shortText(p.body || '', 30) || '글';
+  if(!postTombstone(id, Date.now(), (session && session.staff) || '', ttl)) return false;
+  if(sheetSpec) closeSheet();
+  save(); render();
+  toast('글을 지웠어요 · 전 직원에게도 반영됩니다');
   return true;
 }
 function sysCmt(text){
@@ -2828,6 +2882,14 @@ function syncScan(){
     var dt = state.delCust[did] || {};
     items.push({t: 'c', id: did, f: {deleted: true}, u: +dt.at || now});
   }
+  /* v8.18: 지운 글도 같은 방식으로 f.deleted 를 한 번 올려 전 직원 폰의 홈 피드에서 함께 사라지게 */
+  for(var pid2 in (state.delPost || {})){
+    if(!state.delPost.hasOwnProperty(pid2)) continue;
+    var prec = syncRec('p:' + pid2);
+    if(prec.f.deleted && prec.f.deleted.v === true) continue;
+    var pt = state.delPost[pid2] || {};
+    items.push({t: 'p', id: pid2, f: {deleted: true}, u: +pt.at || now});
+  }
   return items;
 }
 function syncMarkSent(items, at){
@@ -3054,6 +3116,17 @@ function syncApplyCust(it){
 }
 function syncApplyPost(it){
   var rec = syncRec('p:' + it.id);
+  /* v8.18: 삭제 표시 — 다른 직원이 지운 글은 이 폰에서도 피드에서 빼고, 다시 살아나지 않게 표시를 남긴다 */
+  if(it.f && it.f.deleted === true){
+    var du = +it.u || 0, pd = rec.f.deleted;
+    if(pd && (+pd.u || 0) > du) return 0;
+    rec.f.deleted = {v: true, u: du};
+    if(isPostDeleted(it.id)) return 0;
+    var knownDel = findPost(it.id);
+    postTombstone(it.id, du || Date.now(), it.st || '', knownDel ? (knownDel.title || shortText(knownDel.body || '', 30) || '글') : '');
+    return 1;
+  }
+  if(isPostDeleted(it.id)) return 0;   /* 이미 지운 글 — 늦게 도착한 다른 칸 변경은 무시 */
   var p = findPost(it.id), created = false;
   if(!p){
     var f0 = it.f || {};
@@ -3113,6 +3186,10 @@ function syncNoteOf(it){
   }
   var p = findPost(it.id);
   var ttl = (it.f && it.f.title) || (p && p.title) || '';
+  if(it.f && it.f.deleted === true){
+    var dp = state && state.delPost && state.delPost[it.id];
+    return (who ? who + ' · ' : '') + ((dp && dp.title) || ttl || '글') + ' 삭제';
+  }
   if(it.cm && it.cm.length){ var a = it.cm[it.cm.length - 1]; return (a.author || who) + ' · 댓글' + (ttl ? ' · ' + shortText(ttl, 18) : ''); }
   if(it.f && it.f.body !== undefined && !p) return (who ? who + ' · ' : '') + '새 글';
   return '';
@@ -3670,6 +3747,7 @@ function postCard(p, opts){
                            : '💬 댓글 <b class="cnt">'+cs.length+'</b>개 모두 보기 <span class="chev">▾</span>')
                   +   '</button>'
                 : ''))   /* v8.13: 댓글이 없으면 아래 바로 쓰는 입력칸이 그 자리를 대신한다 */
+     +   (isAdmin()? '<button class="act post-del" data-act="post-del" data-id="'+p.id+'" aria-label="'+esc(shortText(p.title||p.body||'글',20))+' 삭제">🗑️ 삭제</button>' : '')
      +   postStatHTML(p)
      + '</div>';
   /* v8.13: 접힌 카드에서도 '댓글 모두 보기'를 누르기 전에 바로 댓글·사진을 남길 수 있게 한다.
@@ -4386,6 +4464,10 @@ function postMenuHTML(p){
   if(p.reserve){
     h += '<button class="menu-item" data-act="resv-add" data-id="'+p.id+'"><span>사전예약 추가</span><span class="arw">＋</span></button>';
   }
+  /* v8.18: 글(공지) 삭제 — 관리자 모드에서만 */
+  if(isAdmin()){
+    h += '<button class="menu-item danger" data-act="post-del" data-id="'+p.id+'"><span>🗑️ 글 삭제<small>전 직원 폰의 홈 피드에서도 함께 사라집니다</small></span><span class="arw">🗑️</span></button>';
+  }
   h += '</div>';
   return h;
 }
@@ -4437,11 +4519,11 @@ function menuHTML(){
   h += '<button class="menu-item" data-act="admin">'
      + (adminOn
         ? '<span>🔓 관리자 모드 끄기<small>화면 캡처를 다시 막습니다</small></span><span class="arw">잠금</span>'
-        : '<span>🔐 관리자 모드<small>관리자 PIN · 이 화면 캡처 허용 (10분)</small></span><span class="arw">›</span>')
+        : '<span>🔐 관리자 모드<small>관리자 PIN · 글 삭제·화면 캡처 허용 (10분)</small></span><span class="arw">›</span>')
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.17</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.18</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -4459,7 +4541,7 @@ function adminFormHTML(){
   }
   h += '<form class="form" data-form="adminpin">'
      + '<label>관리자 PIN<input name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="숫자 4자리"></label>'
-     + '<p class="hint" style="margin:2px 0 0">관리자 PIN 을 넣으면 이 앱에서만 <b>화면 캡처·녹화가 허용</b>됩니다. '
+     + '<p class="hint" style="margin:2px 0 0">관리자 PIN 을 넣으면 이 앱에서만 <b>화면 캡처·녹화가 허용</b>되고, <b>글(공지)·고객 삭제</b>도 할 수 있습니다. '
      + '10분이 지나면 자동으로 다시 막힙니다 (직원 화면은 항상 막힘).</p>'
      + '<div class="formfoot"><button class="btn primary" type="submit">관리자 모드 열기</button>'
      + '<button class="btn ghost" type="button" data-act="close">취소</button></div></form>';
@@ -5294,6 +5376,17 @@ document.addEventListener('click', function(e){
         msg:(delC.name||'이 고객')+' 님을 명단에서 지울까요?\n전 직원 폰의 730·550·3년 명단에서도 함께 사라집니다.',
         ok:'삭제', cancel:'추소',
         onOk:function(){ deleteCust(delId); }});
+      break;
+    /* v8.18: 글(공지) 삭제 — 관리자 모드에서만, 확인 후 전 직원 폰에서도 함께 사라지게 */
+    case 'post-del':
+      if(!isAdmin()){ toast('글 삭제는 관리자 모드에서만 할 수 있어요', true); break; }
+      var pdelId = el.getAttribute('data-id'), pdel = findPost(pdelId);
+      if(!pdel) break;
+      var pdelName = pdel.title || shortText(pdel.body || '', 24) || '이 글';
+      openConfirm({title:'글 삭제',
+        msg:'「'+pdelName+'」 글을 지울까요?\n전 직원 폰의 홈 피드에서도 함께 사라집니다.',
+        ok:'삭제', cancel:'취소',
+        onOk:function(){ deletePost(pdelId); }});
       break;
     case 'resv-add': openSheet({type:'resv', id: el.getAttribute('data-id')}); break;
     case 'resv-del':
