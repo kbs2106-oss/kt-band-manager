@@ -1279,6 +1279,16 @@ function normalizeSeed(d){
 }
 function seed(){ return normalizeSeed(seedRaw()); }
 
+/* 매일 09:00 새 시드(오늘 명단·오늘 올린 밴드 글)가 배포돼도, 이 기기에 이미 저장된 상태·메모는 그대로 두고
+   저장본에 없는 글·고객만 덧붙인다(같은 id 는 손대지 않음, 삭제 없음). */
+function mergeSeed(d, s){
+  var pids = {}, cids = {}, added = 0;
+  (d.posts||[]).forEach(function(p){ pids[p.id] = 1; });
+  (d.customers||[]).forEach(function(c){ cids[c.id] = 1; });
+  (s.posts||[]).forEach(function(p){ if(!pids[p.id]){ d.posts.push(p); added++; } });
+  (s.customers||[]).forEach(function(c){ if(!cids[c.id]){ d.customers.push(c); added++; } });
+  return added;
+}
 /* v8: seedVersion 이 8보다 낮은 저장본(v1~v7 테스트 데이터)은 한 번만 새 실데이터로 깨끗이 교체한다 */
 function loadState(){
   try{
@@ -1291,6 +1301,7 @@ function loadState(){
           try{ localStorage.setItem(KEY, JSON.stringify(fresh)); }catch(e){}
           return fresh;
         }
+        if(mergeSeed(d, seed())){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
         return d;
       }
     }
