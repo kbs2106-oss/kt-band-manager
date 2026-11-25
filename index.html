@@ -1861,6 +1861,7 @@ function loadState(){
         if(!d.delCust) d.delCust = {};          /* v8.12: 삭제 표시(가입 시드·과거 명단에서 다시 살아나지 않게) */
         if(!d.delPost) d.delPost = {};          /* v8.18: 지운 글 표시(새 시드·전 직원 공유에서 다시 살아나지 않게) */
         var dirty = false;
+        if(adoptLegacyPostDeletes(d)) dirty = true;   /* v8.18: 구버전 기기가 deleted=true 만 적어 둔 글을 삭제 표시로 */
         if(syncNotices(d, s)) dirty = true;
         if(mergeSeed(d, s)) dirty = true;
         if(pruneDeletedPosts(d)) dirty = true;  /* v8.18: 지운 글은 시드·동기화로 다시 들어와도 화면에 남기지 않는다 */
@@ -1937,6 +1938,23 @@ function pruneDeletedPosts(d){
   d.posts = (d.posts||[]).filter(function(p){ return p && !isPostDeleted(p.id, d); });
   return before - d.posts.length;
 }
+/* v8.18: v8.17 기기가 서버의 삭제 표시(f.deleted)를 먼저 받아 글 객체에 deleted=true 로만 적어 둔 경우
+   → 저장본을 읽을 때 삭제 표시(delPost)로 옮긴다. 그 기기가 v8.18 로 바뀌어도 지운 글이 화면에 남지 않게. */
+function adoptLegacyPostDeletes(d){
+  if(!d || !Array.isArray(d.posts)) return 0;
+  var n = 0;
+  d.posts.forEach(function(p){
+    if(!p || p.deleted !== true) return;
+    d.delPost = d.delPost || {};
+    if(!d.delPost[p.id]) d.delPost[p.id] = {at: Date.now(), by: '', title: p.title || shortText(p.body || '', 30) || '글', sent: 1};
+    n++;
+  });
+  return n;
+}
+/* 실시간 공유 부수 기록(삭제 표시의 '이미 올림')을 저장할 때 — syncChanged 를 다시 태우지 않는다 */
+function saveQuiet(){
+  try{ if(state) localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+}
 function postTombstone(id, at, by, title){
   if(!state) return false;
   id = String(id||'');
@@ -1946,6 +1964,7 @@ function postTombstone(id, at, by, title){
   var prev = state.delPost[id];
   if(prev && (+prev.at||0) > at) return false;   /* 더 새로운 삭제 표시가 이미 있음 */
   state.delPost[id] = {at:at, by:by||'', title:title||(prev&&prev.title)||''};
+  if(prev && prev.sent) state.delPost[id].sent = prev.sent;
   var before = state.posts.length;
   state.posts = state.posts.filter(function(p){ return p && p.id!==id; });
   /* 그 글에 열어 둔 댓글 칸·글 시트가 남아 있지 않게 */
@@ -2888,6 +2907,7 @@ function syncScan(){
     var prec = syncRec('p:' + pid2);
     if(prec.f.deleted && prec.f.deleted.v === true) continue;
     var pt = state.delPost[pid2] || {};
+    if(pt.sent) continue;                 /* 이미 서버에 올린 삭제 표시 — 앱을 다시 열 때마다 되풀이해 올리지 않는다 */
     items.push({t: 'p', id: pid2, f: {deleted: true}, u: +pt.at || now});
   }
   return items;
@@ -2901,6 +2921,11 @@ function syncMarkSent(items, at){
     (it.cm || []).forEach(function(c){ if(c && c.id) rec.cm[c.id] = {fp: c.fp, u: at || syncNow()}; });
     if(it.rv) rec.rv = syncRvKey(it.rv);
     rec.u = at || syncNow();
+    /* v8.18: 서버에 올라간 글 삭제 표시는 '올림'을 남겨 다시 올리지 않는다 */
+    if(it.t === 'p' && it.f && it.f.deleted === true && state && state.delPost && state.delPost[it.id]){
+      state.delPost[it.id].sent = 1;
+      if(typeof saveQuiet === 'function') saveQuiet();
+    }
   });
 }
 
@@ -3121,9 +3146,10 @@ function syncApplyPost(it){
     var du = +it.u || 0, pd = rec.f.deleted;
     if(pd && (+pd.u || 0) > du) return 0;
     rec.f.deleted = {v: true, u: du};
-    if(isPostDeleted(it.id)) return 0;
+    if(isPostDeleted(it.id)){ if(state.delPost && state.delPost[it.id]) state.delPost[it.id].sent = 1; return 0; }
     var knownDel = findPost(it.id);
     postTombstone(it.id, du || Date.now(), it.st || '', knownDel ? (knownDel.title || shortText(knownDel.body || '', 30) || '글') : '');
+    if(state.delPost && state.delPost[it.id]) state.delPost[it.id].sent = 1;   /* 이미 서버에 있는 삭제 표시 */
     return 1;
   }
   if(isPostDeleted(it.id)) return 0;   /* 이미 지운 글 — 늦게 도착한 다른 칸 변경은 무시 */
