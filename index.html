@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
+<meta name="app-version" content="v8.7">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -4402,12 +4403,56 @@ document.addEventListener('keydown', function(e){
 });
 
 /* ================= init ================= */
+/* v8.7(#18345): 새 버전이 배포되면 앱을 껐다 켜지 않아도 화면이 저절로 최신으로 바뀐다.
+   · 앱을 열 때·화면으로 돌아올 때·켜 둔 동안 1분마다 새 버전을 확인(reg.update)
+   · 새 서비스워커가 이 화면을 넘겨받으면(controllerchange) 한 번만 새로고침 */
+var swReg = null;
+var swLastCheck = 0;
+var swReloading = false;
+var swHadController = false;
+try{ swHadController = !!(navigator.serviceWorker && navigator.serviceWorker.controller); }catch(e){}
+
+function swReloadForUpdate(){
+  if(swReloading) return;
+  swReloading = true;
+  try{
+    var last = parseInt(sessionStorage.getItem('ktBandSwReload')||'0', 10) || 0;
+    if(Date.now() - last < 20000) return;   /* 무한 새로고침 방지 */
+    sessionStorage.setItem('ktBandSwReload', String(Date.now()));
+  }catch(e){}
+  /* 글 쓰는 중이면 저장이 날아가지 않게, 입력칸에서 손을 뗀 뒤 새로고침 */
+  var ae = document.activeElement;
+  var typing = ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable);
+  if(typing){
+    try{ toast('새 버전이 준비되었습니다 — 입력을 마치면 화면이 새로 고쳐집니다.'); }catch(e){}
+    document.addEventListener('focusout', function(){ setTimeout(function(){ location.reload(); }, 500); }, {once:true});
+    return;
+  }
+  location.reload();
+}
+
+function swCheckUpdate(){
+  if(!swReg) return;
+  var now = Date.now();
+  if(now - swLastCheck < 60000) return;   /* 1분에 한 번만 확인 */
+  swLastCheck = now;
+  try{ swReg.update(); }catch(e){}
+}
+
 function registerSW(){
   if('serviceWorker' in navigator && location.protocol!=='file:'){
     try{
+      navigator.serviceWorker.addEventListener('controllerchange', function(){
+        if(!swHadController) return;   /* 첫 설치 때는 새로고침하지 않는다 */
+        swReloadForUpdate();
+      });
       navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).then(function(reg){
-        try{ reg.update(); }catch(e){}
+        swReg = reg;
+        swCheckUpdate();
       }).catch(function(){});
+      document.addEventListener('visibilitychange', function(){ if(!document.hidden) swCheckUpdate(); });
+      window.addEventListener('focus', swCheckUpdate);
+      setInterval(function(){ if(!document.hidden) swCheckUpdate(); }, 60000);
     }catch(e){}
   }
 }
