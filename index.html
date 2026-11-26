@@ -1412,13 +1412,28 @@
     .rsort{height:30px;padding:0 9px;font-size:12px}
   }
 
-  /* ================= v8.25: 🔔 알람 탭 ================= */
-  /* 미확인 빨간 배지 — 탭 이름 옆 */
+  /* ================= v8.25: 🔔 알람 ================= */
+  /* 미확인 빨간 배지 */
   .tab .n.hot{background:#E5484D;color:#fff}
   .tab.on .n.hot{background:#E5484D;color:#fff}
-  @media (max-width:430px){ .tabs{gap:15px} .tab{font-size:13.8px;gap:4px} }
-  @media (max-width:360px){ .tabs{gap:11px} .tab{font-size:13px} }
+  /* 헤더 프로필([김] 김태양) 바로 왼쪽의 종 버튼 */
+  .bellbtn{position:relative;flex:none;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);
+    background:#fff;display:grid;place-items:center;font-size:17px;line-height:1;color:var(--ink-2)}
+  .bellbtn:hover{background:var(--gray-bg)}
+  .bellbtn.on{border-color:#BBD7FA;background:var(--blue-weak)}
+  .bellbtn .bn{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;
+    background:#E5484D;color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center;
+    letter-spacing:-.02em;box-shadow:0 0 0 2px #fff}
+  .bellbtn .bn[hidden]{display:none}
+  @media (max-width:430px){ .bellbtn{width:36px;height:36px;border-radius:11px;font-size:16px} }
   .albar{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 13px 11px;margin-bottom:12px}
+  .alhead{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+  .alhead>b{font-size:14.5px;font-weight:800;letter-spacing:-.03em;color:var(--ink)}
+  .alhead .alun{margin-left:auto;font-size:12px;font-weight:700;color:var(--hint)}
+  .alhead .alun b{color:#E5484D;font-weight:800}
+  .alx{flex:none;width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    font-size:13px;font-weight:800;color:var(--sub);line-height:1}
+  .alx:hover{background:var(--gray-bg)}
   .alctl{display:grid;grid-template-columns:1fr 1fr;gap:7px}
   .alsw{display:flex;align-items:center;gap:6px;height:44px;padding:0 10px;border-radius:12px;border:1px solid var(--line);
     background:#fff;font-size:12.5px;font-weight:800;color:var(--sub);letter-spacing:-.02em;white-space:nowrap}
@@ -1509,6 +1524,9 @@
         </div>
       </div>
       <div class="topacts">
+        <button class="bellbtn" id="alarmBell" data-act="alarm-open" aria-label="알람 모음">
+          <span aria-hidden="true">🔔</span><span class="bn" id="t3n" hidden>0</span>
+        </button>
         <button class="who" data-act="menu" aria-label="설정 메뉴">
           <span class="av" id="whoAv" style="--c:#3182F6">김</span>
           <b id="whoName">김태양</b>
@@ -1518,7 +1536,6 @@
     <nav class="tabs" id="tabbar">
       <button class="tab" data-act="tab" data-tab="notice"><span>홈 피드</span> <span class="n" id="t1n"></span></button>
       <button class="tab" data-act="tab" data-tab="band"><span>730 · 550 · 3년</span> <span class="n" id="t2n"></span></button>
-      <button class="tab" data-act="tab" data-tab="alarm" id="tabAlarm"><span>🔔 알람</span> <span class="n" id="t3n"></span></button>
       <span class="livechip" id="liveChip" data-act="sync-now" role="button" tabindex="0" aria-label="지금 전 직원 변경 반영" hidden></span>
     </nav>
     <div class="aban" id="adminBadge" hidden>🔓 관리자 모드 · 화면 캡처 허용 중 <span>10분 뒤 자동 잠금</span></div>
@@ -1920,12 +1937,16 @@ function alarmAdd(it){
   alarmBadge();
   return rec;
 }
-/* 탭 옆 빨간 배지 — 미확인 건수 */
+/* 헤더 종 버튼의 빨간 배지 — 미확인 건수 */
 function alarmBadge(){
-  var n = alarmUnread(), el = $('t3n');
+  var n = alarmUnread(), el = $('t3n'), bell = $('alarmBell');
   if(el){
     el.textContent = n ? (n > 99 ? '99+' : String(n)) : '';
-    el.className = 'n' + (n ? ' hot' : '');
+    el.hidden = !n;
+  }
+  if(bell){
+    bell.classList.toggle('on', ui.tab === 'alarm');
+    bell.setAttribute('aria-label', '알람 모음' + (n? ' · 안 읽음 ' + n + '건' : ''));
   }
 }
 /* 소리·진동 — 소리는 WebAudio 두 음, 진동은 되는 기기에서만 */
@@ -2157,6 +2178,9 @@ function alarmView(){
   for(i=0;i<alarm.items.length;i++){ if(alarm.items[i].cat === 'dday') ddayN++; }
   var staffN = all - ddayN;
   var h = '<div class="albar">'
+    + '<div class="alhead"><b>🔔 알람 모음</b>'
+    +   '<span class="alun">안 읽음 <b>'+un+'</b>건</span>'
+    +   '<button class="alx" data-act="alarm-close" aria-label="알람 닫기">✕</button></div>'
     + '<div class="alctl">'
     +   '<button class="alsw '+(alarm.sound? 'on' : '')+'" data-act="alarm-sound" aria-pressed="'+(alarm.sound? 'true' : 'false')+'"><i>🔊</i><span>소리·진동</span><b>'+(alarm.sound? '켜짐' : '꺼짐')+'</b></button>'
     +   '<button class="alsw '+(alarm.notif? 'on' : '')+'" data-act="alarm-notif" aria-pressed="'+(alarm.notif? 'true' : 'false')+'"><i>📱</i><span>폰 상단 알림</span><b>'+(alarm.notif? '켜짐' : '꺼짐')+'</b></button>'
@@ -2166,7 +2190,7 @@ function alarmView(){
     +   '<button class="alchip '+(f === 'dday'? 'on' : '')+'" data-act="alarm-f" data-f="dday">D-DAY·예약 <em>'+ddayN+'</em></button>'
     +   '<button class="alchip '+(f === 'staff'? 'on' : '')+'" data-act="alarm-f" data-f="staff">직원활동 <em>'+staffN+'</em></button>'
     + '</div>'
-    + '<div class="almeta"><span>안 읽음 <b style="color:#E5484D">'+un+'</b>건</span><span class="sp"></span>'
+    + '<div class="almeta"><span>전체 <b>'+all+'</b>건</span><span class="sp"></span>'
     +   (un? '<button class="almini" data-act="alarm-readall">모두 확인</button>' : '')
     +   (all? '<button class="almini" data-act="alarm-clear">비우기</button>' : '')
     + '</div></div>';
@@ -6040,7 +6064,15 @@ document.addEventListener('click', function(e){
 
   switch(act){
     case 'tab': setTab(el.getAttribute('data-tab')); break;
-    /* ---- v8.25: 🔔 알람 모음 ---- */
+    /* ---- v8.25: 🔔 알람 모음 (헤더 종 버튼) ---- */
+    case 'alarm-open':
+      ui.tab = 'alarm'; ui.filter = 'all';
+      render(); alarmBadge();
+      window.scrollTo({top:0, behavior:'smooth'});
+      break;
+    case 'alarm-close':
+      setTab('notice');
+      break;
     case 'alarm-f':
       ui.alarmF = el.getAttribute('data-f') || 'all';
       render();
