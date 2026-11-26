@@ -6512,6 +6512,7 @@ function updateCustList(){
   var body = $('custListBody');
   if(!body){ render(); return; }
   body.innerHTML = custListHTML();
+  dayMoreMaybe();   /* v8.25: 검색어를 지웠을 때 화면이 짧아도 다음 묶음이 자동으로 */
 }
 document.addEventListener('input', function(e){
   var t = e.target;
