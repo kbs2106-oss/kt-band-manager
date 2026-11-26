@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.27">
+<meta name="app-version" content="v8.28">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1207,11 +1207,19 @@
   .cmtbanner{background:#FEF2F2;border:1px solid #FBD5D5}
   .cmtbanner b{color:#B91C1C}
   .cmtbanner span b{color:#B91C1C}
-  /* v8.4: 좁은 화면에서 필터 칩 4개가 다 보이게 — '모두 펼치기'는 윗줄 오른쪽으로 */
+  /* v8.28: 좁은 폰에서도 '전체·상담·사전예약' 칩과 '모두 펼치기/접기'를 한 줄에 — 칩은 왼쪽, 버튼은 오른쪽 끝
+     (v8.4에서는 '모두 펼치기'를 윗줄로 올려 두 줄이었다) */
   @media (max-width:520px){
-    .feedbar{flex-wrap:wrap;row-gap:6px}
-    .feedbar .filterbar{order:2;flex:1 1 100%;padding-bottom:12px}
-    .feedbar .collapsebtn{order:1;margin-left:auto;height:32px;padding:0 11px;font-size:12px}
+    .feedbar{flex-wrap:nowrap;row-gap:0;gap:7px}
+    .feedbar .filterbar{order:0;flex:0 1 auto;min-width:0;gap:6px;padding:0;overflow-x:auto}
+    .feedbar .collapsebtn{order:1;flex:none;margin-left:auto;height:36px;padding:0 11px;font-size:12.5px}
+  }
+  /* v8.28: 320px대 아주 좁은 폰 — 칩 글자·여백만 조금 줄여 네 요소가 한 줄에 여유 있게 */
+  @media (max-width:340px){
+    .feedbar{gap:6px}
+    .feedbar .filterbar{gap:5px}
+    .feedbar .filterbar .fchip{height:34px;padding:0 10px;font-size:12.5px}
+    .feedbar .collapsebtn{height:34px;padding:0 9px;font-size:12px}
   }
 
   /* ================= v8.4(#17870): 명단 상단 필터 정리 ================= */
@@ -5342,7 +5350,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.27</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.28</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
