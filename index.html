@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.28">
+<meta name="app-version" content="v8.29">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -298,31 +298,24 @@
   .todo.tfull em{white-space:nowrap}
   .todo.tfull .tf-go{font-style:normal;margin-left:auto;font-size:12px;font-weight:800;color:var(--blue-deep);white-space:nowrap}
 
-  /* ---------- v8.16: 부재중 킵 · 예약 킵 반반(2열) ---------- */
-  .k2bar{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  /* ---------- v8.29: ⏰ 예약 킵 한 칸(부재중 킵 배너는 없앰) ---------- */
+  .k2bar{grid-column:1/-1;display:grid;grid-template-columns:1fr;gap:10px}
   .k2{display:grid;gap:5px;padding:11px 12px;border:1px solid;border-radius:14px;text-align:left;
     font-family:inherit;transition:.12s}
-  .k2-abs{border-color:#F6CCCC;background:linear-gradient(180deg,#FFF8F8,#FFFDFD)}
-  .k2-abs:hover{border-color:#EDA9A9;background:#FFF1F1}
   .k2-resv{border-color:#FBD8A8;background:linear-gradient(180deg,#FFF9EF,#FFFDF8)}
   .k2-resv:hover{border-color:#F5B96A;background:#FFF7E8}
   .k2-head{display:flex;align-items:center;gap:5px;min-width:0}
   .k2-ico{flex:none;width:25px;height:25px;border-radius:8px;display:grid;place-items:center;font-size:14px;line-height:1}
-  .k2-abs .k2-ico{background:#FDE6E6}
   .k2-resv .k2-ico{background:#FDEFD8}
   .k2-lb{flex:1 1 auto;min-width:0;font-size:13px;font-weight:800;letter-spacing:-.035em;white-space:nowrap;color:#1F2937}
-  .k2-abs .k2-lb{color:#A32B2B}
   .k2-resv .k2-lb{color:#8A4B0B}
   .k2-n{flex:none;min-width:26px;height:23px;padding:0 7px;border-radius:8px;color:#fff;
     font-size:13px;font-weight:800;letter-spacing:-.02em;line-height:1;display:grid;place-items:center;white-space:nowrap}
-  .k2-abs .k2-n{background:var(--no-call)}
   .k2-resv .k2-n{background:#B45309}
   .k2.zero .k2-n{background:#E6E9EE;color:#8B97A6}
   .k2-foot{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
-  .k2-abs .k2-foot{color:#9C5A5A}
   .k2-resv .k2-foot{color:#97601F}
   .k2-go{font-style:normal;margin-left:auto;font-weight:800}
-  .k2-abs .k2-go{color:#A32B2B}
   .k2-resv .k2-go{color:#8A4B0B}
 
   /* ---------- band: summary ---------- */
@@ -386,8 +379,6 @@
     .k2-go{margin-left:2px}
   }
 
-  .keepnote{margin:0 0 10px;font-size:12.5px;font-weight:600;color:var(--hint)}
-  .keepnote b{color:var(--ink)}
   .klist{display:grid;gap:10px}
   .krow{padding:12px 13px 11px;border:1px solid var(--line);border-left:4px solid #E5E8EB;border-radius:14px;background:#fff}
   .krow[data-st="부재"]{border-left-color:var(--absent);background:#FFFDF8}
@@ -398,7 +389,6 @@
   .k-name{font-size:15.5px;font-weight:800;letter-spacing:-.02em}
   .k-day{font-size:11.5px;font-weight:600;color:var(--hint)}
   .k-tries{font-size:11px;font-weight:800;color:var(--absent-ink);background:var(--absent-bg);border-radius:6px;padding:2px 6px}
-  .k-top .kpin{margin-left:auto}
   .k-mid{display:flex;align-items:center;gap:8px;margin-top:6px}
   .k-phone{flex:1;min-width:0;font-size:14.5px;font-weight:700;color:var(--ink-2);letter-spacing:.01em;padding:6px 0}
   .k-phone:hover{color:var(--blue-deep)}
@@ -422,10 +412,8 @@
   .kact.try-dec:disabled{opacity:.42;background:var(--gray-bg);border-color:transparent;
     color:var(--faint);cursor:default}
   .kact.try-dec:disabled:hover{background:var(--gray-bg)}
-  .kpin{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid transparent;background:transparent;
-    font-size:14px;line-height:1;color:#C6CDD6;display:grid;place-items:center;filter:grayscale(1);opacity:.75}
-  .kpin:hover{background:var(--line-soft)}
-  .kpin.on{background:#FFF3DC;border-color:#F7CE8E;filter:none;opacity:1}
+  /* v8.29: ＋/－ 부재 1회는 한 짝으로 묶어 두 줄이 돼도 떨어지지 않게 */
+  .k-trypair{display:flex;gap:6px}
 
   .filters{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:16px}
   /* v8.27: 개통장부 '기준 월' 바와 같은 흰색 둥근 카드 한 줄 — 📅 기간 · 연 ▾ · 월 ▾ · [이번 달] [전체 기간] */
@@ -930,8 +918,7 @@
   .seg-b{height:36px;font-size:12.5px;font-weight:700}
   .seg-b[data-st="완료"].on,.cseg-b[data-st="완료"].on{background:var(--done-ink);color:#fff;border-color:var(--done-ink)}
 
-  /* --- 부재중 킵 --- */
-  .keepnote{font-size:13px;font-weight:700;color:var(--sub)}
+  /* --- 부재 고객 목록 --- */
   .k-name{font-size:17px;font-weight:800;letter-spacing:-.02em}
   .k-day{font-size:12px;font-weight:700;color:var(--sub)}
   .k-phone{font-size:15.5px;font-weight:700;color:var(--ink)}
@@ -1269,9 +1256,8 @@
   .krow.cmtrow{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff}
   .krow.cmtrow .k-top{display:flex;align-items:center;gap:6px}
   .k-src{flex:none;font-size:10.5px;font-weight:800;color:#B45309;background:#FEF3C7;padding:2px 6px;border-radius:6px}
-  /* v8.4: 생년월일은 이름 바로 옆에, 📌은 오른쪽 끝으로 */
+  /* v8.4: 생년월일은 이름 바로 옆에 */
   .c-top .c-name{flex:0 1 auto;min-width:0}
-  .c-top .kpin{margin-left:auto}
 
   /* ================= v8.6(#18220·#18232): 📞 번호 바로 옆 생년월일 ================= */
   /* 번호 묶음은 절대 쪼개지 않고(nowrap), 공간이 모자랄 때만 생년월일이 다음 줄로 내려간다 */
@@ -2782,9 +2768,6 @@ function renderSheet(){
     if(!c){ closeSheet(); return; }
     ttl.textContent = '고객 정보';
     b.innerHTML = custSheetHTML(c);
-  } else if(type==='keep'){
-    ttl.textContent = '부재중 킵';
-    b.innerHTML = keepSheetHTML();
   } else if(type==='custadd'){
     ttl.textContent = '명단 추가';
     b.innerHTML = custAddForm(sheetSpec.day);
@@ -4049,19 +4032,11 @@ function segHTML(c){
   return h+'</div>';
 }
 
-/* v8.16: 📵 부재중 킵 · ⏰ 예약 킵 반반(2열) 배너 — 홈 피드·명단 탭 공통.
-   v8.22(#21031·#21042): 배너는 양쪽 다 그대로 둔다(사용자 확정).
-   왼쪽 = 부재중 킵(부재 + 📌킵, 최근 3개월) · 오른쪽 = 예약 킵(명단 + 상담 댓글 예약 전체, 날짜·시간 순) */
-function keepSplitHTML(){
-  var keeps = absentCount('keep');
+/* v8.29: 📵 부재중 킵 배너를 없애고 ⏰ 예약 킵 한 칸만 폭 전체로 — 홈 피드·명단 탭 공통.
+   예약 킵 = 명단 + 상담 댓글 예약 전부(날짜·시간 순) */
+function resvKeepHTML(){
   var resv = resvAllCount();
   return '<section class="k2bar">'
-    + '<button type="button" class="k2 k2-abs'+(keeps?'':' zero')+'" data-act="keep-open"'
-    +   ' aria-label="부재중 킵 '+keeps+'명 목록 열기">'
-    +   '<span class="k2-head"><span class="k2-ico" aria-hidden="true">📵</span><span class="k2-lb">부재중 킵</span>'
-    +     '<b class="k2-n" data-k2="keep">'+keeps+'</b></span>'
-    +   '<span class="k2-foot">부재·킵 고객<i class="k2-go">열기 ›</i></span>'
-    + '</button>'
     + '<button type="button" class="k2 k2-resv'+(resv?'':' zero')+'" data-act="resv-filter"'
     +   ' aria-label="예약 킵 '+resv+'건 날짜·시간 순 목록 열기">'
     +   '<span class="k2-head"><span class="k2-ico" aria-hidden="true">⏰</span><span class="k2-lb">예약 킵</span>'
@@ -4078,7 +4053,7 @@ function todoBar(){
   return '<section class="todobar">'
     + '<button class="todo tfull" data-act="tab" data-tab="band">'
     +   '<span>오늘 남은 콜</span><b>'+left+'</b><em>미통화 '+noCall+'</em><i class="tf-go">명단 ›</i></button>'
-    + keepSplitHTML()
+    + resvKeepHTML()
     + '</section>';
 }
 
@@ -4712,7 +4687,7 @@ function dayHasMatch(day){
   return false;
 }
 /* v8.4(#17983): 부재는 '오늘 기준 최근 3개월(90일)' 기준 — 명단 고객 + 상담 공지 댓글까지 한 번에 모은다.
-   mode: 'absent' = 부재 상태만 · 'keep' = 부재 + 📌킵(미완료) */
+   v8.29: 부재중 킵 화면은 없어졌지만 데이터의 c.keep 필드는 그대로 둔다(기존 기록 보존) — mode 'keep'도 내부용으로 남긴다. */
 function absentItems(mode){
   var cut = shiftDay(-89), out = [];
   (state.customers||[]).forEach(function(c){
@@ -4742,10 +4717,10 @@ function flatHeadHTML(icon, title, n, sub){
        + '<small>'+esc(sub)+'</small>'
        + '<button class="flatback" data-act="filter" data-f="all">전체 명단 ›</button></div>';
 }
-function flatKeepHTML(mode){
-  var items = absentItems(mode);
-  var h = flatHeadHTML('📵', mode==='absent'?'부재 고객':'부재중 킵', items.length, '최근 3개월 · 명단 + 상담 댓글 · 최신순');
-  if(!items.length) return h + '<div class="emptycard">'+(mode==='absent'?'최근 3개월 부재 건이 없어요.':'최근 3개월 부재중·킵 고객이 없어요.')+'<br>명단에서 <b>📌</b>를 누르면 여기에 모입니다.</div>';
+function flatKeepHTML(){
+  var items = absentItems('absent');
+  var h = flatHeadHTML('📵', '부재 고객', items.length, '최근 3개월 · 명단 + 상담 댓글 · 최신순');
+  if(!items.length) return h + '<div class="emptycard">최근 3개월 부재 건이 없어요.</div>';
   return h + '<div class="klist">' + items.map(function(it){ return it.kind==='cust'? keepRow(it.c) : cmtAbsentRow(it); }).join('') + '</div>';
 }
 function cmtAbsentRow(it){
@@ -4871,8 +4846,8 @@ function resvSearchHTML(shownDays){
        + '<div class="resvlist" style="margin-bottom:10px">' + out.map(resvRowHTML).join('') + '</div>';
 }
 function custListHTML(){
-  if(ui.filter==='keep') return flatKeepHTML('keep');
-  if(ui.filter==='s:부재') return flatKeepHTML('absent');
+  if(ui.filter==='keep') ui.filter = 'all';   /* v8.29: 부재중 킵 화면은 없어졌다 — 예전 필터가 남아 있으면 전체로 */
+  if(ui.filter==='s:부재') return flatKeepHTML();
   if(ui.filter==='s:예약') return resvListHTML();
   var days = listDays(custIndex());
   var limit = dayLimit();
@@ -4979,14 +4954,6 @@ function lastAtOf(c){
   (c.comments||[]).forEach(function(x){ if(String(x.at||'')>at) at = String(x.at); });
   return at;
 }
-function keepList(){
-  return state.customers.filter(function(c){ return c.status==='부재' || c.keep; }).sort(function(a,b){
-    if(a.day!==b.day) return String(b.day).localeCompare(String(a.day));
-    var la = lastAtOf(a), lb = lastAtOf(b);
-    if(la!==lb) return lb.localeCompare(la);
-    return String(a.name).localeCompare(String(b.name));
-  });
-}
 function lastMemoOf(c){
   var m = String(c.memo||'').trim();
   if(m) return m;
@@ -5016,7 +4983,7 @@ function bandView(){
   });
   h += '</div>';
 
-  h += keepSplitHTML();   /* v8.16: 부재중 킵 · 예약 킵 반반 — v8.22(#21031)에도 홈·명단 모두 유지 */
+  h += resvKeepHTML();   /* v8.29: ⏰ 예약 킵 한 칸 — 홈·명단 모두 */
 
   h += periodHTML();
 
@@ -5132,7 +5099,6 @@ function custRow(c){
   h += '<div class="c-top"><span class="c-name">'+esc(c.name)+bkBadge(c.bucket)+'</span>'
      +   '<span class="c-topsp"></span>'
      +   (isAdmin()? '<button class="c-del" data-act="cust-del" data-id="'+c.id+'" title="고객 삭제" aria-label="'+esc(c.name)+' 삭제">삭제</button>' : '')
-     +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" title="부재중 킵" aria-label="부재중 킵">📌</button>'
      + '</div>';
   /* v8.3: 예약 날짜가 있으면 이름 바로 아래에 한 줄로 — 오늘·지난 예약은 빨갛게 */
   if(c.status==='예약' && c.resDate){
@@ -5239,17 +5205,7 @@ function custSheetHTML(c){
   return h;
 }
 
-/* ---------- 부재중 킵 sheet ---------- */
-function keepSheetHTML(){
-  var list = keepList();
-  var h = '<p class="keepnote">부재중·킵 고객 <b>'+list.length+'</b>명 · 최신순</p>';
-  if(!list.length){
-    return h + '<div class="emptycard">지금 부재중이거나 킵해둔 고객이 없어요.<br>명단에서 <b>📌</b>를 누르면 여기에 모입니다.</div>';
-  }
-  h += '<div class="klist">';
-  list.forEach(function(c){ h += keepRow(c); });
-  return h + '</div>';
-}
+/* ---------- 부재 고객 목록 ---------- */
 function keepRow(c){
   var memo = lastMemoOf(c);
   var tries = c.tries||0;
@@ -5260,7 +5216,7 @@ function keepRow(c){
     +   '<span class="k-day">'+fmtDayLabel(c.day)+'</span>'
     +   (tries? '<span class="k-tries">부재 '+tries+'회</span>' : '')
     +   (isAdmin()? '<button class="c-del" data-act="cust-del" data-id="'+c.id+'" title="고객 삭제" aria-label="'+esc(c.name)+' 삭제">삭제</button>' : '')
-    +   '<button class="kpin '+(c.keep?'on':'')+'" data-act="keep-toggle" data-id="'+c.id+'" aria-label="킵 고정">📌</button></div>'
+    +   '</div>'
     + '<div class="k-mid">'
     +   (digits(c.phone)
           ? '<a class="k-phone" href="tel:'+digits(c.phone)+'">📞 '+esc(maskPhone(c.phone))+'</a>'
@@ -5277,10 +5233,11 @@ function keepRow(c){
      +   '<button class="kact res" data-act="keep-status" data-id="'+c.id+'" data-st="예약">예약</button>'
      +   '<button class="kact done" data-act="keep-status" data-id="'+c.id+'" data-st="완료">완료</button>'
      +   '<button class="kact open" data-act="keep-status" data-id="'+c.id+'" data-st="개통완료">개통완료</button>'
-     +   '<button class="kact" data-act="keep-status" data-id="'+c.id+'" data-st="미통화">킵 해제</button>'
-     +   '<button class="kact ghost try-inc" data-act="keep-try" data-id="'+c.id+'" aria-label="부재 1회 추가">＋ 부재 1회</button>'
-     +   '<button class="kact try-dec" data-act="keep-untry" data-id="'+c.id+'" aria-label="부재 1회 빼기"'
-     +     (tries? '' : ' disabled aria-disabled="true"')+'>－ 부재 1회</button>'
+     +   '<span class="k-trypair">'
+     +     '<button class="kact ghost try-inc" data-act="keep-try" data-id="'+c.id+'" aria-label="부재 1회 추가">＋ 부재 1회</button>'
+     +     '<button class="kact try-dec" data-act="keep-untry" data-id="'+c.id+'" aria-label="부재 1회 빼기"'
+     +       (tries? '' : ' disabled aria-disabled="true"')+'>－ 부재 1회</button>'
+     +   '</span>'
      + '</div></div>';
   return h;
 }
@@ -5350,7 +5307,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.28</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.29</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -5404,6 +5361,8 @@ function resvForm(pid){
 /* ================= render ================= */
 function render(opts){
   if(!session) return;
+  /* v8.29: 부재중 킵 화면은 없어졌다 — 저장돼 있던 'keep' 필터는 안전하게 'all'로 */
+  if(ui.filter === 'keep') ui.filter = 'all';
   clearTimeout(sheetBackT);   /* v8.24: 다시 그리면 시트 닫을 때의 위치 복원은 취소(기준 카드 보정이 우선) */
   if(typeof closePhotoMenu==='function') closePhotoMenu();   /* v8.13: 다시 그릴 때 사진 메뉴는 접는다 */
   var y = window.scrollY;
@@ -5622,16 +5581,6 @@ function keepStatusNow(id, st){
   var c = ensureCust(id);
   if(!c) return;
   var row = document.querySelector('#main .krow[data-id="'+id+'"]');
-  if(st==='미통화'){
-    if(c.status==='부재') applyCustStatus(c, '미통화');
-    c.keep = false;
-    save();
-    /* v8.24: 목록에 남는 카드는 다시 그리지 않고 그 자리에서 바로 바꿔 화면이 튀지 않게 */
-    if(row && keepRowStays(c)){ paintKeepRow(row, c); updateCounts(); toast('부재중 킵에서 뺐어요'); return; }
-    render({anchor:true});
-    toast('부재중 킵에서 뺐어요');
-    return;
-  }
   applyCustStatus(c, st);
   c.keep = false;
   save();
@@ -5642,7 +5591,6 @@ function keepStatusNow(id, st){
 /* v8.24: 지금 보고 있는 목록(부재중 킵·부재·예약)에 이 카드가 그대로 남는지 */
 function keepRowStays(c){
   var f = ui.filter || 'all';
-  if(f === 'keep') return c.status === '부재';
   if(f === 's:부재') return c.status === '부재';
   if(f === 's:예약') return c.status === '예약';
   return true;
@@ -6063,12 +6011,9 @@ function updateCounts(){
   }
   var left = list.filter(function(c){ return !isDoneSt(c.status); }).length;
   var t2 = $('t2n'); if(t2) t2.textContent = left? left : '';
-  /* v8.16: 홈·명단 상단 반반 킵 타일 숫자도 같이 새로 */
-  var kk = document.querySelector('.k2-n[data-k2="keep"]');
-  if(kk){ var kn = absentCount('keep'); kk.textContent = kn; var kt = kk.parentNode.parentNode; if(kt) kt.className = 'k2 k2-abs'+(kn?'':' zero'); }
-  /* v8.24: 목록 맨 위 '부재중 킵 N' 머리 숫자도 그 자리에서 */
+  /* v8.24: 목록 맨 위 '부재 고객 N' 머리 숫자도 그 자리에서 */
   var fh = document.querySelector('#main .flathead .n');
-  if(fh) fh.textContent = absentCount(ui.filter === 's:부재' ? 'absent' : 'keep');
+  if(fh) fh.textContent = absentCount('absent');
   var rk = document.querySelector('.k2-n[data-k2="resv"]');
   if(rk){ var rn2 = resvAllCount(); rk.textContent = rn2; var rt = rk.parentNode.parentNode; if(rt) rt.className = 'k2 k2-resv'+(rn2?'':' zero'); }
   var days = document.querySelectorAll('.day[data-day]');
@@ -6375,22 +6320,10 @@ document.addEventListener('click', function(e){
       render(); break;
     case 'reply-close': ui.replyOpen = null; render(); break;
     case 'cust': openSheet({type:'cust', id: el.getAttribute('data-id')}); break;
-    case 'keep-open':
-      /* v8.4(#17927): 작은 창 대신 명단 탭 아래에 부재중 킵 목록을 바로 */
-      ui.tab = 'band'; ui.filter = 'keep'; render();
-      window.scrollTo({top:0, behavior:'smooth'});
-      break;
     case 'resv-filter':
       /* v8.4(#17927): ⏰ 예약 알람 → 명단 탭 아래에 예약 고객 목록(날짜·시간 순) */
       ui.tab = 'band'; ui.filter = 's:예약'; render();
       window.scrollTo({top:0, behavior:'smooth'});
-      break;
-    case 'keep-toggle':
-      var kc = findCust(el.getAttribute('data-id'));
-      if(kc){
-        kc.keep = !kc.keep; save(); render({anchor:true});   /* v8.24: 킵을 풀어도 목록이 튀지 않게 */
-        toast(kc.keep? kc.name+'님을 부재중 킵에 꽂았어요' : '킵을 해제했어요');
-      }
       break;
     case 'keep-status': keepStatus(el.getAttribute('data-id'), el.getAttribute('data-st')); break;
     case 'keep-try': keepTry(el.getAttribute('data-id')); break;
