@@ -5433,6 +5433,9 @@ function updateCounts(){
   var list = periodCustomers();
   var n = {};
   STATUSES.forEach(function(s){ n[s] = list.filter(function(c){ return c.status===s; }).length; });
+  /* v8.24: 부재(최근 3개월)·예약(기간 밖 포함)은 명단 화면과 같은 기준으로 — 그 자리에서만 다시 그릴 때 숫자가 틀리지 않게 */
+  n['부재'] = absentCount('absent');
+  n['예약'] = resvAllCount();
   var stats = document.querySelectorAll('.sstat');
   for(var i=0;i<stats.length;i++){
     var s = stats[i].getAttribute('data-st');
