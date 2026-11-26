@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.23">
+<meta name="app-version" content="v8.26">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -439,6 +439,13 @@
     background:var(--blue-weak);color:var(--blue-deep);font-size:11.5px;font-weight:800;letter-spacing:-.01em}
   .pb-on:hover{background:#DCEBFF}
   .pb-x{font-size:10px;color:#5B8FDC;font-weight:700}
+  /* v8.26: 한 번만 누르면 전체 연도·전체 월로 — 연·월 드롭다운 옆 원탭 버튼 */
+  .pball{flex:none;display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 12px;border-radius:10px;
+    border:1px solid var(--line);background:#fff;color:var(--ink-2);white-space:nowrap;
+    font-size:12.5px;font-weight:800;letter-spacing:-.01em;line-height:1}
+  .pball:hover{border-color:#DFE5EC}
+  .pball:active{transform:scale(.97)}
+  .pball.on{background:var(--ink);border-color:var(--ink);color:#fff}
   .filters .sep{flex:none;width:1px;height:18px;background:var(--line);margin:0 3px}
   .ftools{display:flex;align-items:center;gap:7px;flex:none}
   .qbox{flex:none;display:flex;align-items:center;gap:5px;height:40px;padding:0 12px;border-radius:999px;
@@ -4896,6 +4903,7 @@ function periodHTML(){
   /* v8.4: 지금 고른 연·월이 자료에 없어도 드롭다운이 비지 않게 목록에 넣어 둔다 */
   if(ui.year!=='all' && yl.indexOf(ui.year)<0){ yl.push(ui.year); yl.sort().reverse(); }
   if(ui.month!=='all' && ml.indexOf(ui.month)<0){ ml.push(ui.month); ml.sort(); }
+  var allPeriod = (ui.year==='all' && ui.month==='all');
   var h = '<div class="periodbar"><span class="pb-lbl">📅 기간</span>'
         + '<label class="psel"><select data-act="fyear" aria-label="연도 선택">'
         +   '<option value="all"'+(ui.year==='all'?' selected':'')+'>전체 연도</option>'
@@ -4904,7 +4912,11 @@ function periodHTML(){
         + '<label class="psel"><select data-act="fmonth" aria-label="월 선택">'
         +   '<option value="all"'+(ui.month==='all'?' selected':'')+'>전체 월</option>'
         +   ml.map(function(m){ return '<option value="'+m+'"'+(ui.month===m?' selected':'')+'>'+(+m)+'월</option>'; }).join('')
-        + '</select></label>';
+        + '</select></label>'
+        /* v8.26: 드롭다운을 열지 않고 1탭으로 전체 연도·전체 월 복귀 */
+        + '<button type="button" class="pball'+(allPeriod?' on':'')+'" data-act="period-all"'
+        +   ' aria-label="전체 기간(전체 연도·전체 월)으로 보기" aria-pressed="'+(allPeriod?'true':'false')+'"'
+        +   ' title="'+(allPeriod? '지금 전체 연도·전체 월로 보고 있어요' : '눌러서 전체 연도·전체 월로')+'">전체 기간</button>';
   /* v8.8(#18425): `2026년 11월 기준 ✕` 파란 알약은 띄우지 않는다 — 전체 보기는 연·월 드롭다운에서 고른다 */
   if(!arch.ready){
     h += '<div class="archline'+(arch.err?' err':'')+'">'
@@ -5300,7 +5312,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.25</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.26</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -6239,6 +6251,11 @@ document.addEventListener('click', function(e){
     case 'period-clear':
       ui.year = 'all'; ui.month = 'all'; render();
       toast('기간을 초기화했어요'); break;
+    case 'period-all':
+      /* v8.26: 📅 기간 옆 원탭 버튼 — 연·월 드롭다운을 열지 않고 바로 전체로 */
+      if(ui.year==='all' && ui.month==='all'){ toast('지금 전체 연도 · 전체 월로 보고 있어요'); break; }
+      ui.year = 'all'; ui.month = 'all'; render();
+      toast('전체 연도 · 전체 월로 돌아왔어요'); break;
     case 'thread-toggle':
       var tid = el.getAttribute('data-id');
       var tclosing = !!ui.openThreads[tid];
