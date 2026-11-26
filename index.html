@@ -1489,6 +1489,27 @@
   .dh-cnts i.op{background:#E9F9F1;color:#0E7C5A}
   .dh-cnts i.zero{opacity:.42}
   .day.collapsed:hover{background:#FBFCFE}
+  /* v8.25: 일자별 헤더를 카드 목록에서 띄우기 — 연한 틴트 바 + 뚜렷한 구분선 + 날짜 배지 + 색상별 잔여 배지 */
+  .day{border:1px solid #D7E1EE;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .day .day-head{background:linear-gradient(#F8FBFF,#F1F6FD);border-bottom:1px solid #DDE7F4}
+  .day.collapsed{border-color:#C6D6EA;background:#FCFDFF}
+  .day.collapsed .day-head{background:linear-gradient(#EDF4FE,#E4EEFB);border-bottom:0}
+  .day.is-today{border-color:#BFD7F6;box-shadow:0 1px 3px rgba(49,130,246,.14)}
+  .day.is-today .day-head{background:linear-gradient(#EAF3FF,#DFECFE);border-bottom-color:#C7DDFB}
+  .dh-date b{display:inline-block;background:#fff;border:1px solid #D8E3F1;border-radius:9px;
+    padding:3px 9px;box-shadow:0 1px 2px rgba(16,24,40,.06);letter-spacing:-.03em;line-height:1.25}
+  .day.collapsed .dh-date b{background:#fff;border-color:#B9CDE6;box-shadow:0 1px 3px rgba(23,58,107,.10)}
+  .day.is-today .dh-date b{background:#1F6BEC;border-color:#1F6BEC;color:#fff;box-shadow:0 1px 3px rgba(31,107,236,.30)}
+  .dh-top .chev{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;
+    background:#fff;border:1px solid #D3DFEF;color:#7B8DA4;font-size:10px;margin-left:2px}
+  .day.collapsed .dh-top .chev{background:#fff;border-color:#AFC6E3;color:#2C5C99}
+  .dh-cnts i{border:1px solid transparent;font-weight:800}
+  .dh-cnts i.mt{background:#FFE5E5;color:#A92116;border-color:#F7C4C4}
+  .dh-cnts i.ab{background:#FFEFD2;color:#8A4B08;border-color:#F3D7A6}
+  .dh-cnts i.dn{background:#E6EDF6;color:#3C4F66;border-color:#CFDBE9}
+  .dh-cnts i.op{background:#DAF4E7;color:#0A6446;border-color:#B8E5D1}
+  .dh-cnts i b{font-size:12px;margin-left:1px}
+  .dh-cnts i.zero{opacity:.5;background:#F1F4F8;color:#8A95A3;border-color:#E4E9F0}
   /* v8.25: 날짜 무한 스크롤 — 이 줄이 화면에 닿으면 다음 묶음이 붙는다 */
   .daymore{display:flex;align-items:center;justify-content:center;gap:8px;height:58px;
     color:var(--faint);font-size:12px;font-weight:700;letter-spacing:-.02em}
@@ -4972,7 +4993,7 @@ function dayCard(day, isFirst){
   var left = all.length - done;
   var canCollapse = dayCollapseOn();
   var open = !canCollapse || dayIsOpen(day, isFirst);
-  var h = '<section class="day'+(open? '' : ' collapsed')+'" data-day="'+day+'" data-anc="day:'+day+'">'
+  var h = '<section class="day'+(open? '' : ' collapsed')+(day===todayStr()? ' is-today' : '')+'" data-day="'+day+'" data-anc="day:'+day+'">'
         + '<div class="day-head">'+dayHeadHTML(day, all, left, open, canCollapse)
         +   (isAdmin()? '<button class="day-add" data-act="add-cust" data-day="'+day+'" aria-label="이 날짜에 명단 추가">＋</button>' : '')
         + '</div>';
