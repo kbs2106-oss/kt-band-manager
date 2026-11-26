@@ -121,6 +121,8 @@
     height:24px;padding:0 9px;border-radius:999px;background:#E7F6EF;color:#0E7C5A;
     border:1px solid #C4E9D8;font-size:11.5px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
   .livechip[hidden]{display:none}
+  .livechip{cursor:pointer}
+  .livechip:active{transform:scale(.96)}
   .livechip.wait{background:var(--gray-bg);color:var(--sub);border-color:#E5E9EF}
   .livechip.warn{background:#FFF6E5;color:#B45309;border-color:#F5DFAE}
   @media (max-width:400px){ .livechip{font-size:11px;padding:0 7px} }
@@ -1409,6 +1411,69 @@
     .rchip{height:30px;padding:0 9px;font-size:12px}
     .rsort{height:30px;padding:0 9px;font-size:12px}
   }
+
+  /* ================= v8.25: 🔔 알람 탭 ================= */
+  /* 미확인 빨간 배지 — 탭 이름 옆 */
+  .tab .n.hot{background:#E5484D;color:#fff}
+  .tab.on .n.hot{background:#E5484D;color:#fff}
+  @media (max-width:430px){ .tabs{gap:15px} .tab{font-size:13.8px;gap:4px} }
+  @media (max-width:360px){ .tabs{gap:11px} .tab{font-size:13px} }
+  .albar{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 13px 11px;margin-bottom:12px}
+  .alctl{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .alsw{display:flex;align-items:center;gap:6px;height:44px;padding:0 10px;border-radius:12px;border:1px solid var(--line);
+    background:#fff;font-size:12.5px;font-weight:800;color:var(--sub);letter-spacing:-.02em;white-space:nowrap}
+  .alsw i{font-style:normal;font-size:15px;line-height:1}
+  .alsw span{overflow:hidden;text-overflow:ellipsis}
+  .alsw b{margin-left:auto;flex:none;font-size:11px;font-weight:800;color:var(--faint)}
+  .alsw.on{background:var(--blue-weak);border-color:#BBD7FA;color:var(--blue-deep)}
+  .alsw.on b{color:var(--blue-deep)}
+  .alchips{display:flex;gap:6px;margin-top:9px}
+  .alchip{flex:1;min-width:0;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;
+    font-size:12.5px;font-weight:800;color:var(--sub);letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .alchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .alchip em{font-style:normal;font-weight:800;opacity:.7;margin-left:2px}
+  .almeta{display:flex;align-items:center;gap:7px;margin-top:9px;font-size:12px;font-weight:700;color:var(--hint)}
+  .almeta .sp{flex:1}
+  .almeta b{font-weight:800}
+  .almini{height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:#fff;
+    font-size:12px;font-weight:800;color:var(--sub)}
+  .almini:hover{border-color:#D5E3F8}
+  .alday{margin:14px 2px 7px;font-size:12px;font-weight:800;color:var(--hint);letter-spacing:-.01em}
+  .allist{display:grid;gap:8px}
+  .alrow{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:#fff;
+    border:1px solid var(--line);border-radius:14px;padding:12px 12px 11px;min-height:62px}
+  .alrow.unread{border-color:#F6C9CB;background:#FFFCFC;box-shadow:inset 3px 0 0 #E5484D}
+  .alrow .aic{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:16px;background:var(--gray-bg);line-height:1}
+  .alrow .am{flex:1;min-width:0}
+  .alrow .at{display:block;font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.02em;line-height:1.35;word-break:keep-all}
+  .alrow .as{display:block;margin-top:3px;font-size:12.5px;font-weight:600;color:var(--sub);line-height:1.45;word-break:keep-all}
+  .alrow .af{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;font-weight:700;color:var(--faint)}
+  .alrow .af .ck{color:#0E7C5A;font-weight:800}
+  .alrow .af .nu{color:#E5484D;font-weight:800}
+  .alrow .ago{margin-left:auto;align-self:center;flex:none;color:var(--faint);font-size:16px;font-weight:700}
+  .alrow.read{opacity:.74;box-shadow:none}
+  .alrow.read .at{font-weight:700;color:var(--ink-2)}
+  @media (max-width:430px){ .alsw{font-size:12px;height:42px;padding:0 8px} .alchip{font-size:12px;height:34px} .alrow .at{font-size:13px} }
+
+  /* ================= v8.25: 날짜 접기 ================= */
+  .day-head{display:flex;align-items:flex-start;gap:6px;padding:12px 14px 10px}
+  .dh-tap{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;background:none;border:0;padding:0;text-align:left;
+    -webkit-tap-highlight-color:transparent}
+  .dh-top{display:flex;align-items:center;gap:8px;min-width:0}
+  .dh-top .dh-date{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dh-top .chev{margin-left:2px;flex:none;font-size:11px;color:var(--faint);line-height:1;transition:transform .16s}
+  .day.collapsed .dh-top .chev{transform:rotate(-90deg)}
+  .dh-cnts{display:flex;gap:5px;flex-wrap:wrap}
+  .dh-cnts i{font-style:normal;display:inline-flex;align-items:center;gap:4px;height:23px;padding:0 8px;border-radius:7px;
+    background:var(--gray-bg);color:var(--sub);font-size:11.5px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+  .dh-cnts i b{font-weight:800}
+  .dh-cnts i.mt{background:#FFF1F1;color:#B42318}
+  .dh-cnts i.ab{background:#FFF6E5;color:#B45309}
+  .dh-cnts i.dn{background:#EEF2F6;color:#52606D}
+  .dh-cnts i.op{background:#E9F9F1;color:#0E7C5A}
+  .dh-cnts i.zero{opacity:.42}
+  .day.collapsed:hover{background:#FBFCFE}
+  @media (max-width:430px){ .day-head{padding:11px 13px 9px} .dh-cnts i{height:22px;padding:0 7px;font-size:11px} }
 </style>
 </head>
 <body>
@@ -1453,7 +1518,8 @@
     <nav class="tabs" id="tabbar">
       <button class="tab" data-act="tab" data-tab="notice"><span>홈 피드</span> <span class="n" id="t1n"></span></button>
       <button class="tab" data-act="tab" data-tab="band"><span>730 · 550 · 3년</span> <span class="n" id="t2n"></span></button>
-      <span class="livechip" id="liveChip" hidden></span>
+      <button class="tab" data-act="tab" data-tab="alarm" id="tabAlarm"><span>🔔 알람</span> <span class="n" id="t3n"></span></button>
+      <span class="livechip" id="liveChip" data-act="sync-now" role="button" tabindex="0" aria-label="지금 전 직원 변경 반영" hidden></span>
     </nav>
     <div class="aban" id="adminBadge" hidden>🔓 관리자 모드 · 화면 캡처 허용 중 <span>10분 뒤 자동 잠금</span></div>
   </header>
@@ -1774,7 +1840,9 @@ var ui = {
   drafts:{},
   attach:{},
   composer:{kind:'store', photos:[], pin:false},   /* v8.4: 매장 공지·상담·사전예약 */
-  addPick:'resv'    /* v8.17: 관리자 + 창에서 고른 종류(resv | cust) */
+  addPick:'resv',    /* v8.17: 관리자 + 창에서 고른 종류(resv | cust) */
+  alarmF:'all',      /* v8.25: 알람 탭 필터(all | dday | staff) */
+  dayOpen:{}         /* v8.25: 날짜 접기 상태 — 전체 보기에서 지난 날짜는 접힌 채로 시작 */
 };
 var sheetSpec = null;
 var sheetOpenY = -1;    /* v8.24: 시트를 열 때의 스크롤 위치 — 닫을 때 그 자리로 */
@@ -1783,6 +1851,348 @@ var toastTimer = null;
 /* v8.1: 관리자 모드 — 이 상태일 때만 전용 앱(KTBandBridge)에 캡처 허용을 알린다. 기본은 차단. */
 var adminOn = false;
 var adminAt = 0;
+
+/* ================= v8.25: 🔔 알람 모음 ================= */
+/* 왜 — 상단 토스트·폰 알림은 몇 초 지나면 닫혀 "무슨 알람이었는지" 다시 볼 수 없었다.
+   이제 직원 상태·메모·댓글 변경과 오늘 예약·처리 대상을 한 곳에 쌓아 두고,
+   누르기 전에는 미확인(빨간 배지)으로 남기며, 눌러 확인한 뒤에도 이력으로 계속 남긴다.
+   지우는 것은 '비우기'를 직접 눌렀을 때뿐. 관리자 모드와 상관없이 모든 직원이 같은 탭에서 본다. */
+var ALKEY = 'kt_band_alarm_v1';
+var AL_MAX = 200;                       /* 넉넉히 200건 보관 */
+var alarm = {items:[], sound:true, notif:false, ac:null};
+function alarmLoad(){
+  try{
+    var d = JSON.parse(localStorage.getItem(ALKEY)||'null');
+    if(d && typeof d === 'object'){
+      if(Object.prototype.toString.call(d.items) === '[object Array]'){
+        alarm.items = d.items.filter(function(x){ return x && x.id && x.title; });
+      }
+      alarm.sound = d.sound !== false;
+      alarm.notif = !!d.notif;
+    }
+  }catch(e){}
+}
+function alarmSave(){
+  try{ localStorage.setItem(ALKEY, JSON.stringify({v:1, sound:alarm.sound, notif:alarm.notif, items:alarm.items})); }catch(e){}
+}
+function alarmId(p){ return (p||'al')+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function alarmHasKey(key){
+  if(!key) return false;
+  for(var i=0;i<alarm.items.length;i++){ if(alarm.items[i].key === key) return true; }
+  return false;
+}
+function alarmFind(id){
+  for(var i=0;i<alarm.items.length;i++){ if(alarm.items[i].id === id) return alarm.items[i]; }
+  return null;
+}
+function alarmUnread(){
+  var n = 0;
+  for(var i=0;i<alarm.items.length;i++){ if(!alarm.items[i].read) n++; }
+  return n;
+}
+/* 알람 한 건 적재 — 같은 key 는 한 번만. 200건을 넘으면 오래된 것부터, 읽은 것을 먼저 비운다 */
+function alarmAdd(it){
+  if(!it || !it.title) return null;
+  if(it.key && alarmHasKey(it.key)) return null;
+  var rec = {
+    id: it.id || alarmId(it.cat === 'dday' ? 'd' : 's'),
+    cat: it.cat === 'dday' ? 'dday' : 'staff',
+    key: String(it.key||''),
+    icon: String(it.icon||'🔔'),
+    title: String(it.title||''),
+    sub: String(it.sub||''),
+    who: String(it.who||''),
+    name: String(it.name||''),
+    at: String(it.at||nowAt()),
+    read: false,
+    cid: String(it.cid||''),      /* 누르면 열 명단 고객 */
+    pid: String(it.pid||''),      /* 누르면 열 글(상담 댓글) */
+    mid: String(it.mid||'')       /* 그 글 안의 댓글 */
+  };
+  alarm.items.unshift(rec);
+  while(alarm.items.length > AL_MAX){
+    var k = -1;
+    for(var j=alarm.items.length-1;j>=0;j--){ if(alarm.items[j].read){ k = j; break; } }
+    if(k < 0) k = alarm.items.length-1;
+    alarm.items.splice(k,1);
+  }
+  alarmSave();
+  alarmBadge();
+  return rec;
+}
+/* 탭 옆 빨간 배지 — 미확인 건수 */
+function alarmBadge(){
+  var n = alarmUnread(), el = $('t3n');
+  if(el){
+    el.textContent = n ? (n > 99 ? '99+' : String(n)) : '';
+    el.className = 'n' + (n ? ' hot' : '');
+  }
+}
+/* 소리·진동 — 소리는 WebAudio 두 음, 진동은 되는 기기에서만 */
+function alarmUnlockAudio(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    if(!alarm.ac) alarm.ac = new AC();
+    if(alarm.ac.state === 'suspended'){ try{ alarm.ac.resume(); }catch(e){} }
+  }catch(e){}
+}
+function alarmBeep(){
+  alarmUnlockAudio();
+  try{
+    var ac = alarm.ac;
+    if(ac && ac.state === 'running'){
+      var t0 = ac.currentTime;
+      [880, 1180].forEach(function(f, i){
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        var s = t0 + i*0.16;
+        g.gain.setValueAtTime(0.0001, s);
+        g.gain.exponentialRampToValueAtTime(0.14, s + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, s + 0.13);
+        o.connect(g); g.connect(ac.destination);
+        o.start(s); o.stop(s + 0.15);
+      });
+    }
+  }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate([70,50,70]); }catch(e){}
+}
+/* 폰 상단 알림(Notification API) — 미지원 브라우저·APK WebView에서는 조용히 넘어간다(앱 다리가 있으면 그쪽으로) */
+function alarmNotify(rec){
+  if(!alarm.notif || !rec) return;
+  var title = '🔔 ' + (rec.title || '알람'), body = rec.sub || '';
+  try{
+    if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
+      new Notification(title, {body: body, tag: rec.id, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png'});
+      return;
+    }
+    var b = window.KTBandBridge;
+    if(b && typeof b.notify === 'function') b.notify(title, body);
+  }catch(e){}
+}
+function alarmSignal(rec){
+  if(alarm.sound) alarmBeep();
+  alarmNotify(rec);
+}
+function alarmSoundToggle(){
+  alarm.sound = !alarm.sound;
+  alarmSave();
+  render();
+  if(alarm.sound){ alarmBeep(); toast('알람 소리·진동을 켰어요'); }
+  else toast('알람 소리·진동을 껐어요');
+}
+function alarmNotifToggle(){
+  if(alarm.notif){
+    alarm.notif = false; alarmSave(); render(); toast('폰 상단 알림을 껐어요'); return;
+  }
+  var hasN = (typeof Notification !== 'undefined');
+  var bridge = !!(window.KTBandBridge && typeof window.KTBandBridge.notify === 'function');
+  function on(){ alarm.notif = true; alarmSave(); render(); toast('폰 상단 알림을 켰어요'); }
+  function off(msg){ toast(msg, true); }
+  if(!hasN){
+    if(bridge) on();
+    else off('이 브라우저에서는 폰 상단 알림을 지원하지 않아요 — 앱(APK)에서 켜 주세요');
+    return;
+  }
+  if(Notification.permission === 'granted'){ on(); return; }
+  if(Notification.permission === 'denied'){
+    if(bridge) on();
+    else off('브라우저에서 알림이 꺼져 있어요 — 주소창 자물쇠 → 알림 → 허용으로 바꿔 주세요');
+    return;
+  }
+  var done = false;
+  function res(p){
+    if(done) return;
+    done = true;
+    if(p === 'granted') on();
+    else if(bridge) on();
+    else off('알림 권한을 허용하지 않아 켜지 못했어요');
+  }
+  try{
+    var r = Notification.requestPermission(res);
+    if(r && typeof r.then === 'function') r.then(res, function(){ res('denied'); });
+  }catch(e){
+    if(bridge) on(); else off('알림을 켜지 못했어요');
+  }
+}
+/* 오늘 예약·처리 대상 D-DAY — 하루에 한 번씩만 적재(같은 key 는 다시 만들지 않는다) */
+function alarmScanDday(){
+  if(!state || !state.customers) return 0;
+  var t = todayStr(), todays = custsOfDay(t), made = 0, n = {"미통화":0,"부재":0,"예약":0,"완료":0,"개통완료":0};
+  todays.forEach(function(c){ if(n[c.status] != null) n[c.status]++; });
+  var left = todays.filter(function(c){ return !isDoneSt(c.status); }).length;
+  if(todays.length){
+    var sum = alarmAdd({cat:'dday', icon:'📊', key:'dds:'+t, at:nowAt(),
+      title:'오늘 명단 '+todays.length+'명 · 남은 '+left+'명',
+      sub:'미통화 '+n['미통화']+' · 부재 '+n['부재']+' · 예약 '+n['예약']+' · 완료 '+n['완료']+' · 개완 '+n['개통완료']});
+    if(sum) made++;
+  }
+  resvDueList().forEach(function(r){
+    var id = r.kind === 'cust' ? r.id : (r.pid + ':' + r.cid);
+    var key = 'ddr:' + id + ':' + r.resDate + ':' + (r.resTime||'');
+    if(alarmHasKey(key)) return;
+    var late = String(r.resDate) < t;
+    var sub = resvText(r) + (r.phone? ' · '+maskPhone(r.phone) : '') + (r.memo? ' · '+shortText(r.memo, 40) : '');
+    var rec = alarmAdd({cat:'dday', icon:'⏰', key:key, at:nowAt(),
+      title:(r.name||'고객')+' · '+(late? '지난 예약' : '오늘 예약 D-DAY'),
+      sub:sub, name:r.name||'',
+      cid:(r.kind === 'cust'? r.id : ''), pid:(r.kind === 'cmt'? r.pid : ''), mid:(r.kind === 'cmt'? r.cid : '')});
+    if(rec) made++;
+  });
+  if(made) alarmBadge();
+  return made;
+}
+/* 실시간 동기화로 들어온 다른 직원의 변경을 알람으로 — 변경 전/후를 남긴다 */
+function alarmCustSnap(id){
+  var c = findCust(id);
+  if(!c) return null;
+  var cms = {};
+  (c.comments||[]).forEach(function(x){ if(x && x.id) cms[x.id] = x.st || ''; });
+  return {name:c.name||'', status:c.status||'미통화', memo:c.memo||'', keep:!!c.keep, tries:+c.tries||0,
+          resDate:c.resDate||'', resTime:c.resTime||'', cms:cms};
+}
+function alarmPostSnap(id){
+  var p = findPost(id);
+  if(!p) return null;
+  var cms = {};
+  (p.comments||[]).forEach(function(x){ if(x && x.id) cms[x.id] = x.st || ''; });
+  return {title:(p.title || shortText(p.body||'', 24) || '글'), cms:cms};
+}
+function alarmSnapOf(it){
+  var t = String((it && it.t) || '');
+  if(!it || !it.id) return null;
+  if(t === 'c' || t === 'cust') return alarmCustSnap(it.id);
+  if(t === 'p' || t === 'post') return alarmPostSnap(it.id);
+  return null;
+}
+function alarmFromSync(it, snap){
+  if(!snap || !session || sync.alarmMute) return;
+  if(+it.u && (+it.u) < (Date.now() - 6*3600*1000)) return;   /* 6시간 지난 변경은 알람 대신 화면 이력으로만 */
+  var who = String(it.st || '');
+  if(who && who === session.staff) return;     /* 내가 한 일은 내 알람함에 쌓지 않는다 */
+  var at = nowAt(), f = it.f || {}, out = [];
+  function push(o){ o.cat = 'staff'; o.who = who; o.at = at; out.push(o); }
+  var t = String(it.t || '');
+  var last = null;
+  if(t === 'c' || t === 'cust'){
+    if(f.deleted === true){
+      push({icon:'🗑', title:(snap.name||'고객')+' · 고객 삭제', sub:'명단에서 지웠어요', name:snap.name});
+    } else {
+      var c = findCust(it.id);
+      if(c){
+        var nm = snap.name || c.name || '고객';
+        var was = snap.status || '미통화', now = c.status || '미통화';
+        if(was !== now) push({icon:'🔄', title:nm+' · '+stLabel(now), sub:stLabel(was)+' → '+stLabel(now), cid:c.id, name:nm});
+        if(!!snap.keep !== !!c.keep) push({icon:'📌', title:nm+' · '+(c.keep? '부재중 킵' : '킵 해제'), sub:c.keep? '부재중 킵에 꽂았어요' : '킵을 풀었어요', cid:c.id, name:nm});
+        if((+snap.tries||0) !== (+c.tries||0)) push({icon:'📞', title:nm+' · 부재 '+(+c.tries||0)+'회', sub:'부재 '+(+snap.tries||0)+'회 → '+(+c.tries||0)+'회', cid:c.id, name:nm});
+        if((snap.resDate||'') !== (c.resDate||'') || (snap.resTime||'') !== (c.resTime||'')){
+          push({icon:'⏰', title:nm+' · '+(c.resDate? '예약' : '예약 취소'), sub:c.resDate? resvText(c) : '예약이 취소됐어요', cid:c.id, name:nm});
+        }
+        if(String(snap.memo||'') !== String(c.memo||'')){
+          push({icon:'📝', title:nm+' · 메모', sub:(c.memo? shortText(c.memo, 70) : '메모를 지웠어요'), cid:c.id, name:nm});
+        }
+        (c.comments||[]).forEach(function(cm){
+          if(!cm || !cm.id || cm.sys) return;
+          if(cm.author === '장부 연동') return;
+          if(snap.cms[cm.id] !== undefined){
+            if((snap.cms[cm.id]||'') !== (cm.st||'')){
+              push({icon:'🔄', title:nm+' · '+stLabel(cm.st||'미통화'),
+                sub:(snap.cms[cm.id]? stLabel(snap.cms[cm.id]) : '미통화')+' → '+stLabel(cm.st||'미통화'), cid:c.id, name:nm});
+            }
+            return;
+          }
+          push({icon:'💬', title:nm+' · 통화 기록', sub:shortText(cm.text||'', 70), cid:c.id, name:nm});
+        });
+      }
+    }
+  } else if(t === 'p' || t === 'post'){
+    var ttl = (snap && snap.title) || '글';
+    if(f.deleted === true){
+      push({icon:'🗑', title:ttl+' · 글 삭제', sub:'홈 피드에서 지웠어요', name:ttl});
+    } else {
+      var p = findPost(it.id);
+      (p && p.comments || []).forEach(function(cm){
+        if(!cm || !cm.id || cm.sys) return;
+        var ttl2 = shortText(ttl, 20);
+        if(snap.cms[cm.id] !== undefined){
+          if((snap.cms[cm.id]||'') !== (cm.st||'')){
+            push({icon:'🔄', title:(cm.author||'댓글')+' · '+stLabel(cm.st||'미통화'),
+              sub:ttl2+' · '+(snap.cms[cm.id]? stLabel(snap.cms[cm.id]) : '미통화')+' → '+stLabel(cm.st||'미통화'),
+              pid:p.id, mid:cm.id, name:cm.author||''});
+          }
+          return;
+        }
+        push({icon:'💬', title:(cm.author||'댓글')+' · 댓글', sub:ttl2+' · '+shortText(cm.text||'', 60),
+          pid:p.id, mid:cm.id, name:cm.author||''});
+      });
+    }
+  }
+  for(var i=0;i<out.length;i++){
+    var rec = alarmAdd(out[i]);
+    if(rec) last = rec;
+  }
+  if(last) alarmSignal(last);   /* 여러 건이면 알림은 마지막 한 번만 */
+}
+/* 알람 목록 — 날짜별 묶음 */
+function alarmDayTitle(d){
+  if(!d) return '알 수 없음';
+  if(d === todayStr()) return '오늘';
+  if(d === shiftDay(-1)) return '어제';
+  return fmtDayLabel(d);
+}
+function alarmRowHTML(it){
+  return '<button class="alrow '+(it.read? 'read' : 'unread')+'" data-act="alarm-item" data-id="'+esc(it.id)+'">'
+    + '<span class="aic">'+esc(it.icon||'🔔')+'</span>'
+    + '<span class="am"><b class="at">'+esc(it.title)+'</b>'
+    +   (it.sub? '<span class="as">'+esc(it.sub)+'</span>' : '')
+    +   '<span class="af">'+(it.read? '<span class="ck">✓ 확인함</span>' : '<span class="nu">● 새 알람</span>')
+    +     (it.who? '<span>'+esc(it.who)+'</span>' : '')
+    +     '<span>'+esc(fmtAt(it.at))+'</span></span>'
+    + '</span><span class="ago">›</span></button>';
+}
+function alarmView(){
+  try{ alarmScanDday(); }catch(e){}
+  var f = ui.alarmF || 'all', all = alarm.items.length, un = alarmUnread(), i;
+  var ddayN = 0;
+  for(i=0;i<alarm.items.length;i++){ if(alarm.items[i].cat === 'dday') ddayN++; }
+  var staffN = all - ddayN;
+  var h = '<div class="albar">'
+    + '<div class="alctl">'
+    +   '<button class="alsw '+(alarm.sound? 'on' : '')+'" data-act="alarm-sound" aria-pressed="'+(alarm.sound? 'true' : 'false')+'"><i>🔊</i><span>소리·진동</span><b>'+(alarm.sound? '켜짐' : '꺼짐')+'</b></button>'
+    +   '<button class="alsw '+(alarm.notif? 'on' : '')+'" data-act="alarm-notif" aria-pressed="'+(alarm.notif? 'true' : 'false')+'"><i>📱</i><span>폰 상단 알림</span><b>'+(alarm.notif? '켜짐' : '꺼짐')+'</b></button>'
+    + '</div>'
+    + '<div class="alchips">'
+    +   '<button class="alchip '+(f === 'all'? 'on' : '')+'" data-act="alarm-f" data-f="all">전체 <em>'+all+'</em></button>'
+    +   '<button class="alchip '+(f === 'dday'? 'on' : '')+'" data-act="alarm-f" data-f="dday">D-DAY·예약 <em>'+ddayN+'</em></button>'
+    +   '<button class="alchip '+(f === 'staff'? 'on' : '')+'" data-act="alarm-f" data-f="staff">직원활동 <em>'+staffN+'</em></button>'
+    + '</div>'
+    + '<div class="almeta"><span>안 읽음 <b style="color:#E5484D">'+un+'</b>건</span><span class="sp"></span>'
+    +   (un? '<button class="almini" data-act="alarm-readall">모두 확인</button>' : '')
+    +   (all? '<button class="almini" data-act="alarm-clear">비우기</button>' : '')
+    + '</div></div>';
+  var list = alarm.items.filter(function(x){
+    if(f === 'dday') return x.cat === 'dday';
+    if(f === 'staff') return x.cat !== 'dday';
+    return true;
+  });
+  if(!list.length){
+    h += '<div class="emptycard">아직 알람이 없어요.<br>직원이 상태·메모를 바꾸면 여기에 쌓이고,<br>오늘 예약·처리 대상도 매일 아침 여기에 모여요.<br>'
+      +   '<small style="color:var(--faint)">확인한 알람도 지우기 전까지 이력으로 남습니다.</small></div>';
+    return h;
+  }
+  var groups = [], cur = null;
+  list.forEach(function(x){
+    var d = String(x.at||'').slice(0,10);
+    if(!cur || cur.day !== d){ cur = {day:d, items:[]}; groups.push(cur); }
+    cur.items.push(x);
+  });
+  groups.forEach(function(g){
+    h += '<div class="alday">'+esc(alarmDayTitle(g.day))+'</div><div class="allist">';
+    g.items.forEach(function(x){ h += alarmRowHTML(x); });
+    h += '</div>';
+  });
+  return h;
+}
 
 function loadSession(){
   try{ var raw=localStorage.getItem(SKEY); if(raw){ var s=JSON.parse(raw); if(s && s.staff) return s; } }catch(e){}
@@ -1925,7 +2335,7 @@ function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(state)); }
   catch(e){ toast('저장 공간이 부족해요. 사진을 줄이거나 내보내기 후 초기화해 주세요.', true); }
   custIdxDirty();
-  /* v8.9: 바뀐 칸이 있으면 전 직원 실시간 공유로 곧바로 올린다(0.4초 묶음) */
+  /* v8.9: 바뀐 칸이 있으면 전 직원 실시간 공유로 올린다(v8.25: 0.4초를 기다리지 않고 즉시 — 닫자마자 상태가 안 올라가 사라지는 일 방지) */
   try{ if(typeof syncChanged === 'function') syncChanged(); }catch(e){}
 }
 function findPost(id){ for(var i=0;i<state.posts.length;i++){ if(state.posts[i].id===id) return state.posts[i]; } return null; }
@@ -2370,6 +2780,8 @@ function doLogin(){
   $('app').hidden = false;
   ledgerApply();
   render();
+  try{ alarmScanDday(); }catch(e){}   /* v8.25: 오늘 예약·처리 대상은 하루에 한 번 알람함에 적재 */
+  alarmBadge();
   archInit();      /* v8: 아직이면 과거 명단을 받아 둔다 */
   setTimeout(resvNotifyDue, 1200);   /* v8.3 */
   toast(session.staff+'님, 반갑습니다!');
@@ -2762,6 +3174,8 @@ var sync = {
   lastErr: '',
   fails: 0,
   baseSent: false,
+  again: false,       /* v8.25: 올리는 중에 또 바뀌어 끝난 뒤 한 번 더 올릴 필요 */
+  alarmMute: false,   /* v8.25: 처음 전체 받아오기에서는 알람을 만들지 않는다 */
   lastNote: ''
 };
 
@@ -2995,7 +3409,7 @@ function syncPostJson(payload){
   return new Promise(function(resolve, reject){
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     var tm = setTimeout(function(){ if(ctrl){ try{ ctrl.abort(); }catch(e){} } }, SYNC_TMO);
-    var opt = {method: 'POST', cache: 'no-store', redirect: 'follow',
+    var opt = {method: 'POST', cache: 'no-store', redirect: 'follow', keepalive: true,
                headers: {'Content-Type': 'text/plain;charset=utf-8'},
                body: JSON.stringify(payload)};
     if(ctrl) opt.signal = ctrl.signal;
@@ -3062,7 +3476,10 @@ function syncPull(full){
     try{ localStorage.setItem(SYNC_SINCE_KEY, String(sync.since)); }catch(e){}
     sync.lastAt = Date.now();
     var items = Array.isArray(d.items) ? d.items : [];
+    /* v8.25: 처음 전체로 받아오거나 한꺼번에 많이 들어온 과거 변경은 알람으로 쌓지 않는다 */
+    sync.alarmMute = (!since) || items.length > 30;
     var n = items.length ? syncApply(items) : 0;
+    sync.alarmMute = false;
     if(n) syncChip();
     return n;
   }, function(e){
@@ -3072,7 +3489,8 @@ function syncPull(full){
   });
 }
 function syncPush(force){
-  if(!session || !state || sync.pushBusy || sync.mode !== 'live') return;
+  if(!session || !state || sync.mode !== 'live') return;
+  if(sync.pushBusy){ sync.again = true; return; }   /* v8.25: 올리는 중에 또 바뀌면 끝난 직후 한 번 더 */
   if(!sync.dirty && !force) return;      /* 바뀐 게 없으면 전체 훑지 않는다 */
   var items = syncScan();
   if(!items.length) return;
@@ -3107,8 +3525,10 @@ function syncPush(force){
     sync.pushBusy = false;
     sync.dirty = false;
     syncChip();
+    if(sync.again){ sync.again = false; sync.dirty = true; syncFlush(0); }   /* v8.25 */
   }, function(e){
     sync.pushBusy = false;
+    sync.again = false;
     syncFail((e && e.message) || '저장 실패');
   });
 }
@@ -3116,12 +3536,13 @@ function syncFlush(delay){
   clearTimeout(sync.pushT);
   sync.pushT = setTimeout(syncPush, delay == null ? SYNC_PUSH_WAIT : delay);
 }
-/* 저장(save) 뒤에 부른다 — 바뀐 칸이 있으면 묶어서 곧바로 올린다 */
+/* 저장(save) 뒤에 부른다 — 바뀐 칸이 있으면 곧바로 올린다 */
 function syncChanged(){
   if(!session || !state || sync.applying || !sync.primed) return;
   sync.dirty = true;
   if(sync.mode !== 'live') return;   /* 서버 준비 전에 바꾼 것도 켜질 때 함께 올라간다 */
-  syncFlush();
+  /* v8.25: 상태·메모·댓글 같은 저장은 지연 없이 바로 — 앱을 닫거나 다른 앱으로 가도 서버에 남는다 */
+  syncFlush(0);
 }
 
 /* ---------- 받은 변경을 화면에 반영 ---------- */
@@ -3286,11 +3707,16 @@ function syncApply(items){
   sync.applying = true;
   items.forEach(function(it){
     try{
+      var mine = (it.st && session && it.st === session.staff);
+      /* v8.25: 다른 직원의 변경을 알람으로 남기려면 적용 전 상태를 먼저 본다 */
+      var near = mine ? null : alarmSnapOf(it);
       var n = syncApplyItem(it);
       if(n > 0){
         changed += n;
-        var mine = (it.st && session && it.st === session.staff);
-        if(!mine){ var t = syncNoteOf(it); if(t) notes.push(t); }
+        if(!mine){
+          var t = syncNoteOf(it); if(t) notes.push(t);
+          try{ alarmFromSync(it, near); }catch(e3){}
+        }
       }
     }catch(e){ try{ console.warn('[sync] 적용 실패', it && it.id, (e && e.message) || e); }catch(e2){} }
   });
@@ -3325,7 +3751,7 @@ function syncChip(){
   var on = !!session && sync.mode === 'live';
   var txt = on ? '● 실시간' : (sync.mode === 'wait' && sync.lastErr ? '○ 대기' : '');
   var cls = 'livechip' + (on ? ' on' : ' wait') + (sync.lastErr ? ' warn' : '');
-  var tip = on ? ('전 직원 실시간 공유 중' + (sync.lastErr ? ' · ' + sync.lastErr : '')) : (sync.lastErr || '실시간 공유 준비 중');
+  var tip = on ? ('전 직원 실시간 공유 중' + (sync.lastErr ? ' · ' + sync.lastErr : '') + ' — 눌러서 지금 반영') : ((sync.lastErr || '실시간 공유 준비 중') + ' — 눌러서 지금 확인');
   var sig = txt + '|' + cls + '|' + tip;
   if(sync.chipSig === sig){ return; }
   sync.chipSig = sig;
@@ -3356,10 +3782,14 @@ function syncStart(){
   try{ sync.since = parseInt(localStorage.getItem(SYNC_SINCE_KEY) || '0', 10) || 0; }catch(e){ sync.since = 0; }
   sync.chipEl = $('liveChip');
   document.addEventListener('visibilitychange', function(){
-    if(!document.hidden && session) syncWake();
+    if(!document.hidden){ if(session) syncWake(); return; }
+    /* v8.25: 화면을 닿으면 남은 변경을 그 자리에서 밀어 넣는다(keepalive) — 0.4초 기다리다 사라지는 일 방지 */
+    if(session && sync.dirty) syncPush(true);
   });
   window.addEventListener('focus', function(){ if(session) syncWake(); });
   window.addEventListener('online', function(){ if(session) syncWake(); });
+  window.addEventListener('pagehide', function(){ if(session && sync.dirty) syncPush(true); });
+  window.addEventListener('beforeunload', function(){ if(session && sync.dirty) syncPush(true); });
   syncPull(sync.since ? false : true);
   syncLoop();
 }
@@ -3408,13 +3838,20 @@ function syncPrime(){
   });
   sync.primed = true;
 }
-/* 메뉴의 '지금 동기화' */
+/* 메뉴·상단 '● 실시간' 칩을 누를 때 — 지금 바로 밀어 넣고 바로 받아온다 (v8.25: 칩을 탭해도 같은 동작) */
 function syncNowPush(){
   if(!session){ toast('로그인하면 실시간 공유가 켜져요'); return; }
-  toast('전 직원 변경을 확인하는 중…');
+  var wasLive = (sync.mode === 'live');
+  syncPush(true);                       /* 내 변경을 지금 바로 서버로 */
+  if(!wasLive){ toast('전 직원 실시간 공유를 확인하는 중…'); }
+  else toast('지금 바로 반영하는 중…');
   syncPull(sync.since ? false : true).then(function(n){
     syncPush();
-    if(!n) toast(sync.mode === 'live' ? '최신 상태예요 · 전 직원 실시간 공유 중' : '서버 준비 중이에요');
+    if(n) toast('전 직원 변경 '+n+'건을 받았어요');
+    else if(sync.mode === 'live') toast('최신 상태예요 · 전 직원 실시간 공유 중');
+    else toast('서버 준비 중이에요 — 잠시 뒤 다시 눌러 주세요');
+  }, function(){
+    toast('서버와 연결하지 못했어요 — 잠시 뒤 다시 눌러 주세요', true);
   });
 }
 
@@ -3432,6 +3869,10 @@ try{
 /* ================= views ================= */
 function viewHTML(){
   if(ui.tab==='band') return bandView();
+  if(ui.tab==='alarm'){
+    try{ return alarmView(); }
+    catch(e){ try{ console.warn('[alarm] 화면 오류', e && e.message); }catch(e2){} return '<div class="emptycard">알람을 불러오지 못했어요.<br>잠시 뒤 다시 열어 주세요.</div>'; }
+  }
   return noticeView();
 }
 
@@ -4345,7 +4786,7 @@ function custListHTML(){
   var limit = dayLimit();
   var hits = [], i;
   for(i=0;i<days.length;i++){ if(dayHasMatch(days[i])) hits.push(days[i]); }
-  var cards = hits.slice(0, limit).map(dayCard).filter(Boolean).join('');
+  var cards = hits.slice(0, limit).map(function(d, i){ return dayCard(d, i === 0); }).filter(Boolean).join('');
   if(ui.q) cards = resvSearchHTML(hits) + cards;   /* v8.17: 기간 밖 예약도 검색에 */
   if(!cards){
     if(!arch.ready && (ui.year!=='all' || ui.q)){
@@ -4486,23 +4927,59 @@ function bandView(){
   return h;
 }
 
-function dayCard(day){
+function dayCard(day, isFirst){
   var all = custsOfDay(day);
   var list = all.filter(custMatch).sort(sortCust);
   if(!list.length) return '';
   var done = all.filter(function(c){return isDoneSt(c.status);}).length;
   var left = all.length - done;
+  var canCollapse = dayCollapseOn();
+  var open = !canCollapse || dayIsOpen(day, isFirst);
+  var h = '<section class="day'+(open? '' : ' collapsed')+'" data-day="'+day+'" data-anc="day:'+day+'">'
+        + '<div class="day-head">'+dayHeadHTML(day, all, left, open, canCollapse)
+        +   (isAdmin()? '<button class="day-add" data-act="add-cust" data-day="'+day+'" aria-label="이 날짜에 명단 추가">＋</button>' : '')
+        + '</div>';
+  if(open) h += '<div class="cust-list">' + list.map(custRow).join('') + '</div>';
+  return h + '</section>';
+}
+/* v8.25: 730·550·3년 '전체' 보기에서만 날짜를 접는다 — 730/550/3년을 따로 골랐을 때는 그냥 전부 펼친다 */
+function dayCollapseOn(){
+  if(ui.q) return false;                        /* 검색 중에는 결과가 묻히지 않게 모두 펼친다 */
+  return ui.filter.indexOf('b:') !== 0;
+}
+function dayIsOpen(day, isFirst){
+  if(!dayCollapseOn()) return true;
+  var v = ui.dayOpen[day];
+  if(v === true || v === false) return v;
+  if(day === todayStr()) return true;           /* 기본: 오늘(가장 최신 날짜)만 펄침 */
+  return !!isFirst && !custsOfDay(todayStr()).some(custMatch);   /* 오늘 묶음이 없으면 가장 최근 날짜 */
+}
+function dayCounts(list){
+  var o = {"미통화":0,"부재":0,"완료":0,"개통완료":0};
+  list.forEach(function(c){ if(o[c.status] != null) o[c.status]++; });
+  return o;
+}
+function dayHeadHTML(day, all, left, open, canCollapse){
   var isToday = day===todayStr();
   var tag = isToday? '<span class="bk">오늘</span>' : (day===shiftDay(-1)? '<span class="bk">어제</span>':'');
-  var h = '<section class="day" data-day="'+day+'" data-anc="day:'+day+'">'
-        + '<div class="day-head">'
-        +   '<div class="dh-date"><b>'+fmtDayLabel(day)+'</b>'+tag+'</div>'
-        +   '<div class="dh-done '+(left?'':'all-done')+'">'+(left? '남은 <b>'+left+'</b>' : '모두 완료')+'</div>'
-        +   (isAdmin()? '<button class="day-add" data-act="add-cust" data-day="'+day+'" aria-label="이 날짜에 명단 추가">＋</button>' : '')
-        + '</div><div class="cust-list">'
-        + list.map(custRow).join('')
-        + '</div></section>';
-  return h;
+  var h = '<span class="dh-top"><span class="dh-date"><b>'+fmtDayLabel(day)+'</b>'+tag+'</span>'
+        + '<span class="dh-done '+(left? '' : 'all-done')+'">'+(left? '남은 <b>'+left+'</b>' : '모두 완료')+'</span>'
+        + (canCollapse? '<span class="chev" aria-hidden="true">▾</span>' : '')
+        + '</span>';
+  if(canCollapse && !open){
+    var n = dayCounts(all);
+    h += '<span class="dh-cnts">'
+       +   '<i class="mt'+(n['미통화']? '' : ' zero')+'">미통화 <b>'+n['미통화']+'</b></i>'
+       +   '<i class="ab'+(n['부재']? '' : ' zero')+'">부재 <b>'+n['부재']+'</b></i>'
+       +   '<i class="dn'+(n['완료']? '' : ' zero')+'">완료 <b>'+n['완료']+'</b></i>'
+       +   '<i class="op'+(n['개통완료']? '' : ' zero')+'">개완 <b>'+n['개통완료']+'</b></i>'
+       + '</span>';
+  }
+  if(canCollapse){
+    return '<button class="dh-tap" data-act="day-toggle" data-day="'+day+'" aria-expanded="'+(open? 'true' : 'false')+'"'
+         + ' aria-label="'+esc(fmtDayLabel(day))+' '+(open? '접기' : '펄치기')+'">'+h+'</button>';
+  }
+  return '<div class="dh-tap">'+h+'</div>';
 }
 
 function custRow(c){
@@ -4733,7 +5210,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.24</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.25</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -4811,6 +5288,7 @@ function render(opts){
   var todayLeft = custsOfDay(todayStr()).filter(function(c){ return !isDoneSt(c.status); }).length;
   $('t1n').textContent = '';
   $('t2n').textContent = todayLeft || '';
+  alarmBadge();   /* v8.25: 🔔 알람 탭 미확인 배지 */
 
   $('whoName').textContent = session.staff;
   var av = $('whoAv');
@@ -4823,7 +5301,7 @@ function render(opts){
        · 일반 직원 → ⏰ 예약 추가  · 관리자 → ⏰ 예약 추가 / 📋 명단 추가 중 골라 입력
        (명단 추가·삭제 자체는 계속 관리자 전용) · 홈 피드는 그대로 새 글 쓰기 */
     var onBand = ui.tab==='band';
-    fab.hidden = false;
+    fab.hidden = (ui.tab==='alarm');   /* v8.25: 알람 탭에는 + 를 두지 않는다 */
     fab.setAttribute('data-act', onBand? 'staff-add' : 'compose');
     fab.setAttribute('aria-label', onBand? (isAdmin()? '추가 — 예약 또는 730·550·3년 명단' : '예약 추가') : '새 글 쓰기');
     fab.classList.toggle('fab-resv', onBand);
@@ -5463,6 +5941,18 @@ function updateCounts(){
       hd.innerHTML = rest? '남은 <b>'+rest+'</b>' : '모두 완료';
       hd.classList.toggle('all-done', !rest);
     }
+    /* v8.25: 접힌 날짜 줄의 미통화·부재·완료·개완 숫자도 그 자리에서 */
+    var cc = days[j].querySelector('.dh-cnts');
+    if(cc){
+      var dc = dayCounts(all), keys = [['mt','미통화'],['ab','부재'],['dn','완료'],['op','개통완료']];
+      for(var q=0;q<keys.length;q++){
+        var chip = cc.querySelector('i.'+keys[q][0]);
+        if(!chip) continue;
+        var bq = chip.querySelector('b');
+        if(bq) bq.textContent = dc[keys[q][1]];
+        chip.classList.toggle('zero', !dc[keys[q][1]]);
+      }
+    }
   }
 }
 function saveMemo(id){
@@ -5550,6 +6040,40 @@ document.addEventListener('click', function(e){
 
   switch(act){
     case 'tab': setTab(el.getAttribute('data-tab')); break;
+    /* ---- v8.25: 🔔 알람 모음 ---- */
+    case 'alarm-f':
+      ui.alarmF = el.getAttribute('data-f') || 'all';
+      render();
+      break;
+    case 'alarm-sound': alarmSoundToggle(); break;
+    case 'alarm-notif': alarmNotifToggle(); break;
+    case 'alarm-item':
+      var ait = alarmFind(el.getAttribute('data-id'));
+      if(!ait) break;
+      if(!ait.read){ ait.read = true; alarmSave(); }
+      render();   /* 확인함으로 바뀌고 목록에는 그대로 남는다 */
+      alarmBadge();
+      if(ait.pid && ait.mid){ openPostCmt(ait.pid, ait.mid); break; }
+      if(ait.cid && findCust(ait.cid)){ openSheet({type:'cust', id: ait.cid}); break; }
+      if(ait.cid){ toast('이미 지워진 고객이에요'); break; }
+      if(ait.cat==='dday'){ ui.tab = 'band'; ui.filter = 's:예약'; render(); window.scrollTo({top:0, behavior:'smooth'}); }
+      break;
+    case 'alarm-readall':
+      alarm.items.forEach(function(x){ x.read = true; });
+      alarmSave(); render(); alarmBadge();
+      toast('알람을 모두 확인 처리했어요');
+      break;
+    case 'alarm-clear':
+      openConfirm({title:'알람 비우기', msg:'알람 이력을 모두 지워요.\n확인한 알람도 함께 사라지고 되돌릴 수 없습니다.',
+        ok:'비우기', cancel:'취소',
+        onOk:function(){ alarm.items = []; alarmSave(); ui.alarmF = 'all'; alarmBadge(); render(); toast('알람을 비웠어요'); }});
+      break;
+    case 'day-toggle':
+      var tday = el.getAttribute('data-day');
+      if(!tday || !dayCollapseOn()) break;
+      ui.dayOpen[tday] = (el.getAttribute('aria-expanded') !== 'true');
+      render({anchor:true});   /* 누른 날짜 줄이 있던 자리를 지킨다 */
+      break;
     case 'compose': compose(); break;
     case 'menu': openSheet({type:'menu'}); break;
     case 'admin': openSheet({type:'admin'}); break;
@@ -6268,6 +6792,7 @@ function registerSW(){
 function init(){
   session = loadSession();
   state = loadState();
+  alarmLoad();   /* v8.25: 알람 이력은 기기에 영구 보관(200건) — 앱을 꺼도 남는다 */
   ledgerLoad();
   archInit();   /* v8: 과거 전체 명단(archive.json)을 백그라운드로 받아 IndexedDB에 */
   if(session){
@@ -6291,6 +6816,8 @@ function init(){
     }
     syncStart();   /* v8.9: 전 직원 실시간 공유 — 앱을 열 때 바로 한 번 받아온다 */
     setTimeout(resvNotifyDue, 1200);   /* v8.3: 오늘·지난 예약은 앱을 열 때 한 번 알림 */
+    try{ alarmScanDday(); }catch(e){}   /* v8.25 */
+    alarmBadge();
   } else {
     $('login').hidden = false;
     $('app').hidden = true;
@@ -6302,7 +6829,9 @@ function init(){
   applyCapture();
   setInterval(adminTick, 20 * 1000);
   setInterval(function(){ if(session && !document.hidden) ledgerSync(false); }, 5*60*1000);
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ adminTick(); ledgerSync(false); } });
+  setInterval(function(){ if(session){ alarmScanDday(); alarmBadge(); } }, 5*60*1000);   /* v8.25: 자정이 지나도 오늘 D-DAY 가 바로 */
+  document.addEventListener('pointerdown', alarmUnlockAudio, {passive:true});            /* v8.25: 첫 터치에 알람 소리 허용 */
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ adminTick(); ledgerSync(false); alarmScanDday(); alarmBadge(); } });
   registerSW();
 }
 init();
