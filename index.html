@@ -4792,6 +4792,12 @@ function render(opts){
   var y = window.scrollY;
   /* v8.24: 상태 변경·전 직원 반영처럼 '보던 자리를 지켜야 하는' 다시 그리기만 기준 카드를 잡는다 */
   var anc = (opts && opts.anchor) ? anchorPick() : null;
+  /* v8.24: 누른 버튼이 초점을 쥔 채 사라지면 안드로이드 크롬이 화면을 다시 맞추는 경우가 있어,
+     다시 그리기 직전에 버튼 초점만 먼저 뺀다(버튼은 커서가 필요 없다). */
+  try{
+    var af = document.activeElement;
+    if(af && af.tagName === 'BUTTON' && af.blur) af.blur();
+  }catch(e){}
   var activeId = document.activeElement && document.activeElement.id;
   var selStart = null, selEnd = null;
   try{ if(activeId && document.activeElement.setSelectionRange){ selStart = document.activeElement.selectionStart; selEnd = document.activeElement.selectionEnd; } }catch(e){}
@@ -4996,17 +5002,59 @@ function keepStatus(id, st){
 function keepStatusNow(id, st){
   var c = ensureCust(id);
   if(!c) return;
+  var row = document.querySelector('#main .krow[data-id="'+id+'"]');
   if(st==='미통화'){
     if(c.status==='부재') applyCustStatus(c, '미통화');
     c.keep = false;
-    save(); render({anchor:true});
+    save();
+    /* v8.24: 목록에 남는 카드는 다시 그리지 않고 그 자리에서 바로 바꿔 화면이 튀지 않게 */
+    if(row && keepRowStays(c)){ paintKeepRow(row, c); updateCounts(); toast('부재중 킵에서 뺐어요'); return; }
+    render({anchor:true});
     toast('부재중 킵에서 뺐어요');
     return;
   }
   applyCustStatus(c, st);
   c.keep = false;
-  save(); render({anchor:true});
+  save();
+  if(row && keepRowStays(c)){ paintKeepRow(row, c); updateCounts(); toast(c.name+' · '+stLabel(st)+' 표시했어요'); return; }
+  render({anchor:true});
   toast(c.name+' · '+stLabel(st)+' 표시했어요');
+}
+/* v8.24: 지금 보고 있는 목록(부재중 킵·부재·예약)에 이 카드가 그대로 남는지 */
+function keepRowStays(c){
+  var f = ui.filter || 'all';
+  if(f === 'keep') return c.status === '부재';
+  if(f === 's:부재') return c.status === '부재';
+  if(f === 's:예약') return c.status === '예약';
+  return true;
+}
+/* v8.24: 카드 한 장만 그 자리에서 다시 그린다(상태·부재 횟수·킵 표시) — 전체를 다시 그리지 않는다 */
+function paintKeepRow(row, c){
+  if(!row) return;
+  var st = c.status || '미통화';
+  row.setAttribute('data-st', st);
+  var chip = row.querySelector('.st-chip');
+  if(chip){ chip.setAttribute('data-st', st); chip.textContent = stLabel(st); }
+  var t = +c.tries || 0;
+  var cnt = row.querySelector('.k-tries');
+  if(t){
+    if(!cnt){
+      cnt = document.createElement('span');
+      cnt.className = 'k-tries';
+      var day = row.querySelector('.k-day');
+      if(day && day.parentNode) day.parentNode.insertBefore(cnt, day.nextSibling); else row.querySelector('.k-top').appendChild(cnt);
+    }
+    cnt.textContent = '부재 '+t+'회';
+  } else if(cnt && cnt.parentNode){ cnt.parentNode.removeChild(cnt); }
+  var dec = row.querySelector('.try-dec');
+  if(dec){
+    dec.disabled = !t;
+    if(t) dec.removeAttribute('aria-disabled'); else dec.setAttribute('aria-disabled','true');
+  }
+  var pin = row.querySelector('.kpin');
+  if(pin) pin.classList.toggle('on', !!c.keep);
+  var resv = row.querySelector('.k-resv');   /* v8.24: 예약 → 다른 상태면 카드의 ⏰ 줄도 정리 */
+  if(resv && st !== '예약') resv.parentNode.removeChild(resv);
 }
 function keepTry(id){
   var c = ensureCust(id);
@@ -5021,7 +5069,10 @@ function keepTry(id){
     c.comments.push(sysCmt('통화상태 '+stLabel(prev)+' → 부재'));
   }
   c.comments.push(sysCmt('부재 통화 '+c.tries+'회차 — 재통화 필요'));
-  save(); render({anchor:true});
+  save();
+  var krow = document.querySelector('#main .krow[data-id="'+id+'"]');
+  if(krow && keepRowStays(c)){ paintKeepRow(krow, c); updateCounts(); toast(c.name+' · 부재 '+c.tries+'회 기록'); return; }
+  render({anchor:true});
   toast(c.name+' · 부재 '+c.tries+'회 기록');
 }
 /* v8.24: 실수로 누른 '부재 1회'를 1회씩 되돌린다 (0회 밑으로는 내려가지 않는다) */
@@ -5033,7 +5084,10 @@ function keepUntry(id){
   c.tries = n - 1;
   c.comments = c.comments || [];
   c.comments.push(sysCmt('부재 통화 기록 1회 차감 ('+n+'회 → '+c.tries+'회)'));
-  save(); render({anchor:true});
+  save();
+  var krow = document.querySelector('#main .krow[data-id="'+id+'"]');
+  if(krow && keepRowStays(c)){ paintKeepRow(krow, c); updateCounts(); toast(c.name+' · 부재 '+(c.tries? c.tries+'회' : '0회 (기록 없음)')); return; }
+  render({anchor:true});
   toast(c.name+' · 부재 '+(c.tries? c.tries+'회' : '0회 (기록 없음)'));
 }
 function saveKeepMemo(id){
@@ -5390,6 +5444,9 @@ function updateCounts(){
   /* v8.16: 홈·명단 상단 반반 킵 타일 숫자도 같이 새로 */
   var kk = document.querySelector('.k2-n[data-k2="keep"]');
   if(kk){ var kn = absentCount('keep'); kk.textContent = kn; var kt = kk.parentNode.parentNode; if(kt) kt.className = 'k2 k2-abs'+(kn?'':' zero'); }
+  /* v8.24: 목록 맨 위 '부재중 킵 N' 머리 숫자도 그 자리에서 */
+  var fh = document.querySelector('#main .flathead .n');
+  if(fh) fh.textContent = absentCount(ui.filter === 's:부재' ? 'absent' : 'keep');
   var rk = document.querySelector('.k2-n[data-k2="resv"]');
   if(rk){ var rn2 = resvAllCount(); rk.textContent = rn2; var rt = rk.parentNode.parentNode; if(rt) rt.className = 'k2 k2-resv'+(rn2?'':' zero'); }
   var days = document.querySelectorAll('.day[data-day]');
