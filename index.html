@@ -4268,6 +4268,8 @@ function resvDateHTML(sp){
   }
   var d = (cur && cur.resDate) || todayStr();
   var tm = (cur && cur.resTime) || '';
+  /* v8.32: 예약 날짜·시간 창에서도 고객 생년월일을 함께 — 예약 잡을 때 나이를 바로 확인 */
+  var bWait = target==='cust'? birthOf(cur) : '';
   function addDay(n){
     var t = new Date(); t.setDate(t.getDate()+n);
     return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
@@ -4276,7 +4278,8 @@ function resvDateHTML(sp){
   var h = '<form class="form resvform" data-form="resvdate" data-target="'+esc(target)+'"'
         + ' data-id="'+esc(sp.id||'')+'" data-pid="'+esc(sp.pid||'')+'" data-cid="'+esc(sp.cid||'')+'" data-key="'+esc(sp.key||'')+'"'
         + ' data-act="resv-noop">'
-        + '<div class="rf-who">⏰ '+esc(who)+(phone? ' · '+esc(phone) : '')+'</div>'
+        + '<div class="rf-who">⏰ '+esc(who)+(phone? ' · '+esc(phone) : '')
+        +   (bWait? ' · <b>'+esc(bWait)+' 만 '+birthAge(bWait)+'세</b>' : '')+'</div>'
         + (curText? '<p class="rf-cur">'+esc(curText)+'</p>' : '')
         + '<div class="rf-quick">'
         +   quick.map(function(q){
