@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.32">
+<meta name="app-version" content="v8.33">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -5146,6 +5146,36 @@ function dayIsOpen(day, isFirst){
   if(day === todayStr()) return true;           /* 기본: 오늘(가장 최신 날짜)만 펄침 */
   return !!isFirst && !custsOfDay(todayStr()).some(custMatch);   /* 오늘 묶음이 없으면 가장 최근 날짜 */
 }
+/* v8.33: 날짜 하나만 제자리에서 접고 펴기 — 목록 전체를 다시 그리지 않는다.
+   v8.32까지는 render({anchor:true})로 #main 을 통째로 다시 그렸는데, 화면 밖 .day 카드는
+   content-visibility:auto 라서 높이가 '마지막으로 그린 값 → 1200px 추정값'으로 되돌아간다.
+   그러면 화면 위쪽 날짜들의 키가 줄어 기준 카드의 좌표가 1,800px씩 어긋나고,
+   anchorKeep 이 그만큼 scrollBy 를 해서 누른 날짜가 화면 밖으로 밀려났다.
+   이제 그 날짜 <section> 하나만 바꿔 끼우므로 위쪽 좌표는 1px도 변하지 않는다. */
+function dayToggleInPlace(day, open){
+  var body = $('custListBody');
+  if(!body) return false;
+  var sec = null, all = body.querySelectorAll('.day[data-day]');
+  for(var i=0;i<all.length;i++){ if(all[i].getAttribute('data-day')===day){ sec = all[i]; break; } }
+  if(!sec) return false;
+  var head = sec.querySelector('.dh-tap');
+  var prevTop = (head || sec).getBoundingClientRect().top;
+  ui.dayOpen[day] = !!open;
+  var html = dayCard(day, false);
+  if(!html) return false;                 /* 그 날짜가 사라졌으면 전체 다시 그리기로 넘긴다 */
+  var box = document.createElement('div');
+  box.innerHTML = html;
+  var next = box.firstElementChild;
+  if(!next) return false;
+  sec.parentNode.replaceChild(next, sec);
+  /* 브라우저 스크롤 앵커링·높이 재계산이 끼어들어도 누른 날짜 줄은 누른 자리에 그대로 둔다 */
+  var h2 = next.querySelector('.dh-tap');
+  if(h2 && head){
+    var d = h2.getBoundingClientRect().top - prevTop;
+    if(Math.abs(d) >= 1) window.scrollBy(0, d);
+  }
+  return true;
+}
 function dayCounts(list){
   var o = {"미통화":0,"부재":0,"완료":0,"개통완료":0};
   list.forEach(function(c){ if(o[c.status] != null) o[c.status]++; });
@@ -5454,7 +5484,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.32</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.33</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -6325,8 +6355,10 @@ document.addEventListener('click', function(e){
     case 'day-toggle':
       var tday = el.getAttribute('data-day');
       if(!tday || !dayCollapseOn()) break;
-      ui.dayOpen[tday] = (el.getAttribute('aria-expanded') !== 'true');
-      render({anchor:true});   /* 누른 날짜 줄이 있던 자리를 지킨다 */
+      var tOpen = el.getAttribute('aria-expanded') !== 'true';
+      /* v8.33: 그 날짜 카드만 제자리에서 열고 닫는다 — 전체 다시 그리기는 화면 위쪽 높이를
+         추정값으로 되돌려 스크롤이 위로 튀었다(dayToggleInPlace 주석 참고). */
+      if(!dayToggleInPlace(tday, tOpen)) render({anchor:true});
       break;
     case 'compose': compose(); break;
     case 'menu': openSheet({type:'menu'}); break;
