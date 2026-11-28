@@ -3578,6 +3578,7 @@ var navSyncT = 0;
 /* 지금 열려 있는 창 — 아래(먼저 닫히는 쪽이 위)에서부터 차례대로 */
 function navLayers(){
   var L = [];
+  if(!session) return L;                                       /* 로그인 화면에는 닫을 창이 없다 */
   if(ui && ui.nqOpen) L.push('search');                        /* 홈 피드 검색 바 */
   if(ui && ui.tab === 'alarm') L.push('alarm');                /* 🔔 알람 화면 */
   if(sheetSpec) L.push('sheet');                               /* 시트 · 확인창 */
@@ -7829,6 +7830,7 @@ function logout(){
   ui.loginStaff = '김태양';
   clearPin();
   renderLogin();
+  navSync();   /* v8.43: 로그인 화면으로 나가면 쌓아 둔 history 항목도 걷어낸다 */
 }
 
 /* ================= events ================= */
