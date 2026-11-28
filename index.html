@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.46">
+<meta name="app-version" content="v8.47">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -7095,15 +7095,32 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape' && photoMe
    · 관리자 화면(isAdmin) : 댓글 복사 + 수정하기 + 삭제하기 (모든 댓글·옛 답글)
    스크롤·글자 드래그로 움직이면 취소하고, 버튼·메모·사진 위에서는 뜨지 않는다. */
 var cmtMenu = null, cmtMenuSpec = null, cmtPress = null, cmtMenuAt = 0, cmtMenuOrigin = null;
+/* v8.47: 꾹 눌러 연 메뉴에서 손을 떼며 따라오는 click 한 번만 무시하기 위한 표시.
+   새 터치(pointerdown)가 시작되면 곧바로 꺼지므로, 그 다음 탭부터는 정상으로 동작한다. */
+var cmtSwallowClick = false;
+/* v8.47: 마지막 '손가락' pointerdown 시각 — 손가락 롱프레스가 보내는 contextmenu 인지 가른다 */
+var cmtLastTouchAt = 0;
+/* v8.47: 같은 롱프레스가 contextmenu 를 한 번 더 보내는 것을 무시하는 창(ms) */
+var CMT_DUP_MS = 1200;
 /* v8.46(#31161): 안드로이드 기본 롱프레스/WebView OnLongClick(~450~500ms)보다 확실히 먼저 열리도록
    350ms 로 더 당기고, 엄지손가락이 눌린 채 미세하게 흔들리는 것을 감안해 이동 허용을 25px 로 넓힌다. */
 var CMT_PRESS_MS = 350;
 var CMT_MOVE_PX = 25;
 function closeCmtMenu(){
   if(cmtMenu && cmtMenu.parentNode) cmtMenu.parentNode.removeChild(cmtMenu);
+  /* v8.47: 추적이 끊긴 .cmenu 가 남아 DOM 에 2개가 되는 일이 없게 같이 걷어낸다 */
+  var stray = document.querySelectorAll('.cmenu');
+  for(var si = 0; si < stray.length; si++) if(stray[si].parentNode) stray[si].parentNode.removeChild(stray[si]);
   cmtMenu = null; cmtMenuSpec = null; cmtMenuOrigin = null;
   if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
   navSync();
+}
+/* v8.47: 같은 댓글·답글을 가리키는지 — 메뉴가 두 번 뜨는지 판정할 때 쓴다 */
+function cmtSameSpec(a, b){
+  if(!a || !b) return false;
+  return a.kind === b.kind && String(a.pid) === String(b.pid) && String(a.cid) === String(b.cid)
+      && String(a.rid || '') === String(b.rid || '')
+      && (a.ridx === undefined ? -1 : a.ridx) === (b.ridx === undefined ? -1 : b.ridx);
 }
 function cmtMenuTarget(el){
   /* v8.46(#31161): 일부 WebView 는 touchstart 의 target 으로 텍스트 노드(nodeType 3)를 준다.
@@ -7251,17 +7268,25 @@ function cmtPressCancel(){
   if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
 }
 document.addEventListener('pointerdown', function(e){
+  /* v8.47: 새 터치가 시작되면 '손 뗀 click 한 번 무시'는 끝 — 그 다음 탭은 정상으로 닫기·동작 */
+  cmtSwallowClick = false;
   if(e.button && e.button !== 0) return;
   if(e.target && e.target.closest && e.target.closest('.cmenu')) return;
   var t = cmtMenuTarget(e.target);
   if(!t) return;
+  if(e.pointerType === 'touch') cmtLastTouchAt = Date.now();
   var x = e.clientX, y = e.clientY;
   cmtPressCancel();
+  /* v8.47: 같은 댓글 메뉴가 방금 떠 있는데 또 눌러도(두 손가락·짧은 간격) 새로 그리지 않는다
+     — 메뉴가 닫혔다 다시 뜨고 진동이 두 번 울리던 증상 방지 */
+  if(cmtMenu && cmtMenuSpec && cmtSameSpec(cmtMenuSpec, t) && Date.now() - cmtMenuAt < CMT_DUP_MS) return;
   var timer = setTimeout(function(){
     cmtPress = null;
     openCmtMenu(t, x, y);
+    /* v8.47: 손가락을 떼며 따라오는 click 은 방금 연 메뉴를 닫지 않게 한 번만 무시 */
+    if(cmtMenu) cmtSwallowClick = true;
   }, CMT_PRESS_MS);
-  cmtPress = {x: x, y: y, timer: timer, touch: (e.pointerType === 'touch')};
+  cmtPress = {x: x, y: y, timer: timer, touch: (e.pointerType === 'touch'), spec: t};
 }, {passive: true});
 document.addEventListener('pointermove', function(e){
   if(!cmtPress) return;
@@ -7299,8 +7324,15 @@ document.addEventListener('touchcancel', function(){
 document.addEventListener('contextmenu', function(e){
   var t = cmtMenuTarget(e.target);
   if(!t) return;
-  e.preventDefault();
+  e.preventDefault();   /* v8.47: 중복이라 무시하는 경우에도 브라우저 기본 메뉴는 항상 막는다 */
+  /* v8.47: 손가락을 뗀 채 계속 누르고 있으면 안드로이드 Chrome/WebView 가 롱프레스 판정
+     (~450~500ms)으로 contextmenu 를 한 번 더 보낸다. pointerdown 타이머가 이미 같은 댓글 메뉴를 열어
+     두었으면 이것은 같은 롱프레스의 중복이므로 두 번째로 열지 않는다
+     — 진동 2번, 메뉴가 닫혔다 다시 뜸, 좌표 (0,0) 보정으로 위치가 튀던 증상의 원인. */
+  if(cmtMenu && cmtMenuSpec && cmtSameSpec(cmtMenuSpec, t) && Date.now() - cmtMenuAt < CMT_DUP_MS) return;
   openCmtMenu(t, e.clientX, e.clientY);
+  /* 손가락 롱프레스로 연 것이면 손을 떼며 오는 click 을 무시할 준비 */
+  if(cmtMenu && Date.now() - cmtLastTouchAt < CMT_DUP_MS) cmtSwallowClick = true;
 });
 /* v8.45(#31052): 여는 순간의 미세 스크롤(#sheetBody 리플로우·포커스 보정)에 방금 연 메뉴가
    바로 닫히지 않게 사진 메뉴와 같은 0.5초 유예를 둔다. */
@@ -7933,20 +7965,20 @@ document.addEventListener('click', function(e){
   if(e.target && e.target.id==='lightbox'){ closeLB(); return; }
   /* v8.13: 사진 메뉴 밖을 누르면 메뉴를 닫는다 */
   if(photoMenu && e.target.closest && !e.target.closest('.pmenu') && !e.target.closest('[data-act="photo-menu"]')) closePhotoMenu();
-  /* v8.42: 댓글 메뉴 바깥을 누르면 닫는다 — 단, 꾹 누른 뒤 따라오는 click(470ms 직후)으로
-     방금 연 메뉴가 바로 닫히지 않도록 여는 순간의 0.45초는 무시한다. */
-  /* v8.44: 꾹 눌렀다가 0.5초 넘게 더 누르고 손을 떼도 메뉴가 그대로 남게 —
-     손을 떼며 따라오는 click(꾹 눌렀던 그 댓글 줄)은 메뉴를 닫지도, 댓글을 누르지도 않는다. */
-  if(cmtMenu && cmtMenuOrigin && e.target && e.target.closest && !e.target.closest('.cmenu')){
-    var inOrigin = cmtMenuOrigin.contains(e.target);
-    var nearAct = e.target.closest('[data-act]');
-    var originIsPrev = (cmtMenuOrigin.getAttribute && cmtMenuOrigin.getAttribute('data-act') === 'preview-open');
-    /* 꾹 누른 그 줄의 글자·빈 곳에서 올라온 click — 메뉴는 그대로 두고 아무것도 하지 않는다 */
-    if(inOrigin && (!nearAct || nearAct === cmtMenuOrigin)) return;
-    /* 미리보기 안의 사진처럼 원래 하던 동작이 있는 곳 — 메뉴를 닫고 그 동작을 살린다 */
-    if(inOrigin && originIsPrev && nearAct) closeCmtMenu();
+  /* v8.42: 댓글 메뉴 바깥을 누르면 닫는다. */
+  /* v8.47: 꾹 눌러 메뉴가 떠 있을 때 —
+     · 손을 떼며 따라오는 click(한 번)은 메뉴를 닫지도, 댓글을 누르지도 않고 무시하고,
+     · 그 뒤로는 .cmenu 바깥이면 어디를 눌러도(꾹 눌렀던 그 댓글 줄의 글자·빈 곳 포함)
+       여는 시각과 상관없이 기다리지 않고 바로 닫는다. */
+  if(cmtMenu && e.target && e.target.closest && !e.target.closest('.cmenu')){
+    if(cmtSwallowClick){ cmtSwallowClick = false; return; }
+    var cmtNearAct = e.target.closest('[data-act]');
+    /* 꾹 눌렀던 그 줄(미리보기·댓글) 자체가 걸리는 data-act → 빈 곳으로 본다 */
+    var cmtOnOrigin = !!(cmtNearAct && cmtMenuOrigin && cmtNearAct === cmtMenuOrigin);
+    closeCmtMenu();
+    /* 닫기만 하고 끝 — 그 줄 안의 다른 버튼(상태 칩·메모 등)은 아래에서 원래 동작을 살린다 */
+    if(!cmtNearAct || cmtOnOrigin) return;
   }
-  if(cmtMenu && e.target.closest && !e.target.closest('.cmenu') && Date.now() - cmtMenuAt > 450) closeCmtMenu();
   if((ui.memoEdit || ui.resvMemo || ui.keepMemo || ui.cMemo)
      && !(e.target.closest && e.target.closest('.c-edit,.rmemo-edit,.k-edit,.cmemo-edit'))){
     cancelInlineEdit();
