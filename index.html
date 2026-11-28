@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.40">
+<meta name="app-version" content="v8.41">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1143,13 +1143,18 @@
 .replybtn{min-height:34px;padding:5px 12px;font-size:13px;border-radius:9px}
 .cmt .cseg{margin:10px 0 4px;max-width:520px}
 .cmt .cseg-b{min-height:40px;font-size:14px}
-/* v8.37(#29852·#29867): 댓글 한 줄 메모 — 없으면 머리의 📝 메모, 있으면 노란 상자(탭하면 수정) */
-.memobtn{min-height:38px;padding:0 12px;border-radius:10px;background:#F7F9FC;border:1px solid var(--line);
-  color:#475569;font-size:13px;font-weight:800;letter-spacing:-.01em}
-.memobtn:hover{background:#EEF3FA;border-color:#D7DFE9;color:var(--blue-deep)}
+/* v8.41: 4칸 상태 버튼과 메모 한 줄 바를 같은 폭으로 맞춘다(넓은 화면에서도 나란히) */
+.cmt .cmemo,.cmt .cmemo-edit{max-width:520px}
+/* v8.37(#29852·#29867) → v8.41(#30368·#30372): 댓글 한 줄 메모 —
+   고객 카드와 같이 상태 버튼 바로 아래 한 줄. 없으면 연한 '📝 메모 입력' 바, 있으면 노란 상자(탭하면 수정) */
 .cmemo{display:flex;gap:8px;width:100%;max-width:100%;margin:8px 0 2px;padding:9px 11px;text-align:left;
   border-radius:11px;border:1px solid #F3E0A9;background:#FFFBEB;color:#6B3F05}
 .cmemo:active{background:#FFF3D2}
+.cmemo.empty{background:#FAFBFD;border-color:var(--line-soft, #EEF1F5);color:var(--hint);
+  border-style:solid;min-height:40px;align-items:center;margin:9px 0 2px}
+.cmemo.empty .cmemo-ic{opacity:.75}
+.cmemo.empty .cmemo-t{font-weight:600;font-size:13.5px}
+.cmemo.empty:hover{background:#F4F7FB;border-color:#DDE4EE;color:var(--sub)}
 .cmemo .cmemo-ic{flex:none;font-size:13px;line-height:1.6}
 .cmemo .cmemo-body{flex:1;min-width:0;display:block}
 .cmemo .cmemo-t{display:block;font-size:14px;line-height:1.55;font-weight:700;letter-spacing:-.01em;word-break:break-word}
@@ -1800,16 +1805,16 @@
             <path d="m15.6 15.6 4.4 4.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
           </svg>
         </button>
+        <button class="who" data-act="menu" aria-label="설정 메뉴">
+          <span class="av" id="whoAv" style="--c:#3182F6">김</span>
+          <b id="whoName">김태양</b>
+        </button>
         <button class="bellbtn" id="alarmBell" data-act="alarm-open" aria-label="알람 모음">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true">
             <path d="M12 3.2c-3.1 0-5.3 2.3-5.3 5.4v2.6c0 .9-.3 1.7-.9 2.4l-1 1.2c-.5.6-.1 1.6.7 1.6h13c.8 0 1.2-1 .7-1.6l-1-1.2c-.6-.7-.9-1.5-.9-2.4V8.6c0-3.1-2.2-5.4-5.3-5.4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
             <path d="M9.6 19.2a2.5 2.5 0 0 0 4.8 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
           <span class="bn" id="t3n" hidden>0</span>
-        </button>
-        <button class="who" data-act="menu" aria-label="설정 메뉴">
-          <span class="av" id="whoAv" style="--c:#3182F6">김</span>
-          <b id="whoName">김태양</b>
         </button>
       </div>
     </div>
@@ -5784,12 +5789,8 @@ function threadHTML(item, ctx, open){
 function cmtHTML(c, parentId, ctx, mode){
   var reps = c.replies||[];
   var isPost = ctx==='post' && !c.sys;   /* v5: 글의 1단계 댓글만 상태 관리 */
-  /* v8.37(#29875): 글의 댓글 머리 오른쪽 '답글' 쓰기 버튼 자리에 '📝 메모' —
-     예전에 밴드에서 가져온 답글(c.replies)은 읽기 전용으로 그대로 둔다(아래 '답글 N개 보기').
-     메모가 이미 있으면 머리에는 버튼을 두지 않고 아래 노란 상자를 탭해 고친다. */
-  var memoBtn = (isPost && !String(c.memo||'').trim())
-    ? '<button class="replybtn memobtn" data-act="cmt-memo" data-pid="'+esc(parentId)+'" data-cid="'+esc(c.id||'')+'">📝 메모</button>'
-    : '';
+  /* v8.41(#30368): 머리 오른쪽 '📝 메모' 버튼은 없앴다 —
+     메모는 730·550·3년 고객 카드와 같이 부재·예약·완료·개통완료 버튼 바로 아래 한 줄 바로 둔다(아래 cmtMemoHTML). */
   var rOpen = ui.replyOpen===c.id;
   var nh = nqOn() && nqCmtHit(c);        /* v8.36: 검색어와 맞은 댓글(답글까지) */
   /* 검색 중이면 맞은 답글이 바로 보이게 펼친다 — 단, 사용자가 직접 접은 댓글은 그대로 둔다. */
@@ -5798,16 +5799,15 @@ function cmtHTML(c, parentId, ctx, mode){
         + '<div class="cmt-head"><span class="av xs" style="--c:'+colorOf(c.author)+'">'+esc(initial(c.author))+'</span>'
         + '<b>'+hlHTML(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
         + (!isPost && c.st? '<span class="cst" data-st="'+esc(c.st)+'">'+esc(stLabel(c.st))+'</span>' : '')
-        + memoBtn
         + (c.sys || isPost? '' : '<button class="replybtn" data-act="reply-open" data-cid="'+c.id+'">답글</button>')+'</div>';
-  /* v8.37: 메모를 쓰는 동안에는 방금 누른 버튼 바로 아래에 입력칸이 열린다 */
-  if(isPost && ui.cMemo===c.id) h += cmtMemoHTML(c, parentId, true);
   if(c.text) h += '<p>'+hlHTML(c.text)+'</p>';
   h += photoGrid(c.photos, 'sm');
   if(isPost) h += csegHTML(c, parentId);
   if(isPost && c.st==='예약' && c.resDate) h += '<div class="cmt-resv">⏰ 예약 '+esc(resvText(c))+'</div>';
-  /* v8.37: 저장해 둔 메모는 노란 상자로 — 상자를 탭하면 위 입력칸이 열린다 */
-  if(isPost && ui.cMemo!==c.id) h += cmtMemoHTML(c, parentId, false);
+  /* v8.41(#30368·#30372): 메모 한 줄 바 — 부재·예약·완료·개통완료 바로 아래, 답글 보기 위.
+     고객 카드와 같은 방식: 메모가 없으면 연한 '📝 메모 입력' 바, 있으면 노란 메모 상자,
+     둘 다 탭하면 그 자리에서 입력칸이 열린다. */
+  if(isPost) h += cmtMemoHTML(c, parentId, ui.cMemo===c.id);
   if(reps.length){
     h += '<button class="rep-toggle" data-act="rep-toggle" data-cid="'+c.id+'" aria-expanded="'+(rExp?'true':'false')+'">'
        + (rExp? '답글 접기 <span class="chev">▴</span>' : '답글 '+reps.length+'개 보기 <span class="chev">▾</span>')
@@ -5842,8 +5842,9 @@ function cmtHTML(c, parentId, ctx, mode){
   return h+'</li>';
 }
 
-/* v8.37(#29852·#29867): 댓글 한 줄 메모.
-   · 없으면 머리의 '📝 메모' → 누르면 한 줄 입력칸이 열린다.
+/* v8.37(#29852·#29867) → v8.41(#30368·#30372): 댓글 한 줄 메모.
+   · 고객 카드(730·550·3년) 메모 칸과 같은 자리·같은 모양 — 상태 버튼 아래 한 줄.
+   · 없으면 연한 '📝 메모 입력' 바(한 줄), 누르면 그 자리에서 입력칸이 열린다.
    · 있으면 노란 상자(📝 메모 · 쓴 시각 · 쓴 사람) — 상자를 탭하면 다시 입력칸.
    · 검색 중에는 메모 글자도 hlHTML 로 노랗게 표시한다. */
 function cmtMemoHTML(c, parentId, edit){
@@ -5856,7 +5857,12 @@ function cmtMemoHTML(c, parentId, edit){
       + '<button class="mini-x" type="button" data-act="cmt-memo-cancel" aria-label="취소">✕</button>'
       + '</div>';
   }
-  if(!memo) return '';
+  if(!memo){
+    return '<button type="button" class="cmemo empty" data-act="cmt-memo" data-pid="'+esc(parentId)+'" data-cid="'+esc(c.id||'')+'" aria-label="댓글 메모 입력">'
+      + '<span class="cmemo-ic" aria-hidden="true">📝</span>'
+      + '<span class="cmemo-body"><span class="cmemo-t">메모 입력</span></span>'
+      + '</button>';
+  }
   var st = cmtMemoStamp(c);
   return '<button type="button" class="cmemo" data-act="cmt-memo" data-pid="'+esc(parentId)+'" data-cid="'+esc(c.id||'')+'" aria-label="댓글 메모 수정">'
     + '<span class="cmemo-ic" aria-hidden="true">📝</span>'
