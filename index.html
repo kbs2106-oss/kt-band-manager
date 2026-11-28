@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.41">
+<meta name="app-version" content="v8.42">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -620,6 +620,12 @@
   .sheet-head b{font-size:17px;font-weight:700;letter-spacing:-.02em}
   .sheet-head .x{background:none;border:0;height:32px;padding:0 4px;font-size:14px;font-weight:600;color:var(--hint)}
   .sheet-head .x:hover{color:var(--ink-2)}
+  /* v8.42(#30725·#30736): 고객 정보 시트 오른쪽 위 [저장] — 닫기 바로 왼쪽, 파란 버튼 */
+  .sheet-head .sheet-acts{display:inline-flex;align-items:center;gap:8px;flex:none}
+  .sheet-head .sheet-save{height:34px;padding:0 16px;border-radius:999px;border:0;background:#1B64DA;color:#fff;
+    font-size:13.5px;font-weight:800;letter-spacing:-.02em;box-shadow:0 3px 10px rgba(27,100,218,.24)}
+  .sheet-head .sheet-save:hover{background:#1757BE}
+  .sheet-head .sheet-save:active{transform:translateY(1px)}
   .sheet-body{padding:0 18px calc(24px + env(safe-area-inset-bottom));overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   @media (min-width:700px){
     .sheet-panel{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:560px;max-height:86vh;border-radius:20px;animation:pop .18s ease-out}
@@ -1676,6 +1682,35 @@
   .cmt.nqhit{background:#FFFBEA;border-radius:12px;padding:11px 10px;box-shadow:inset 3px 0 0 #F0C64B;border-bottom-color:transparent}
   .cmt.cmt-done.nqhit{background:#FFFBEA;opacity:1}
   .cmt.nqhit .cmt-head b{color:#8A5A05}
+  /* v8.42(#30500): 검색 중 댓글 창 머리 — '검색 일치 N건만 표시' + 전체 보기 */
+  .nqcmt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;padding:8px 11px;border-radius:10px;
+    background:#EFF4FB;border:1px solid #D6E2F3;color:#2B3A4D;font-size:12.5px;font-weight:700;letter-spacing:-.02em}
+  .nqcmt b{color:#1B64DA;font-weight:800}
+  .nqcmt-all{margin-left:auto;flex:none;height:28px;padding:0 10px;border-radius:999px;border:1px solid #C9D8EE;
+    background:#fff;color:#1B64DA;font-size:12px;font-weight:800;letter-spacing:-.02em;display:inline-flex;align-items:center;gap:2px}
+  .nqcmt-all:hover{background:#F5F9FF}
+  /* ================= v8.42(#30616): 댓글 꾹 누르기 메뉴 =================
+     밴드처럼 댓글을 450~500ms 꾹 누르면 뜨는 작은 메뉴(직원: 복사 + 내 댓글 수정·삭제 / 관리자: 전부) */
+  .cmenu{position:fixed;z-index:1300;min-width:168px;max-width:250px;padding:6px;border-radius:14px;
+    background:#fff;border:1px solid #DFE6EF;box-shadow:0 14px 34px rgba(16,24,40,.22);
+    display:flex;flex-direction:column;gap:2px;animation:cmenuIn .12s ease-out}
+  @keyframes cmenuIn{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .cmenu-who{padding:6px 10px 5px;font-size:11.5px;font-weight:700;color:#8A95A5;letter-spacing:-.02em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cmenu button{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 10px;border:0;border-radius:10px;
+    background:none;color:#2B3A4D;font-size:14px;font-weight:700;letter-spacing:-.02em;text-align:left}
+  .cmenu button i{font-style:normal;font-size:15px;width:18px;text-align:center}
+  .cmenu button:hover,.cmenu button:active{background:#F2F6FB}
+  .cmenu button.del{color:#D63A2F}
+  .cmenu button.del:hover,.cmenu button.del:active{background:#FDEEEC}
+  .cmt,.replies li{-webkit-touch-callout:none}
+  /* 댓글 고치기 — 그 자리 입력칸 */
+  .cedit{margin-top:7px}
+  .cedit input{width:100%;height:44px;padding:0 13px;border-radius:11px;border:1px solid #C9D8EE;background:#fff;
+    font-size:14.5px;font-weight:600;letter-spacing:-.015em;color:var(--ink)}
+  .cedit input:focus{outline:none;border-color:#7FB0F5;box-shadow:0 0 0 3px rgba(40,120,240,.12)}
+  .cedit-btns{display:flex;justify-content:flex-end;gap:6px;margin-top:6px}
+  .cedit-btns .btn.sm{height:34px;padding:0 13px;font-size:13px;font-weight:800}
   @media (max-width:520px){ .cmt.nqhit{padding:12px 9px} }
 
   /* ================= v8.36: 홈 피드 가독성 — 네이버 밴드처럼 크고 시원하게 ================= */
@@ -1838,7 +1873,7 @@
   <div id="sheet" class="sheet" aria-hidden="true">
     <div class="sheet-backdrop" data-act="close"></div>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-      <div class="sheet-head"><b id="sheetTitle">제목</b><button class="x" data-act="close">닫기</button></div>
+      <div class="sheet-head"><b id="sheetTitle">제목</b><span class="sheet-acts"><button class="sheet-save" type="button" data-act="cust-save" hidden>저장</button><button class="x" data-act="close">닫기</button></span></div>
       <div class="sheet-body" id="sheetBody"></div>
     </div>
   </div>
@@ -2509,7 +2544,9 @@ var ui = {
   alarmF:'all',      /* v8.25: 알람 탭 필터(all | dday | staff) */
   dayOpen:{},        /* v8.25: 날짜 접기 상태 — 전체 보기에서 지난 날짜는 접힌 채로 시작 */
   nq:'',             /* v8.36: 홈 피드 글·댓글 검색어 (730·550·3년 탭의 ui.q 와 따로) */
-  nqOpen:false       /* v8.36: 헤더 🔍 로 연 검색 바가 열려 있는지 */
+  nqOpen:false,      /* v8.36: 헤더 🔍 로 연 검색 바가 열려 있는지 */
+  cEdit:null,        /* v8.42(#30616): 지금 그 자리에서 고쳐 쓰는 댓글 id */
+  alarmPrev:'notice' /* v8.42(#30533): 🔔 알람 화면에서 다시 누르면 돌아갈 탭 */
 };
 var sheetSpec = null;
 var sheetOpenY = -1;    /* v8.24: 시트를 열 때의 스크롤 위치 — 닫을 때 그 자리로 */
@@ -3599,6 +3636,9 @@ function renderSheet(){
       + '<div class="formfoot"><button class="btn primary" type="button" data-act="confirm-ok">'+esc(sheetSpec.ok||'확인')+'</button>'
       + '<button class="btn ghost" type="button" data-act="confirm-cancel">'+esc(sheetSpec.cancel||'취소')+'</button></div></div>';
   }
+  /* v8.42(#30725·#30736): 고객 정보 시트에만 제목 오른쪽 [저장] 버튼을 보인다. */
+  var sv = document.querySelector('#sheet .sheet-save');
+  if(sv) sv.hidden = (type !== 'cust');
   b.scrollTop = sc;
 }
 
@@ -4355,11 +4395,21 @@ function syncMarkSent(items, at){
 function syncPostJson(payload, tmo){
   return new Promise(function(resolve, reject){
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var body = '';
+    try{ body = JSON.stringify(payload); }catch(e){ reject(e); return; }
+    /* v8.42(#30548·#30551): keepalive 요청은 본문이 64KB(65,536B)를 넘으면 크롬·안드로이드 WebView 가
+       즉시 실패시킨다 — 사진(t:'ph')을 실었거나 본문이 48,000자를 넘으면 keepalive 를 끄고 보낸다. */
+    var hasPhoto = false;
+    try{
+      var its = (payload && payload.items) || [];
+      for(var pi = 0; pi < its.length; pi++){ if(its[pi] && its[pi].t === 'ph'){ hasPhoto = true; break; } }
+    }catch(e){}
+    var keep = !(hasPhoto || body.length > 48000);
     /* v8.35(#29442): 사진을 실은 요청은 모바일에서 12초를 넘기기 쉽다 — 25초까지 기다린다 */
     var tm = setTimeout(function(){ if(ctrl){ try{ ctrl.abort(); }catch(e){} } }, tmo || SYNC_TMO);
-    var opt = {method: 'POST', cache: 'no-store', redirect: 'follow', keepalive: true,
+    var opt = {method: 'POST', cache: 'no-store', redirect: 'follow', keepalive: keep,
                headers: {'Content-Type': 'text/plain;charset=utf-8'},
-               body: JSON.stringify(payload)};
+               body: body};
     if(ctrl) opt.signal = ctrl.signal;
     fetch(syncBase(), opt).then(function(res){ return res.text(); }).then(function(text){
       clearTimeout(tm);
@@ -4469,8 +4519,11 @@ function syncPush(force){
     chain = chain.then(function(){
       var hasPhoto = false;
       for(var ci = 0; ci < ch.length; ci++){ if(ch[ci] && ch[ci].t === 'ph'){ hasPhoto = true; break; } }
-      if(hasPhoto) return syncPostJson({pin: LEDGER_PIN, action: 'band_push', staff: (session && session.staff) || '', items: ch}, 25000);
-      return syncPostJson({pin: LEDGER_PIN, action: 'band_push', staff: (session && session.staff) || '', items: ch})
+      /* v8.42(#30555): 예전에는 사진 묶음이면 여기서 return 해 .then(syncMarkPhotosSent) 를 통째로 건너뛰었다 —
+         사진이 서버에 올라가도 '올림' 표시가 안 붙어 같은 사진을 되풀이해 올리려 했다.
+         이제는 타임아웃만 늘리고 아래 같은 .then(…) 을 그대로 타게 한다. */
+      var tmo = hasPhoto ? 25000 : SYNC_TMO;
+      return syncPostJson({pin: LEDGER_PIN, action: 'band_push', staff: (session && session.staff) || '', items: ch}, tmo)
         .then(function(d){
           if(!d || d.ok !== true){
             var msg = (d && (d.error || d.message)) || '저장 실패';
@@ -5141,9 +5194,10 @@ function nqHas(q, list){
 function nqCmtHit(c){
   var q = nqNorm(ui.nq);
   if(!q || !c) return false;
+  if(cmtGone(c)) return false;
   if(nqHas(q, [c.text, c.author, c.memo])) return true;
   var rs = c.replies||[];
-  for(var i=0;i<rs.length;i++){ if(nqHas(q, [rs[i].text, rs[i].author])) return true; }
+  for(var i=0;i<rs.length;i++){ if(repGone(rs[i])) continue; if(nqHas(q, [rs[i].text, rs[i].author])) return true; }
   return false;
 }
 /* 글 자체(제목·본문·작성자 · 사전예약 확정건의 이름·번호·기종·메모·담당)가 맞는지 */
@@ -5161,10 +5215,25 @@ function nqPostHit(p){
 }
 /* 그 글 안에 맞는 댓글·답글이 있는지 — 있으면 카드의 댓글 창을 자동으로 펼친다 */
 function nqCmtMatched(p){
-  var cs = (p && p.comments)||[];
+  var cs = liveCmts(p);
   for(var i=0;i<cs.length;i++){ if(nqCmtHit(cs[i])) return true; }
   return false;
 }
+/* v8.42(#30500): 검색 중에는 그 글의 댓글 중 검색어와 맞은 것만 남긴다 —
+   글 제목·본문만 맞은 글은 댓글을 펼치지 않고 본문만 보여 준다(검색어를 지우면 전체 댓글). */
+function nqCmtFilter(cs){
+  var all = cs||[];
+  return nqOn() ? all.filter(nqCmtHit) : all;
+}
+/* ================= v8.42: 지운 댓글·답글 =================
+   서버(_밴드공유)는 Code.gs 가 아는 칸만 돌려주므로 '삭제' 표시를 새 칸으로 보낼 수 없다.
+   → 지운 댓글은 memo 첫머리에, 지운 옛 답글은 text 에 보이지 않는 표시(\u200b삭제)를 남긴다.
+     서버에 그대로 남아 다시 살아나지 않고, 옛 버전 앱에서는 '삭제된 댓글'로만 보인다. */
+var CMT_DEL_MARK = '\u200b삭제';
+function cmtGone(c){ return !!(c && (c.del === true || String(c.memo||'').indexOf(CMT_DEL_MARK) === 0)); }
+function repGone(r){ return !!(r && (r.del === true || String(r.text||'').indexOf(CMT_DEL_MARK) === 0)); }
+function liveCmts(p){ return ((p && p.comments)||[]).filter(function(c){ return !cmtGone(c); }); }
+function liveReps(c){ return ((c && c.replies)||[]).filter(function(r){ return !repGone(r); }); }
 /* 홈 피드에 남길 글인지 — 검색어가 없으면 전부 통과 */
 function nqPostAny(p){
   if(!nqOn()) return true;
@@ -5285,7 +5354,7 @@ function noticeView(){
 /* v8.2: 밴드 공지사항 탭처럼 — 중요공지 먼저, 그다음 일반 공지 최신순. 제목·날짜·댓글수만 컴팩트하게 */
 function noticeCommentCount(p){
   var n = 0;
-  (p.comments||[]).forEach(function(c){ n += 1 + (c.replies||[]).length; });
+  liveCmts(p).forEach(function(c){ n += 1 + liveReps(c).length; });
   return n;
 }
 /* ================= v8.3: 예약 알람 카드 ================= */
@@ -5490,9 +5559,14 @@ function pinItem(p){
 /* v6: 홈 피드 카드 — 기본은 제목·본문·'댓글 N개 보기'만, 누를 때만 댓글이 열립니다 */
 function postCard(p, opts){
   opts = opts||{};
-  var cs = p.comments||[];
-  /* v8.36: 검색 중에 그 댓글이 맞았으면 찾은 댓글을 바로 볼 수 있게 댓글 창을 펼친다(검색어를 지우면 원래대로). */
-  var open = !!opts.sheet || !!ui.openThreads[p.id] || (nqOn() && nqCmtMatched(p));
+  var allCs = liveCmts(p);
+  /* v8.42(#30500): 검색 중 홈 피드 카드에는 검색어와 맞은 댓글만 펼쳐 보여 준다.
+     · 맞는 댓글이 있으면 그 댓글만 담은 댓글 창을 자동으로 펼친다.
+     · 맞는 댓글이 없으면(글 제목·본문만 맞은 글) 댓글 창을 펼치지 않고 본문만 —
+       글 창(opts.sheet)에서는 언제나 전체 댓글을 그대로 본다. */
+  var qon = nqOn() && !opts.sheet;
+  var cs = qon ? allCs.filter(nqCmtHit) : allCs;
+  var open = !!opts.sheet || (qon ? cs.length>0 : !!ui.openThreads[p.id]);
   var kk = kindOf(p);
   var h = '<article class="post k-'+kk+(open?' thread-open':'')+'" data-pid="'+p.id+'" data-anc="post:'+p.id+'">';
   /* v8.38(#30081): 제목·본문 글자만이 아니라 글 상단(프로필·작성자·시간·배지·제목·본문) 어디를 눌러도
@@ -5513,24 +5587,33 @@ function postCard(p, opts){
      + '</div>';
   h += photoGrid(p.photos);
   if(p.reserve) h += reserveBlock(p);
-  if(!open && !opts.sheet && cs.length) h += cmtPreview(cs, p.id);
+  /* v8.42: 검색 중에는 맞는 댓글만 펼치므로 미리보기(첫 댓글)는 그리지 않는다 — 본문만. */
+  if(!open && !opts.sheet && cs.length && !qon) h += cmtPreview(cs, p.id);
   h += '<div class="post-actions">'
      +   (opts.sheet
-            ? '<span class="act cmt-act static">💬 댓글 <b class="cnt">'+cs.length+'</b></span>'
-            : (open || cs.length
-                ? (open
-                    ? '<button class="act cmt-act on" data-act="thread-toggle" data-id="'+p.id+'" aria-expanded="true">'
-                      + '💬 댓글 접기 <span class="chev">▴</span></button>'
-                    : '<button class="act cmt-act" data-act="open-post" data-id="'+p.id+'" aria-expanded="false" aria-label="댓글 '+cs.length+'개 — 글·댓글 창 열기">'
-                      + '💬 댓글 <b class="cnt">'+cs.length+'</b>개 모두 보기 <span class="chev">›</span></button>')
-                : ''))   /* v8.13: 댓글이 없으면 아래 바로 쓰는 입력칸이 그 자리를 대신한다 */
+            ? '<span class="act cmt-act static">💬 댓글 <b class="cnt">'+allCs.length+'</b></span>'
+            : (qon
+                /* v8.42(#30500): 검색 중에는 '검색 일치 N건 · 전체 M개 보기' — 누르면 글 창에서 전체 댓글.
+                   맞는 댓글이 없으면 본문만 두고 '전체 M개 보기'로 글 창에 바로 간다. */
+                ? '<button class="act cmt-act'+(cs.length?' on':'')+'" data-act="open-post" data-id="'+p.id+'" aria-label="글 창에서 전체 댓글 '+allCs.length+'개 보기">'
+                  + (cs.length
+                      ? '💬 검색 일치 <b class="cnt">'+cs.length+'</b>건 · 전체 <b class="cnt">'+allCs.length+'</b>개 보기'
+                      : '💬 댓글 <b class="cnt">'+allCs.length+'</b>개 모두 보기')
+                  + ' <span class="chev">›</span></button>'
+                : (open || cs.length
+                    ? (open
+                        ? '<button class="act cmt-act on" data-act="thread-toggle" data-id="'+p.id+'" aria-expanded="true">'
+                          + '💬 댓글 접기 <span class="chev">▴</span></button>'
+                        : '<button class="act cmt-act" data-act="open-post" data-id="'+p.id+'" aria-expanded="false" aria-label="댓글 '+cs.length+'개 — 글·댓글 창 열기">'
+                          + '💬 댓글 <b class="cnt">'+cs.length+'</b>개 모두 보기 <span class="chev">›</span></button>')
+                    : '')))   /* v8.13: 댓글이 없으면 아래 바로 쓰는 입력칸이 그 자리를 대신한다 */
      +   (isAdmin()? '<button class="act post-del" data-act="post-del" data-id="'+p.id+'" aria-label="'+esc(shortText(p.title||p.body||'글',20))+' 삭제">🗑️ 삭제</button>' : '')
      +   postStatHTML(p)
      + '</div>';
   /* v8.13: 접힌 카드에서도 '댓글 모두 보기'를 누르기 전에 바로 댓글·사진을 남길 수 있게 한다.
      펼친 카드(threadHTML)와 같은 입력 키를 써서 한 상태에서는 입력칸이 하나만 보인다. */
   if(!opts.sheet && !open) h += quickCmtHTML(p);
-  h += threadHTML(p, 'post', open);
+  h += threadHTML(p, 'post', open, qon? cs : null);
   h += '</article>';
   return h;
 }
@@ -5539,7 +5622,7 @@ function postCard(p, opts){
    상태가 바뀔 때마다 render()가 다시 그려서 자동으로 최신 숫자가 된다. */
 function postStatHTML(p){
   var cnt = {'미통화':0,'부재':0,'예약':0,'완료':0,'개통완료':0};
-  (p.comments||[]).forEach(function(c){
+  liveCmts(p).forEach(function(c){
     if(c.sys) return;
     var s = c.st || '미통화';
     if(cnt[s] === undefined) return;
@@ -5757,14 +5840,20 @@ function quickCmtHTML(p){
        +  attachHTML(key)   /* v8.38(#30070): 사진 미리보기는 붙였을 때만 입력칸 아래 줄에 */
        +  '</form>';
 }
-function threadHTML(item, ctx, open){
+function threadHTML(item, ctx, open, csIn){
   if(!open) return '';
-  var cs = item.comments||[];
+  var allCs = liveCmts(item);
+  /* v8.42(#30500): 검색 중이면 검색어와 맞은 댓글만(csIn) — 글 창에서는 넘기지 않아 전체가 그대로 나온다. */
+  var cs = csIn || allCs;
   var key = ctx+':'+item.id;
   var att = ui.attach[key]||[];
   var mode = cmtModeOf(item, ctx);
   var h = '<div class="thread open">';
-  if(!cs.length) h += '<div class="cmts"><div class="empty">아직 댓글이 없어요. 첫 댓글을 남겨보세요.</div></div>';
+  if(nqOn() && ctx==='post' && cs.length !== allCs.length){
+    h += '<div class="nqcmt">🔍 검색 일치 <b>'+cs.length+'</b>건만 표시'
+       + '<button type="button" class="nqcmt-all" data-act="open-post" data-id="'+esc(item.id)+'">전체 '+allCs.length+'개 보기 <span class="chev">›</span></button></div>';
+  }
+  if(!cs.length) h += '<div class="cmts"><div class="empty">'+(nqOn() && ctx==='post' ? '검색어와 맞는 댓글이 없어요.' : '아직 댓글이 없어요. 첫 댓글을 남겨보세요.')+'</div></div>';
   else {
     /* v8.2: 펼치면 1단계 댓글을 접지 않고 전부 보여준다 */
     h += '<ul class="cmts">';
@@ -5787,7 +5876,7 @@ function threadHTML(item, ctx, open){
 }
 
 function cmtHTML(c, parentId, ctx, mode){
-  var reps = c.replies||[];
+  var reps = liveReps(c);
   var isPost = ctx==='post' && !c.sys;   /* v5: 글의 1단계 댓글만 상태 관리 */
   /* v8.41(#30368): 머리 오른쪽 '📝 메모' 버튼은 없앴다 —
      메모는 730·550·3년 고객 카드와 같이 부재·예약·완료·개통완료 버튼 바로 아래 한 줄 바로 둔다(아래 cmtMemoHTML). */
@@ -5800,7 +5889,13 @@ function cmtHTML(c, parentId, ctx, mode){
         + '<b>'+hlHTML(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
         + (!isPost && c.st? '<span class="cst" data-st="'+esc(c.st)+'">'+esc(stLabel(c.st))+'</span>' : '')
         + (c.sys || isPost? '' : '<button class="replybtn" data-act="reply-open" data-cid="'+c.id+'">답글</button>')+'</div>';
-  if(c.text) h += '<p>'+hlHTML(c.text)+'</p>';
+  /* v8.42(#30616): 댓글을 꾹 누르면 '수정하기' — 그 자리에서 고쳐 쓴다(본인 댓글은 직원도, 아무 댓글이나 관리자) */
+  if(ui.cEdit === c.id && ctx === 'post'){
+    h += '<form class="cedit" data-form="cmtedit" data-pid="'+esc(parentId)+'" data-cid="'+esc(c.id||'')+'">'
+       + '<input name="text" value="'+esc(c.text||'')+'" autocomplete="off" enterkeyhint="done" aria-label="댓글 고치기">'
+       + '<div class="cedit-btns"><button type="button" class="btn ghost sm" data-act="cmt-edit-cancel">취소</button>'
+       + '<button type="submit" class="btn primary sm">저장</button></div></form>';
+  } else if(c.text) h += '<p>'+hlHTML(c.text)+'</p>';
   h += photoGrid(c.photos, 'sm');
   if(isPost) h += csegHTML(c, parentId);
   if(isPost && c.st==='예약' && c.resDate) h += '<div class="cmt-resv">⏰ 예약 '+esc(resvText(c))+'</div>';
@@ -5815,7 +5910,8 @@ function cmtHTML(c, parentId, ctx, mode){
     if(rExp){
       h += '<ul class="replies">';
       reps.forEach(function(r){
-        h += '<li><span class="rav">↳</span><b>'+hlHTML(r.author)+'</b>'
+        var ri = (c.replies||[]).indexOf(r);
+        h += '<li data-rid="'+esc(r.id||'')+'" data-ridx="'+(ri<0?'':ri)+'" data-cid="'+esc(c.id||'')+'"><span class="rav">↳</span><b>'+hlHTML(r.author)+'</b>'
            + (r.st? '<i class="rst" data-st="'+esc(r.st)+'">'+esc(stLabel(r.st))+'</i>' : '')
            + '<span>'+hlHTML(r.text)+'</span><time>'+fmtAt(r.at)+'</time>'
            + photoGrid(r.photos,'sm')+'</li>';
@@ -5888,9 +5984,9 @@ function custMatch(c){
 /* 고객의 통화 기록(댓글·답글) 글자를 한 줄로 */
 function custTextOf(c){
   var out = [];
-  (c.comments||[]).forEach(function(x){
+  liveCmts(c).forEach(function(x){
     if(x.text) out.push(x.text);
-    (x.replies||[]).forEach(function(r){ if(r.text) out.push(r.text); });
+    liveReps(x).forEach(function(r){ if(r.text) out.push(r.text); });
   });
   return out.join(' ');
 }
@@ -5928,7 +6024,7 @@ function absentItems(mode){
     out.push({kind:'cust', id:c.id, at:ref, name:c.name, phone:c.phone, status:c.status, memo:lastMemoOf(c), c:c});
   });
   (state.posts||[]).forEach(function(p){
-    (p.comments||[]).forEach(function(cm){
+    liveCmts(p).forEach(function(cm){
       if(cm.st !== '부재') return;
       var at = String(cm.at||'').slice(0,10);
       if(!at || at < cut) return;
@@ -6185,7 +6281,7 @@ function sortCust(a,b){
 }
 function lastAtOf(c){
   var at = c.at||'';
-  (c.comments||[]).forEach(function(x){ if(String(x.at||'')>at) at = String(x.at); });
+  liveCmts(c).forEach(function(x){ if(String(x.at||'')>at) at = String(x.at); });
   return at;
 }
 function keepList(){
@@ -6199,7 +6295,7 @@ function keepList(){
 function lastMemoOf(c){
   var m = String(c.memo||'').trim();
   if(m) return m;
-  var cs = c.comments||[];
+  var cs = liveCmts(c);
   for(var i=cs.length-1;i>=0;i--){ if(cs[i].text && !cs[i].sys) return cs[i].text; }
   return '';
 }
@@ -6362,7 +6458,7 @@ function dayMoreMaybe(){
 window.addEventListener('scroll', function(){ dayMoreMaybe(); }, {passive:true});
 
 function custRow(c){
-  var n = (c.comments||[]).length;
+  var n = liveCmts(c).length;
   var editing = ui.memoEdit===c.id;
   var h = '<div class="cust '+(isDoneSt(c.status)?'is-done':'')+'" data-id="'+c.id+'" data-st="'+esc(c.status)+'" data-anc="cust:'+c.id+'">';
   /* v8.6(#18220): 생년월일은 전화번호 바로 옆 같은 줄로 옮겼다(이름 줄에는 이름·구분만)
@@ -6478,8 +6574,8 @@ function custSheetHTML(c){
      + STAFF.map(function(s){ return '<option '+(c.owner===s?'selected':'')+'>'+esc(s)+'</option>'; }).join('')
      + (STAFF.indexOf(c.owner)<0? '<option selected>'+esc(c.owner||'미지정')+'</option>':'')
      + '</select></div></div>';
-  h += '<div class="cd-memo"><form data-form="memo" data-id="'+c.id+'"><textarea name="memo" rows="3" placeholder="상담 내용 · 재통화 약속 · 전달사항">'+esc(c.memo||'')+'</textarea>'
-     + '<button class="btn ghost" type="submit">메모 저장</button></form></div>';
+  h += '<div class="cd-memo"><form data-form="memo" data-id="'+c.id+'"><textarea name="memo" rows="3" placeholder="상담 내용 · 재통화 약속 · 전달사항">'+esc(c.memo||'')+'</textarea></form></div>';
+  /* v8.42(#30725): '메모 저장' 버튼은 없앴다 — 시트 오른쪽 위 [저장] 버튼이 저장한다. */
   h += '<div class="cd-threads"><h4>댓글 · 통화 기록</h4>'+threadHTML(c,'cust',true)+'</div>';
   /* v8.12: 고객 삭제는 관리자 모드에서만 — 삭제하면 전 직원 폰에서도 함께 사라진다 */
   if(isAdmin()){
@@ -6683,6 +6779,7 @@ function render(opts){
   if(!session) return;
   clearTimeout(sheetBackT);   /* v8.24: 다시 그리면 시트 닫을 때의 위치 복원은 취소(기준 카드 보정이 우선) */
   if(typeof closePhotoMenu==='function') closePhotoMenu();   /* v8.13: 다시 그릴 때 사진 메뉴는 접는다 */
+  if(typeof closeCmtMenu==='function') closeCmtMenu();       /* v8.42: 댓글 메뉴도 접는다 */
   var y = window.scrollY;
   /* v8.24: 상태 변경·전 직원 반영처럼 '보던 자리를 지켜야 하는' 다시 그리기만 기준 카드를 잡는다 */
   var anc = (opts && opts.anchor) ? anchorPick() : null;
@@ -6762,20 +6859,32 @@ function compressImage(file, maxSide, targetKB){
       try{
         var sides = [maxSide || 1080, 900, 720, 560];
         var best = '', lastW = 0, lastH = 0;
+        function shot(w, h, q){
+          var cv = document.createElement('canvas');
+          cv.width = w; cv.height = h;
+          var ctx = cv.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          return cv.toDataURL('image/jpeg', q);
+        }
         for(var si = 0; si < sides.length; si++){
           var w = img.naturalWidth, h = img.naturalHeight;
           var scale = Math.min(1, sides[si]/Math.max(w,h));
           w = Math.max(1, Math.round(w*scale)); h = Math.max(1, Math.round(h*scale));
           lastW = w; lastH = h;
-          var cv = document.createElement('canvas');
-          cv.width = w; cv.height = h;
-          var ctx = cv.getContext('2d');
-          ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
-          ctx.drawImage(img, 0, 0, w, h);
-          var q = 0.72, data = cv.toDataURL('image/jpeg', q);
-          while(data.length > PHOTO_MAX_CHARS && q > 0.4){
-            q -= 0.07;
-            data = cv.toDataURL('image/jpeg', q);
+          /* v8.42(#30557): 화질을 q 0.34 까지 낮추고, 그래도 44,000자를 넘으면
+             가로·세로를 0.8배씩 줄여 확실히 맞춘다(구글 시트 셀 50,000자 한도 보호). */
+          var q = 0.72, data = shot(w, h, q);
+          while(data.length > PHOTO_MAX_CHARS && q > 0.34){
+            q = Math.max(0.34, q - 0.07);
+            data = shot(w, h, q);
+          }
+          var guard = 0;
+          while(data.length > PHOTO_MAX_CHARS && guard < 14){
+            w = Math.max(1, Math.round(w * 0.8)); h = Math.max(1, Math.round(h * 0.8));
+            lastW = w; lastH = h;
+            data = shot(w, h, 0.34);
+            guard++;
           }
           best = data;
           if(data.length <= PHOTO_MAX_CHARS) break;
@@ -6863,6 +6972,168 @@ window.addEventListener('scroll', function(){
 }, true);
 window.addEventListener('resize', function(){ if(photoMenu) closePhotoMenu(); });
 document.addEventListener('keydown', function(e){ if(e.key==='Escape' && photoMenu) closePhotoMenu(); });
+
+/* ================= v8.42(#30616): 댓글 꾹 누르기 메뉴 =================
+   밴드(22013)처럼 댓글을 450~500ms 꾹 누르거나 PC에서 우클릭하면 작은 메뉴가 뜬다.
+   · 직원 화면 : 댓글 복사 (항상) + 수정하기·삭제하기 (본인이 쓴 댓글만 — #30640)
+   · 관리자 화면(isAdmin) : 댓글 복사 + 수정하기 + 삭제하기 (모든 댓글·옛 답글)
+   스크롤·글자 드래그로 움직이면 취소하고, 버튼·메모·사진 위에서는 뜨지 않는다. */
+var cmtMenu = null, cmtMenuSpec = null, cmtPress = null, cmtMenuAt = 0;
+var CMT_PRESS_MS = 470;
+function closeCmtMenu(){
+  if(cmtMenu && cmtMenu.parentNode) cmtMenu.parentNode.removeChild(cmtMenu);
+  cmtMenu = null; cmtMenuSpec = null;
+  if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
+}
+function cmtMenuTarget(el){
+  if(!el || !el.closest) return null;
+  var art = el.closest('article.post');
+  if(!art) return null;                    /* 글의 댓글창에서만 */
+  if(el.closest('button,a,input,textarea,select,label,.cmemo,.cmemo-edit,.pgrid,.pcell,.rep-toggle,.cseg,.cst,.post-actions,.cmt-preview')) return null;
+  var pid = art.getAttribute('data-pid') || '';
+  var rli = el.closest('.replies li');
+  if(rli){
+    var cli0 = rli.closest('li.cmt');
+    var ridx = rli.getAttribute('data-ridx');
+    return {kind: 'rep', pid: pid, cid: (rli.getAttribute('data-cid') || (cli0 ? cli0.getAttribute('data-cid') : '') || ''),
+            rid: rli.getAttribute('data-rid') || '', ridx: (ridx === null || ridx === '') ? -1 : +ridx, el: rli};
+  }
+  var cli = el.closest('li.cmt');
+  if(cli) return {kind: 'cmt', pid: pid, cid: cli.getAttribute('data-cid') || '', rid: '', el: cli};
+  return null;
+}
+/* 지금 보고 있는 댓글·답글 찾기 */
+function cmtOfSpec(sp){
+  if(!sp) return null;
+  var p = findPost(sp.pid);
+  if(!p) return null;
+  var c = null, r = null;
+  (p.comments || []).forEach(function(x){ if(x && x.id === sp.cid) c = x; });
+  if(!c) return null;
+  if(sp.kind === 'rep'){
+    if(sp.rid) (c.replies || []).forEach(function(x){ if(x && x.id === sp.rid) r = x; });
+    else if(sp.ridx >= 0) r = (c.replies || [])[sp.ridx] || null;   /* id 없는 옛 밴드 답글 */
+  }
+  return {p: p, c: c, r: r};
+}
+function openCmtMenu(sp, x, y){
+  closeCmtMenu(); closePhotoMenu();
+  var f = cmtOfSpec(sp);
+  /* id 가 없는 옛 밴드 댓글은 복사만 — 지우거나 고칠 수는 없다 */
+  var who = f ? (f.c.author || '댓글') : '댓글';
+  var when = f ? (f.r ? f.r.at : f.c.at) : '';
+  var mine = !!(f && session && f.c.author === session.staff) && sp.kind === 'cmt';
+  var canEdit = !!(f && sp.kind === 'cmt' && (isAdmin() || mine));
+  var canDel = !!f && isAdmin();
+  var menu = document.createElement('div');
+  menu.className = 'cmenu';
+  menu.setAttribute('role', 'menu');
+  var h = '<div class="cmenu-who">' + (sp.kind === 'rep' ? '↳ ' : '') + esc(who) + (when ? ' · ' + fmtAt(when) : '') + '</div>';
+  h += '<button type="button" data-act="cmt-copy" role="menuitem"><i>📋</i><span>댓글 복사</span></button>';
+  if(canEdit) h += '<button type="button" data-act="cmt-edit" role="menuitem"><i>✏️</i><span>수정하기</span></button>';
+  if(canDel) h += '<button type="button" class="del" data-act="cmt-del" role="menuitem"><i>🗑</i><span>삭제하기</span></button>';
+  menu.innerHTML = h;
+  document.body.appendChild(menu);
+  cmtMenu = menu; cmtMenuSpec = sp; cmtMenuAt = Date.now();
+  var mw = menu.offsetWidth || 168, mh = menu.offsetHeight || 80;
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var left = Math.max(8, Math.min(vw - mw - 8, x - mw / 2));
+  var top = y + 10;
+  if(top + mh > vh - 8) top = Math.max(8, y - mh - 10);
+  menu.style.left = Math.round(left) + 'px';
+  menu.style.top = Math.round(top) + 'px';
+  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
+}
+/* 복사할 글자 — 상태에 있으면 그 글, 없는 옛 댓글이면 화면 글자 */
+function collectedCmtText(sp, f){
+  if(!sp) return '';
+  if(f) return sp.kind === 'rep' && f.r ? String(f.r.text || '') : String(f.c.text || '');
+  var el = sp.el;
+  if(!el) return '';
+  var pEl = el.querySelector('p');
+  if(pEl) return String(pEl.innerText || '').trim();
+  var sp0 = el.querySelector('span:not(.rav)');
+  return String((sp0 ? sp0.innerText : el.innerText) || '').trim();
+}
+function copyCmtText(txt){
+  txt = String(txt || '');
+  if(!txt.trim()){ toast('복사할 내용이 없어요', true); return; }
+  function ok(){ toast('댓글을 복사했어요'); }
+  function fallback(){
+    try{
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.left = '-9999px'; ta.style.top = '0';
+      document.body.appendChild(ta); ta.select();
+      var good = false;
+      try{ good = document.execCommand && document.execCommand('copy'); }catch(e){ good = false; }
+      document.body.removeChild(ta);
+      if(good) ok(); else toast('복사하지 못했어요 — 글자를 길게 눌러 선택해 주세요', true);
+    }catch(e){ toast('복사하지 못했어요', true); }
+  }
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(ok, fallback);
+      return;
+    }
+  }catch(e){}
+  fallback();
+}
+/* 댓글을 지운다 — 지운 자국(\u200b삭제)을 남겨 서버에서 다시 살아나지 않게(본문·사진은 지운다) */
+function cmtDoDelete(sp){
+  var f = cmtOfSpec(sp);
+  if(!f){ toast('이밌 지워진 댓글이에요'); return; }
+  sp = sp || {};
+  var at = nowAt(), by = (session && session.staff) || '';
+  if(sp.kind === 'rep' && f.r){
+    f.r.del = true; f.r.delAt = at; f.r.delBy = by;
+    f.r.text = CMT_DEL_MARK; f.r.photos = [];
+  } else {
+    f.c.del = true; f.c.delAt = at; f.c.delBy = by;
+    f.c.text = ''; f.c.photos = []; f.c.replies = [];
+    f.c.memo = CMT_DEL_MARK; f.c.memoAt = at; f.c.memoBy = by;
+  }
+  if(ui.cEdit === sp.cid) ui.cEdit = null;
+  save(); render();
+  toast(sp.kind === 'rep' ? '답글을 지웠어요' : '댓글을 지웠어요');
+}
+/* 댓글 꾹 누르기 — 470ms 동안 움직이지 않으면 메뉴, 10px 넘게 움직이면 취소 */
+document.addEventListener('pointerdown', function(e){
+  if(e.button && e.button !== 0) return;
+  if(e.target && e.target.closest && e.target.closest('.cmenu')) return;
+  var t = cmtMenuTarget(e.target);
+  if(!t) return;
+  var x = e.clientX, y = e.clientY;
+  if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
+  var timer = setTimeout(function(){
+    cmtPress = null;
+    openCmtMenu(t, x, y);
+  }, CMT_PRESS_MS);
+  cmtPress = {x: x, y: y, timer: timer};
+}, {passive: true});
+document.addEventListener('pointermove', function(e){
+  if(!cmtPress) return;
+  if(Math.abs(e.clientX - cmtPress.x) > 10 || Math.abs(e.clientY - cmtPress.y) > 10){
+    clearTimeout(cmtPress.timer); cmtPress = null;
+  }
+}, {passive: true});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(function(ev){
+  document.addEventListener(ev, function(){
+    if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
+  }, {passive: true});
+});
+/* PC 우클릭 (및 안드로이드 길게 누르기의 contextmenu) — 같은 메뉴 */
+document.addEventListener('contextmenu', function(e){
+  var t = cmtMenuTarget(e.target);
+  if(!t) return;
+  e.preventDefault();
+  openCmtMenu(t, e.clientX, e.clientY);
+});
+window.addEventListener('scroll', function(){
+  if(cmtMenu) closeCmtMenu();
+}, true);
+window.addEventListener('resize', function(){ if(cmtMenu) closeCmtMenu(); });
+
 
 function syncFormBtn(form){
   if(!form) return;
@@ -7486,6 +7757,9 @@ document.addEventListener('click', function(e){
   if(e.target && e.target.id==='lightbox'){ closeLB(); return; }
   /* v8.13: 사진 메뉴 밖을 누르면 메뉴를 닫는다 */
   if(photoMenu && e.target.closest && !e.target.closest('.pmenu') && !e.target.closest('[data-act="photo-menu"]')) closePhotoMenu();
+  /* v8.42: 댓글 메뉴 바깥을 누르면 닫는다 — 단, 꾹 누른 뒤 따라오는 click(470ms 직후)으로
+     방금 연 메뉴가 바로 닫히지 않도록 여는 순간의 0.45초는 무시한다. */
+  if(cmtMenu && e.target.closest && !e.target.closest('.cmenu') && Date.now() - cmtMenuAt > 450) closeCmtMenu();
   if((ui.memoEdit || ui.resvMemo || ui.keepMemo || ui.cMemo)
      && !(e.target.closest && e.target.closest('.c-edit,.rmemo-edit,.k-edit,.cmemo-edit'))){
     cancelInlineEdit();
@@ -7498,12 +7772,69 @@ document.addEventListener('click', function(e){
     case 'tab': setTab(el.getAttribute('data-tab')); break;
     /* ---- v8.25: 🔔 알람 모음 (헤더 종 버튼) ---- */
     case 'alarm-open':
+      /* v8.42(#30517·#30533): 글 창·설정이 떠 있어도 닫고 바로 알람 업무 화면으로.
+         이미 알람 화면이면 누르기 전 탭으로 돌아간다. */
+      if(ui.tab === 'alarm'){
+        var back = ui.alarmPrev || 'notice';
+        ui.tab = back; ui.filter = 'all';
+        render(); alarmBadge();
+        window.scrollTo({top:0, behavior:'smooth'});
+        break;
+      }
+      ui.alarmPrev = ui.tab || 'notice';
+      if(sheetSpec){ closeSheet(); clearTimeout(sheetBackT); }
+      closeCmtMenu(); closePhotoMenu();
       ui.tab = 'alarm'; ui.filter = 'all';
       render(); alarmBadge();
       window.scrollTo({top:0, behavior:'smooth'});
       break;
     case 'alarm-close':
       setTab('notice');
+      break;
+    /* ---- v8.42(#30616·#30640): 댓글 꾹 누르기 메뉴 ---- */
+    case 'cmt-copy':
+      var csp = cmtMenuSpec, cf = cmtOfSpec(csp);
+      closeCmtMenu();
+      copyCmtText(collectedCmtText(csp, cf));
+      break;
+    case 'cmt-edit':
+      var esp = cmtMenuSpec, ef0 = cmtOfSpec(esp);
+      closeCmtMenu();
+      if(!ef0 || !esp || esp.kind !== 'cmt') break;
+      if(!(isAdmin() || (session && ef0.c.author === session.staff))){ toast('내가 쓴 댓글만 고칠 수 있어요', true); break; }
+      ui.cEdit = esp.cid;
+      render();
+      setTimeout(function(){
+        var inp = document.querySelector('form.cedit input[name="text"]');
+        if(inp){ try{ inp.focus({preventScroll:true}); inp.setSelectionRange(inp.value.length, inp.value.length); }catch(e){} }
+        scrollToCmt(esp.pid, esp.cid);
+      }, 30);
+      break;
+    case 'cmt-edit-cancel':
+      ui.cEdit = null; render();
+      break;
+    /* v8.42(#30725): 고객 정보 시트 오른쪽 위 [저장] — 메모 입력값을 저장하고 시트를 닫는다 */
+    case 'cust-save':
+      var svId = (sheetSpec && sheetSpec.type === 'cust') ? sheetSpec.id : '';
+      var svC = svId ? findCust(svId) : null;
+      if(!svC){ toast('고객을 찾지 못했어요', true); break; }
+      var svTa = document.querySelector('#sheetBody .cd-memo textarea[name="memo"]');
+      var svWas = String(svC.memo || '').trim();
+      if(svTa){
+        svC.memo = String(svTa.value || '').trim();
+        if(svC.memo && svC.memo !== svWas) stampMemo(svC);   /* v8.35: 쓴 시각·쓴 사람 */
+      }
+      save();
+      closeSheet(); render();
+      toast('저장했어요');
+      break;
+    case 'cmt-del':
+      var dsp = cmtMenuSpec;
+      closeCmtMenu();
+      if(!isAdmin()){ toast('삭제는 관리자만 할 수 있어요', true); break; }
+      openConfirm({title: (dsp && dsp.kind === 'rep') ? '답글 삭제' : '댓글 삭제',
+                   msg: (dsp && dsp.kind === 'rep') ? '이 답글을 삭제할까요?' : '이 댓글을 삭제할까요?',
+                   ok: '삭제', onOk: function(){ cmtDoDelete(dsp); }});
       break;
     case 'alarm-f':
       ui.alarmF = el.getAttribute('data-f') || 'all';
@@ -8059,6 +8390,25 @@ document.addEventListener('submit', function(e){
     return;
   }
 
+  /* v8.42(#30616): 댓글 고치기 — 본인 댓글(직원) 또는 관리자만 */
+  if(kind==='cmtedit'){
+    var efd = new FormData(f);
+    var etext = String(efd.get('text')||'').trim();
+    var epid = f.getAttribute('data-pid'), ecid = f.getAttribute('data-cid');
+    var eitem = findPost(epid) || ensureCust(epid);
+    var ec = null;
+    if(eitem) (eitem.comments||[]).forEach(function(x){ if(x && x.id===ecid) ec = x; });
+    if(!ec){ toast('댓글을 찾지 못했어요.', true); ui.cEdit = null; render(); return; }
+    if(!(isAdmin() || (session && ec.author === session.staff))){ toast('내가 쓴 댓글만 고칠 수 있어요.', true); return; }
+    if(!etext){ toast('내용을 입력해 주세요.', true); return; }
+    ec.text = etext;
+    ec.editAt = nowAt(); ec.editBy = (session && session.staff) || '';
+    ui.cEdit = null;
+    save(); render();
+    toast('댓글을 고쳤어요');
+    return;
+  }
+
   if(kind==='cmt' || kind==='reply'){
     var fd = new FormData(f);
     var text = String(fd.get('text')||'').trim();
@@ -8296,6 +8646,7 @@ document.addEventListener('submit', function(e){
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape'){
     if($('lightbox').classList.contains('on')){ closeLB(); }
+    else if(cmtMenu){ closeCmtMenu(); }   /* v8.42: 댓글 메뉴 먼저 닫기 */
     else if(e.target && e.target.id==='feedSearch'){ closeFeedSearch(); }   /* v8.36: 검색 바 닫기 */
     else if(ui.resvMemo){ ui.resvMemo = null; render(); }
     else if(ui.memoEdit){ ui.memoEdit = null; render(); }
