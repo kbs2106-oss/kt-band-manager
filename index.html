@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.50">
+<meta name="app-version" content="v8.51">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -5897,7 +5897,8 @@ function flashCmt(el){
   clearTimeout(flashCmt._t);
   flashCmt._t = setTimeout(function(){ el.classList.remove('cmt-flash'); }, 2600);
 }
-function scrollToCmt(pid, cid){
+/* v8.51: noFlash 면 위치만 맞추고 노란 강조(.cmt-flash)는 켜지 않는다 */
+function scrollToCmt(pid, cid, noFlash){
   if(!pid || !cid) return;
   var n = 0;
   function go(){
@@ -5909,20 +5910,22 @@ function scrollToCmt(pid, cid){
       try{ el.scrollIntoView({behavior: n===0? 'smooth' : 'auto', block:'center'}); }
       catch(e){ el.scrollIntoView(); }
     }
-    flashCmt(el);
+    if(!noFlash) flashCmt(el);
     n++;
     if(n < 3) setTimeout(go, n===1? 600 : 700);
   }
   setTimeout(go, 80);
 }
-/* 댓글 창(글 상세 시트)을 열고 그 댓글까지 이동 */
-function openPostCmt(pid, cid){
+/* 댓글 창(글 상세 시트)을 열고 그 댓글까지 이동
+   v8.51: 홈 피드 접힌 카드의 첫 댓글 미리보기(.cmt-preview)에서 들어올 때는 noFlash=true —
+   맨 위 첫 댓글이라 굳이 노란 강조를 띄우지 않는다. 예약·부재·알람에서 중간 댓글로 점프할 때는 그대로 강조. */
+function openPostCmt(pid, cid, noFlash){
   var p = findPost(pid);
   if(!p) return;
   ui.openThreads[pid] = true;
   ui.openCmts[pid] = true;
   openSheet({type:'post', id: pid});
-  if(cid) scrollToCmt(pid, cid);
+  if(cid) scrollToCmt(pid, cid, !!noFlash);
 }
 
 function reserveBlock(p){
@@ -8312,8 +8315,9 @@ document.addEventListener('click', function(e){
       if(ocid){ openPostCmt(opid, ocid); break; }
       openSheet({type:'post', id: opid}); break;
     case 'preview-open':
-      /* v8.19(#20470): 홈 피드 미리보기 댓글(글자·사진)을 누르면 그 글의 댓글 창이 열린다 */
-      openPostCmt(el.getAttribute('data-id'), el.getAttribute('data-cid')); break;
+      /* v8.19(#20470): 홈 피드 미리보기 댓글(글자·사진)을 누르면 그 글의 댓글 창이 열린다
+         v8.51: 첫 댓글 미리보기로 들어올 때는 노란 강조 없이 연다 */
+      openPostCmt(el.getAttribute('data-id'), el.getAttribute('data-cid'), true); break;
     case 'resv-f':
       ui.resvF = el.getAttribute('data-f') || 'all'; render(); break;
     case 'resv-sort':
@@ -8344,7 +8348,8 @@ document.addEventListener('click', function(e){
       /* v8.19(#20470): 미리보기 댓글 안의 작은 사진은 크게 보기 대신 댓글 창으로 연다
          (댓글 창 안에서 사진을 누르면 크게 보기는 그대로 된다) */
       var pbox = el.closest? el.closest('.cmt-preview') : null;
-      if(pbox){ openPostCmt(pbox.getAttribute('data-id'), pbox.getAttribute('data-cid')); break; }
+      /* v8.51: 미리보기 사진으로 들어올 때도 노란 강조 없이 */
+      if(pbox){ openPostCmt(pbox.getAttribute('data-id'), pbox.getAttribute('data-cid'), true); break; }
       var img = el.querySelector('img') || el;
       /* v8.34: 아직 안 받은 사진 — 받아오는 중이라고 알리고 받는다 */
       var needRef = el.getAttribute && el.getAttribute('data-phref');
