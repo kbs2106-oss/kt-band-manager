@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.33">
+<meta name="app-version" content="v8.34">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -184,6 +184,10 @@
   .pcell img{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:#F1F3F5}
   .pgrid.sm{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .pgrid.sm .pcell{width:76px;border-radius:10px}
+  /* v8.34: 다른 폰에서 올린 사진을 아직 받는 중인 칸 */
+  .pcell.phload{display:grid;place-items:center;aspect-ratio:1;background:#EEF2F8;box-shadow:inset 0 0 0 1px #DCE3EE}
+  .pgrid.sm .pcell.phload{width:76px;aspect-ratio:1}
+  .pcell .phwait{font-size:22px;opacity:.5;line-height:1}
 
   .post-actions{display:flex;align-items:center;gap:8px;margin-top:14px;padding:6px 0;border-top:1px solid var(--line-soft)}
   .act{background:none;border:0;padding:11px 8px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--sub);
@@ -2438,21 +2442,58 @@ function syncNotices(d, s){
     if(!sp.isNotice) return;
     var i = idx[sp.id];
     if(i == null){ d.posts.push(sp); n++; return; }
-    var old = d.posts[i], st = {};
-    (old.comments||[]).forEach(function(c){
-      if(c.st) st[(c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'')] = c.st;
-    });
+    var old = d.posts[i], local = old.comments || [];
     var cp = JSON.parse(JSON.stringify(sp));
-    (cp.comments||[]).forEach(function(c){
-      var k = (c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'');
-      if(st[k]) c.st = st[k];
+    cp.comments = cp.comments || [];
+    /* v8.34: 시드로 공지를 다시 맞출 때, 이 폰·다른 폰에서 남긴 댓글과 사진·답글을 지우지 않는다.
+       (예전에는 공지 글을 통째로 시드 복사본으로 덮어 써, 앱을 껐다 켜면 그 사이 남긴 댓글·사진이 사라졌다) */
+    var byId = {}, byKey = {};
+    local.forEach(function(c){
+      if(!c) return;
+      if(c.id) byId[c.id] = c;
+      byKey[(c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'')] = c;
     });
+    cp.comments.forEach(function(c){
+      var l = (c.id && byId[c.id]) || byKey[(c.at||'')+'|'+String(c.text||'').replace(/\s+/g,'')];
+      if(!l) return;
+      if(l.st) c.st = l.st;
+      if(l.stBy) c.stBy = l.stBy;
+      if(l.stAt) c.stAt = l.stAt;
+      if(l.resDate) c.resDate = l.resDate;
+      if(l.resTime) c.resTime = l.resTime;
+      if(l.memo) c.memo = l.memo;
+      if(l.photos && l.photos.length) c.photos = syncMergePhotoList(c.photos, l.photos);
+      if(l.replies && l.replies.length){
+        c.replies = c.replies || [];
+        var have = {};
+        c.replies.forEach(function(r){ if(r && r.id) have[r.id] = 1; });
+        l.replies.forEach(function(r){ if(r && !have[r.id]) c.replies.push(r); });
+      }
+    });
+    /* 시드에 없는 댓글(직원이 앱에서 나중에 남긴 것)은 그대로 뒤에 붙인다 */
+    local.forEach(function(c){
+      if(!c) return;
+      var hit = cp.comments.some(function(cc){
+        return (c.id && cc.id === c.id) || ((cc.at||'')+'|'+String(cc.text||'').replace(/\s+/g,'')) === ((c.at||'')+'|'+String(c.text||'').replace(/\s+/g,''));
+      });
+      if(!hit) cp.comments.push(c);
+    });
+    if((!cp.photos || !cp.photos.length) && old.photos && old.photos.length) cp.photos = old.photos;
     d.posts[i] = cp; n++;
   });
   d.noticeSync = NOTICE_SYNC;
   return n;
 }
 /* v8: seedVersion 이 8보다 낮은 저장본(v1~v7 테스트 데이터)은 한 번만 새 실데이터로 깨끗이 교체한다 */
+/* v8.34: 시드 지문 — 오늘 명단처럼 시드에 고객·글이 새로 들어오면 마지막 동기화 시각(since)을 비워
+   한 번 전체를 다시 받는다. 앱을 계속 켜 둔 채로 껐다 켜도, 그 사이 다른 직원이 올린 상태 변경을 빠짐없이 받는다. */
+var SEED_FP_KEY = 'kt_band_seed_fp_v1';
+var APP_VER_KEY = 'kt_band_app_ver_v1';
+var SEED_FP = '';
+function seedFingerprint(s){
+  if(!s || typeof s !== 'object') return '';
+  return [(+s.seedVersion || 0), String(s.generated || ''), (s.customers || []).length, (s.posts || []).length].join('|');
+}
 function loadState(){
   try{
     var raw = localStorage.getItem(KEY);
@@ -2461,12 +2502,14 @@ function loadState(){
       if(d && Array.isArray(d.posts) && Array.isArray(d.customers)){
         if((+d.seedVersion || 0) < SEED_VER){
           var fresh = seed();
+          SEED_FP = seedFingerprint(fresh);
           try{ localStorage.setItem(KEY, JSON.stringify(fresh)); }catch(e){}
           return fresh;
         }
         /* v8.12: save the seed once and reuse it — seed() parses the 650KB JSON and normalizes every call,
            so six seed() calls at every launch were a big part of the slow start. */
         var s = seed();
+        SEED_FP = seedFingerprint(s);
         if(!d.delCust) d.delCust = {};          /* v8.12: 삭제 표시(가입 시드·과거 명단에서 다시 살아나지 않게) */
         if(!d.delPost) d.delPost = {};          /* v8.18: 지운 글 표시(새 시드·전 직원 공유에서 다시 살아나지 않게) */
         var dirty = false;
@@ -2475,14 +2518,36 @@ function loadState(){
         if(mergeSeed(d, s)) dirty = true;
         if(pruneDeletedPosts(d)) dirty = true;  /* v8.18: 지운 글은 시드·동기화로 다시 들어와도 화면에 남기지 않는다 */
         if(syncBirth(d, s)) dirty = true;       /* v8.3 */
+        if(adoptPhotoRefs(d)) dirty = true;     /* v8.34: 이 폰에만 있던 사진에 서버 이름표 */
         if(dirty){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){} }
         return d;
       }
     }
   }catch(e){}
   var s = seed();
+  SEED_FP = seedFingerprint(s);
   try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){}
   return s;
+}
+/* v8.34: 시드가 바뀌었거나(오늘 명단 추가 등) 앱 버전이 올라가면 since 를 비운다 —
+   앱을 켜 둔 사이 다른 직원이 올린 상태 변경을 놓치지 않도록 다음 동기화에서 전체를 한 번 받는다. */
+function syncSinceGuard(fp){
+  var ver = '';
+  try{ ver = String((document.querySelector('meta[name="app-version"]') || {}).content || ''); }catch(e){}
+  var prevFp = '', prevVer = '';
+  try{ prevFp = localStorage.getItem(SEED_FP_KEY) || ''; prevVer = localStorage.getItem(APP_VER_KEY) || ''; }catch(e){}
+  var reset = 0, why = '';
+  if(!ver) return 0;                                  /* 버전 표시가 없는 화면에서는 건드리지 않는다 */
+  if(!prevVer){ reset = 1; why = '첫 실행·버전 기록 없음'; }
+  else if(prevVer !== ver){ reset = 1; why = '앱 버전 ' + prevVer + ' → ' + ver; }
+  else if(fp && prevFp && prevFp !== fp){ reset = 1; why = '시드 갱신(' + (fp.split('|')[1] || '') + ')'; }
+  try{
+    if(fp) localStorage.setItem(SEED_FP_KEY, fp);
+    localStorage.setItem(APP_VER_KEY, ver);
+    if(reset) localStorage.removeItem(SYNC_SINCE_KEY);
+  }catch(e){}
+  if(reset){ try{ console.log('[sync] 전체 다시 받기 — ' + why); }catch(e){} }
+  return reset;
 }
 /* 이 기기(localStorage)에 저장하는 건 최근 3개월 명단 + 글·댓글까지. 과거 전체는 archive(IndexedDB)에 따로 둔다. */
 function save(){
@@ -2494,8 +2559,31 @@ function save(){
 }
 function findPost(id){ for(var i=0;i<state.posts.length;i++){ if(state.posts[i].id===id) return state.posts[i]; } return null; }
 
-/* ================= v8.12: 고객 삭제(관리자) · 삭제 표시 ================= */
-/* 삭제는 명단에서 빼고 '삭제 표시(state.delCust)'를 남긴다.
+/* v8.34: 예전에 이 폰에만 있던 댓글·답글 사진에도 서버 이름표(ref)를 붙인다 —
+   다음 동기화 때 서버 '_밴드사진'에 한 번 올라가 다른 직원 폰에서도 보인다. */
+function adoptPhotoRefs(d){
+  if(!d) return 0;
+  var n = 0;
+  function fix(list){
+    (list || []).forEach(function(c){
+      if(!c) return;
+      (c.photos || []).forEach(function(ph, i){
+        if(ph && ph.src && !ph.ref && c.id && /^data:/.test(String(ph.src))){ ph.ref = String(c.id) + '-' + i; n++; }
+      });
+      (c.replies || []).forEach(function(r){
+        if(!r || !r.id) return;
+        (r.photos || []).forEach(function(ph, i){
+          if(ph && ph.src && !ph.ref && /^data:/.test(String(ph.src))){ ph.ref = String(r.id) + '-' + i; n++; }
+        });
+      });
+    });
+  }
+  (d.customers || []).forEach(function(c){ fix(c.comments); });
+  (d.posts || []).forEach(function(p){ fix(p.comments); });
+  return n;
+}
+
+/* ================= v8.12: 고객 삭제(관리자) · 삭제 표시 ================= *//* 삭제는 명단에서 빼고 '삭제 표시(state.delCust)'를 남긴다.
    · 다음 실행 때 시드·과거 명단(archive)에서 같은 id 가 다시 살아나지 않게 하고,
    · 전 직원 폰에도 band_push(f.deleted=true)로 같은 표시를 보내 함께 사라지게 한다. */
 function isCustDeleted(id, d){
@@ -3335,6 +3423,8 @@ var sync = {
   baseSent: false,
   again: false,       /* v8.25: 올리는 중에 또 바뀌어 끝난 뒤 한 번 더 올릴 필요 */
   alarmMute: false,   /* v8.25: 처음 전체 받아오기에서는 알람을 만들지 않는다 */
+  caps: {ph: 0},      /* v8.34: 서버가 댓글 사진(_밴드사진·band_ph)을 알면 1 */
+  pendPh: {},         /* v8.34: 댓글보다 먼저 도착한 사진 — 댓글이 생기면 붙인다 */
   lastNote: ''
 };
 
@@ -3364,13 +3454,39 @@ function syncPostFields(p){
     author: p.author || '', at: p.at || '', bandPostId: +p.bandPostId || 0, bandUrl: p.bandUrl || ''
   };
 }
-/* 댓글·답글은 사진(data:)을 빼고 주소(http)만 — 큰 이미지는 폰에만 두고 글로만 공유합니다 */
+/* v8.34: 댓글·답글 사진 — 사진 자체는 '_밴드사진'에 따로 올리고(syncScanPhotos),
+   댓글에는 이름표(ref)만 넣어 함께 보낸다. 예전처럼 http 주소(밴드 원본)는 그대로. */
 function syncPhotos(list){
   var out = [];
   (list || []).forEach(function(ph){
-    var src = String((ph && ph.src) || '');
-    if(/^https?:\/\//.test(src) && src.length < 600) out.push({src: src, name: String(ph.name || '').slice(0, 40)});
+    if(!ph) return;
+    var src = String(ph.src || '');
+    var name = String(ph.name || '사진').slice(0, 40);
+    if(/^https?:\/\//.test(src) && src.length < 600){ out.push({src: src, name: name}); return; }
+    var ref = String(ph.ref || '').slice(0, 80);
+    if(ref) out.push({ref: ref, name: name, w: +ph.w || 0, h: +ph.h || 0});
   });
+  return out;
+}
+/* 서버에서 온 사진 이름표와 이 폰에 이미 있는 사진을 합친다 — 이 폰에서 찍은 사진(src)은 지우지 않는다 */
+function syncMergePhotoList(local, remote){
+  local = local || []; remote = remote || [];
+  var out = [], n = Math.max(local.length, remote.length);
+  for(var i = 0; i < n; i++){
+    var r = remote[i] || null, l = local[i] || null;
+    if(!r && !l) continue;
+    if(!r){ out.push(l); continue; }
+    var o = {name: (r.name || (l && l.name) || '사진')};
+    var ref = r.ref || (l && l.ref) || '';
+    if(ref) o.ref = ref;
+    var src = (r.src || (l && l.src) || '');
+    if(src) o.src = src;
+    if(+r.w) o.w = +r.w; else if(l && l.w) o.w = l.w;
+    if(+r.h) o.h = +r.h; else if(l && l.h) o.h = l.h;
+    if(l && l.up) o.up = 1;          /* 이미 서버에 올린 사진 */
+    if(l && l.phAt) o.phAt = l.phAt;  /* 캐시한 시각 — 오래된 것부더 정리 */
+    out.push(o);
+  }
   return out;
 }
 function syncReplies(list){
@@ -3546,8 +3662,62 @@ function syncScan(){
   }
   return items;
 }
+/* v8.34: 댓글·답글 사진 올리기 — 사진 한 장 = 한 건(t:'ph')으로 보내 서버 '_밴드사진'에 보관한다.
+   서버가 사진 기능을 모르는 예전 버전이면(ph 없음) 보내지 않고, 예전처럼 이 폰에만 둔다. */
+function syncScanPhotos(){
+  var out = [];
+  if(!state || !session || sync.applying || !(sync.caps && sync.caps.ph)) return out;
+  function pick(item, parentId){
+    (item.comments || []).forEach(function(c){
+      if(!c) return;
+      (c.photos || []).forEach(function(ph){
+        if(!ph || !ph.ref || ph.up) return;
+        if(!/^data:image\//.test(String(ph.src || ''))) return;
+        out.push({t: 'ph', id: String(ph.ref).slice(0, 80), p: parentId, c: String(c.id || ''), r: '',
+                  n: String(ph.name || '사진').slice(0, 40), d: ph.src});
+      });
+      (c.replies || []).forEach(function(r){
+        if(!r) return;
+        (r.photos || []).forEach(function(ph){
+          if(!ph || !ph.ref || ph.up) return;
+          if(!/^data:image\//.test(String(ph.src || ''))) return;
+          out.push({t: 'ph', id: String(ph.ref).slice(0, 80), p: parentId, c: String(c.id || ''), r: String(r.id || ''),
+                    n: String(ph.name || '사진').slice(0, 40), d: ph.src});
+        });
+      });
+    });
+  }
+  (state.customers || []).forEach(function(c){ pick(c, c.id); });
+  (state.posts || []).forEach(function(p){ pick(p, p.id); });
+  return out;
+}
+/* 올라간 사진에 '올림' 표시 — 앱을 다시 열어도 되풀이해 올리지 않는다 */
+function syncMarkPhotosSent(items){
+  if(!state || !items || !items.length) return 0;
+  var want = {};
+  items.forEach(function(it){ if(it && it.t === 'ph' && it.id) want[it.id] = 1; });
+  var n = 0, at = Date.now();
+  function mark(list){
+    (list || []).forEach(function(ph){
+      if(!ph || !ph.ref || !want[ph.ref] || ph.up) return;
+      ph.up = 1; ph.phAt = at; n++;
+    });
+  }
+  function scan(item){
+    (item.comments || []).forEach(function(c){
+      if(!c) return;
+      mark(c.photos);
+      (c.replies || []).forEach(function(r){ if(r) mark(r.photos); });
+    });
+  }
+  (state.customers || []).forEach(scan);
+  (state.posts || []).forEach(scan);
+  if(n){ try{ saveQuiet(); }catch(e){} }
+  return n;
+}
 function syncMarkSent(items, at){
   items.forEach(function(it){
+    if(it && it.t === 'ph') return;      /* v8.34: 사진은 syncMarkPhotosSent 로 따로 표시 */
     var rec = syncRec((it.t === 'c' ? 'c:' : 'p:') + it.id);
     for(var k in (it.f || {})){
       if(it.f.hasOwnProperty(k)) rec.f[k] = {v: it.f[k], u: at || syncNow()};
@@ -3631,6 +3801,8 @@ function syncPull(full){
       return 0;
     }
     syncLive(d);
+    /* v8.34: 서버가 사진 보관(band_ph)을 아는지 — 모르면 예전처럼 이 폰에만 두고 조용히 넘긴다 */
+    sync.caps.ph = d.ph ? 1 : 0;
     if(+d.now) sync.since = +d.now;
     try{ localStorage.setItem(SYNC_SINCE_KEY, String(sync.since)); }catch(e){}
     sync.lastAt = Date.now();
@@ -3652,6 +3824,9 @@ function syncPush(force){
   if(sync.pushBusy){ sync.again = true; return; }   /* v8.25: 올리는 중에 또 바뀌면 끝난 직후 한 번 더 */
   if(!sync.dirty && !force) return;      /* 바뀐 게 없으면 전체 훑지 않는다 */
   var items = syncScan();
+  /* v8.34: 댓글·답글 사진도 함께 — 사진은 한 건에 한 장씩(44,000자)이라 자동으로 따로 묶음된다 */
+  var phItems = syncScanPhotos();
+  if(phItems.length) items = items.concat(phItems);
   if(!items.length) return;
   var chunks = [], cur = [], size = 0;
   items.forEach(function(it){
@@ -3675,6 +3850,8 @@ function syncPush(force){
           var at = +d.now ? (+d.now - sync.skew) : syncNow();
           if(+d.now) sync.skew = (+d.now) - Date.now();
           syncMarkSent(ch, at);
+          syncMarkPhotosSent(ch);
+          if(!sync.caps.ph && d.ph) sync.caps.ph = 1;
           sync.lastAt = Date.now();
           sync.fails = 0;
         });
@@ -3729,8 +3906,22 @@ function syncMergeCmts(arr, list, rec){
     ['author', 'at', 'text', 'st', 'stBy', 'stAt', 'resDate', 'resTime', 'memo', 'sys'].forEach(function(k){
       if(rc[k] !== undefined && rc[k] !== null) cur[k] = rc[k];
     });
-    if(rc.photos && rc.photos.length) cur.photos = rc.photos;
-    if(rc.replies && rc.replies.length) cur.replies = rc.replies;
+    if(rc.photos && rc.photos.length) cur.photos = syncMergePhotoList(cur.photos, rc.photos);
+    if(rc.replies && rc.replies.length){
+      /* v8.34: 답글 목록도 사진을 잃지 않게 — 서버 답글에 사진 이름표가 없으면 이 폰 사진을 남긴다 */
+      var rl = cur.replies || [];
+      rc.replies.forEach(function(rr){
+        if(!rr || !rr.id) return;
+        for(var k = 0; k < rl.length; k++){
+          if(rl[k] && rl[k].id === rr.id){
+            if((!rr.photos || !rr.photos.length) && rl[k].photos && rl[k].photos.length) rr.photos = rl[k].photos;
+            else if(rr.photos && rr.photos.length) rr.photos = syncMergePhotoList(rl[k].photos, rr.photos);
+            break;
+          }
+        }
+      });
+      cur.replies = rc.replies;
+    }
     cur.photos = cur.photos || [];
     cur.replies = cur.replies || [];
     rec.cm[rc.id] = {fp: syncCmtFp(cur), u: +rc.u || 0};
@@ -3827,13 +4018,156 @@ function syncItemKind(it){
   var t = String((it && it.t) || '');
   if(t === 'c' || t === 'cust') return 'c';
   if(t === 'p' || t === 'post') return 'p';
+  if(t === 'ph' || t === 'photo') return 'ph';
   return '';
+}
+/* v8.34: 댓글·답글 사진 한 장 도착 — 부모 글·댓글을 찾아 그 자리에 넣는다 */
+function syncPhotoSlot(it){
+  if(!it || !it.p || !it.c) return null;
+  var parent = findCust(it.p) || findPost(it.p);
+  if(!parent) return null;
+  var c = null, list = parent.comments || [];
+  for(var i = 0; i < list.length; i++){ if(list[i] && list[i].id === String(it.c)){ c = list[i]; break; } }
+  if(!c) return null;
+  var holder = c;
+  if(it.r){
+    var reps = c.replies || [], rr = null;
+    for(var j = 0; j < reps.length; j++){ if(reps[j] && reps[j].id === String(it.r)){ rr = reps[j]; break; } }
+    if(!rr) return null;
+    holder = rr;
+  }
+  holder.photos = holder.photos || [];
+  var ref = String(it.id);
+  for(var k = 0; k < holder.photos.length; k++){
+    if(holder.photos[k] && String(holder.photos[k].ref || '') === ref) return holder.photos[k];
+  }
+  return null;   /* 이름표가 없으면 만들지 않는다 — 댓글 정보가 먼저 오면 그때 붙인다 */
+}
+function syncApplyPhoto(it){
+  if(!it || !it.id || !it.d) return 0;
+  var slot = syncPhotoSlot(it);
+  if(!slot){ sync.pendPh[String(it.id)] = it; return 0; }
+  delete sync.pendPh[String(it.id)];
+  if(slot.src === it.d) return 0;
+  slot.src = it.d;
+  slot.phAt = Date.now();
+  if(it.n) slot.name = String(it.n).slice(0, 40);
+  return 1;
+}
+/* 댓글이 늦게 도착해도 사진을 잃지 않게 — 받아 둔 사진을 다시 붙여 본다 */
+function syncPendPhotos(){
+  var keys = Object.keys(sync.pendPh || {});
+  if(!keys.length) return 0;
+  var n = 0;
+  keys.forEach(function(k){ n += syncApplyPhoto(sync.pendPh[k]); });
+  return n;
+}
+
+/* ---------- v8.34: 댓글 사진 받아오기(화면에 필요할 때만) ---------- */
+/* 사진은 목록에 안 실려 오므로, 화면에 그릴 때 이름표(ref)만 보고 그 자리에서 받아온다.
+   받은 사진은 이 폰 state 에 넣어 두고(다음에 바로 뜨게) 오래된 것부더 정리한다. */
+var phQ = {want: {}, busy: false, miss: {}, t: null};
+var PH_CACHE_CHARS = 3200000;    /* 이 폰에 캐시해 두는 사진 전체 크기(약 3MB) */
+function phWant(ref, name){
+  if(!ref) return;
+  if(!sync.caps || !sync.caps.ph) return;     /* 예전 서버 — 사진은 이 폰에만 */
+  if(phQ.miss[ref]){
+    if(Date.now() - phQ.miss[ref] < 60000) return;   /* 서버에 아직 없음 — 1분 뒤 다시 */
+    delete phQ.miss[ref];
+  }
+  phQ.want[ref] = name || 1;
+  clearTimeout(phQ.t);
+  phQ.t = setTimeout(phPull, 80);
+}
+function phPull(){
+  if(phQ.busy || !session) return;
+  var ids = [];
+  for(var k in phQ.want){ if(phQ.want.hasOwnProperty(k) && !phQ.miss[k]){ ids.push(k); if(ids.length >= 6) break; } }
+  if(!ids.length) return;
+  ids.forEach(function(r){ delete phQ.want[r]; });
+  phQ.busy = true;
+  var url = syncBase() + '&action=band_ph&ids=' + encodeURIComponent(ids.join(',')) + '&t=' + Date.now();
+  ledgerFetchJson(url).then(function(d){
+    phQ.busy = false;
+    if(!d || d.ok !== true){
+      ids.forEach(function(r){ phQ.want[r] = 1; });      /* 잠시 뒤 다시 */
+      return;
+    }
+    var items = Array.isArray(d.items) ? d.items : [];
+    var got = {};
+    items.forEach(function(it){ if(it && it.id){ got[it.id] = 1; } });
+    var n = 0;
+    items.forEach(function(it){ n += syncApplyPhoto(it); });
+    ids.forEach(function(r){ if(!got[r]) phQ.miss[r] = Date.now(); });   /* 서버에 아직 없음 — 1분 뒤 다시 */
+    if(n){
+      phTrimCache();
+      saveQuiet();
+      phPatchDOM();
+    }
+    if(Object.keys(phQ.want).length) setTimeout(phPull, 120);
+  }, function(){ phQ.busy = false; ids.forEach(function(r){ phQ.want[r] = 1; }); });
+}
+/* 이 폰에 캐시한 사진이 너무 많으면 오래된 것부터 비운다(이름표는 남겨 두어 필요하면 다시 받는다) */
+function phTrimCache(){
+  if(!state) return 0;
+  var list = [];
+  function scan(item){
+    (item.comments || []).forEach(function(c){
+      if(!c) return;
+      (c.photos || []).forEach(function(ph){ if(ph && ph.ref && ph.up && /^data:/.test(String(ph.src || ''))) list.push(ph); });
+      (c.replies || []).forEach(function(r){
+        (r.photos || []).forEach(function(ph){ if(ph && ph.ref && ph.up && /^data:/.test(String(ph.src || ''))) list.push(ph); });
+      });
+    });
+  }
+  (state.customers || []).forEach(scan);
+  (state.posts || []).forEach(scan);
+  var total = 0;
+  list.forEach(function(ph){ total += String(ph.src || '').length; });
+  if(total <= PH_CACHE_CHARS) return 0;
+  list.sort(function(a, b){ return (+a.phAt || 0) - (+b.phAt || 0); });
+  var n = 0;
+  for(var i = 0; i < list.length && total > PH_CACHE_CHARS; i++){
+    total -= String(list[i].src || '').length;
+    delete list[i].src;
+    n++;
+  }
+  return n;
+}
+/* 화면에 이미 그려 둔 '사진 불러오는 중' 칸을 실제 사진으로 바꾼다(전체를 다시 그리지 않는다) */
+function phPatchDOM(){
+  var nodes = document.querySelectorAll('[data-phref]');
+  if(!nodes.length) return;
+  var idx = {};
+  function put(list){
+    (list || []).forEach(function(ph){ if(ph && ph.ref && ph.src) idx[String(ph.ref)] = ph; });
+  }
+  function scan(item){
+    (item.comments || []).forEach(function(c){
+      if(!c) return;
+      put(c.photos);
+      (c.replies || []).forEach(function(r){ if(r) put(r.photos); });
+    });
+  }
+  (state.customers || []).forEach(scan);
+  (state.posts || []).forEach(scan);
+  for(var i = 0; i < nodes.length; i++){
+    var el = nodes[i], ref = el.getAttribute('data-phref');
+    var ph = idx[ref];
+    if(!ph) continue;
+    el.removeAttribute('data-phref');
+    el.classList.remove('phload');
+    el.innerHTML = '<img src="' + esc(thumbURL(ph.src) || ph.src) + '" data-full="' + esc(ph.src) + '"'
+                 + (thumbURL(ph.src) ? ' data-thumb="1"' : '')
+                 + ' alt="' + esc(ph.name || '사진') + '" loading="lazy" decoding="async">';
+  }
 }
 function syncApplyItem(it){
   if(!it || !it.id) return 0;
   var k = syncItemKind(it);
   if(k === 'c') return syncApplyCust(it);
   if(k === 'p') return syncApplyPost(it);
+  if(k === 'ph') return syncApplyPhoto(it);
   return 0;
 }
 function syncNoteOf(it){
@@ -3880,6 +4214,7 @@ function syncApply(items){
     }catch(e){ try{ console.warn('[sync] 적용 실패', it && it.id, (e && e.message) || e); }catch(e2){} }
   });
   sync.applying = false;
+  try{ var pn = syncPendPhotos(); if(pn) changed += pn; }catch(e4){}
   if(changed){
     syncAfterApply();
     if(notes.length){
@@ -3896,6 +4231,7 @@ function syncApply(items){
 function syncAfterApply(){
   custIdxDirty();
   save();
+  setTimeout(function(){ try{ phPatchDOM(); }catch(e){} }, 60);   /* v8.34: 받아 둔 사진이 있으면 그 자리만 바꾼다 */
   if(!$('app') || $('app').hidden) return;
   var ae = document.activeElement;
   if(ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return;
@@ -4018,6 +4354,7 @@ function syncNowPush(){
 try{
   window.__ktBandSync = sync;
   window.__ktBandSyncPull = syncPull;
+  window.__ktBandVerCheck = verCheck;   /* v8.34: 자동 새로고침 확인을 진단·자동검사에서 부를 때 */
   window.__ktBandSyncState = function(){
     return {mode:sync.mode, since:sync.since, skew:sync.skew, at:sync.lastAt, err:sync.lastErr,
             fails:sync.fails, keys:Object.keys(sync.map).length,
@@ -4502,11 +4839,20 @@ function photoGrid(ps, size){
   var cls = ps.length===1?'one':(ps.length===2?'two':'');
   var out = '<div class="pgrid '+(size||'')+' '+cls+'">';
   for(var i=0;i<ps.length;i++){
-    var src = ps[i].src || '';
+    var ph = ps[i] || {};
+    var src = ph.src || '';
+    /* v8.34: 다른 폰에서 올린 사진은 이름표(ref)만 와 있다 — 그 자리에서 받아온다 */
+    if(!src && ph.ref){
+      phWant(ph.ref, ph.name);
+      out += '<button class="pcell phload" data-act="photo" data-phref="'+esc(ph.ref)+'" aria-label="사진 불러오기">'
+           + '<span class="phwait">📷</span></button>';
+      continue;
+    }
+    if(!src) continue;
     var th = thumbURL(src);       /* v8.12: 목록은 축소본, 크게 보기는 원본 */
     out += '<button class="pcell" data-act="photo" aria-label="사진 크게 보기">'
          + '<img src="'+esc(th||src)+'" data-full="'+esc(src)+'"'+(th?' data-thumb="1"':'')
-         + ' alt="'+esc(ps[i].name||'첨부 사진')+'" loading="lazy" decoding="async">'
+         + ' alt="'+esc(ph.name||'첨부 사진')+'" loading="lazy" decoding="async">'
          + '</button>';
   }
   return out+'</div>';
@@ -5484,7 +5830,7 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.33</b><br>'
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.34</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -5603,30 +5949,39 @@ function render(opts){
 }
 
 /* ================= photos ================= */
+/* v8.34: 댓글·답글 사진은 이제 서버로도 올라간다(전 직원 폰에서 같이 봄).
+   → 시트 한 칸 50,000자 제한과 폰 저장 공간 때문에 긴 변 1080px·data URL 44,000자 이하로 줄이고,
+     그래도 넘으면 900 → 720 → 560px 로 낮춰 다시 압축한다(영수증·화면 글씨가 읽히는 선). */
+var PHOTO_MAX_CHARS = 44000;
 function compressImage(file, maxSide, targetKB){
-  maxSide = maxSide || 1200;
-  targetKB = targetKB || 150;
   return new Promise(function(resolve, reject){
     if(!file || !/^image\//.test(file.type)){ reject(new Error('이미지 파일이 아니에요')); return; }
     var url = URL.createObjectURL(file);
     var img = new Image();
     img.onload = function(){
       try{
-        var w = img.naturalWidth, h = img.naturalHeight;
-        var scale = Math.min(1, maxSide/Math.max(w,h));
-        w = Math.max(1, Math.round(w*scale)); h = Math.max(1, Math.round(h*scale));
-        var cv = document.createElement('canvas');
-        cv.width = w; cv.height = h;
-        var ctx = cv.getContext('2d');
-        ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
-        ctx.drawImage(img, 0, 0, w, h);
-        var q = 0.74, data = cv.toDataURL('image/jpeg', q);
-        while(data.length > targetKB*1400 && q > 0.34){
-          q -= 0.08;
-          data = cv.toDataURL('image/jpeg', q);
+        var sides = [maxSide || 1080, 900, 720, 560];
+        var best = '', lastW = 0, lastH = 0;
+        for(var si = 0; si < sides.length; si++){
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var scale = Math.min(1, sides[si]/Math.max(w,h));
+          w = Math.max(1, Math.round(w*scale)); h = Math.max(1, Math.round(h*scale));
+          lastW = w; lastH = h;
+          var cv = document.createElement('canvas');
+          cv.width = w; cv.height = h;
+          var ctx = cv.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
+          ctx.drawImage(img, 0, 0, w, h);
+          var q = 0.72, data = cv.toDataURL('image/jpeg', q);
+          while(data.length > PHOTO_MAX_CHARS && q > 0.4){
+            q -= 0.07;
+            data = cv.toDataURL('image/jpeg', q);
+          }
+          best = data;
+          if(data.length <= PHOTO_MAX_CHARS) break;
         }
         URL.revokeObjectURL(url);
-        resolve({src:data, name:file.name||'사진'});
+        resolve({src: best, name: String(file.name || '사진').slice(0, 40), w: lastW, h: lastH});
       }catch(err){ URL.revokeObjectURL(url); reject(err); }
     };
     img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('사진을 읽지 못했어요')); };
@@ -5651,6 +6006,16 @@ function handleFiles(input){
     input.value = '';
     render();
     toast(out.length+'장 첨부했어요');
+  });
+}
+/* v8.34: 사진마다 서버용 이름표(ref)를 붙인다 — 사진 원본은 서버 '_밴드사진'에 따로 올라간다.
+   이름표는 댓글/답글 id + 순번이라 어느 폰에서나 같은 자리를 가리킨다. */
+function photoRefs(id, list){
+  return (list || []).map(function(p, i){
+    var o = {src: p.src, name: String(p.name || '사진').slice(0, 40), ref: String(id || '') + '-' + i};
+    if(p.w) o.w = p.w;
+    if(p.h) o.h = p.h;
+    return o;
   });
 }
 
@@ -6492,6 +6857,15 @@ document.addEventListener('click', function(e){
       var pbox = el.closest? el.closest('.cmt-preview') : null;
       if(pbox){ openPostCmt(pbox.getAttribute('data-id'), pbox.getAttribute('data-cid')); break; }
       var img = el.querySelector('img') || el;
+      /* v8.34: 아직 안 받은 사진 — 받아오는 중이라고 알리고 받는다 */
+      var needRef = el.getAttribute && el.getAttribute('data-phref');
+      if(needRef){
+        delete phQ.miss[needRef];
+        phWant(needRef);
+        toast('사진을 불러오는 중…');
+        setTimeout(function(){ try{ phPull(); }catch(e){} }, 10);
+        break;
+      }
       /* v8.12: 목록은 썸네일(thumbs/...), 크게 볼 때는 원본 주소 */
       openLB(img.getAttribute('data-full') || img.getAttribute('src'));
       break;
@@ -6825,11 +7199,12 @@ document.addEventListener('submit', function(e){
     }
 
     if(kind==='cmt'){
-      var photos = ui.attach[fkey]||[];
+      var photos = (ui.attach[fkey]||[]).filter(function(p){ return p && p.src; });
       if(!text && !photos.length){ toast('내용을 입력해 주세요.', true); return; }
       item.comments = item.comments||[];
       if(ctx==='cust') applyCustStatus(item, st);
-      var ncm = {id:uid('c'), author:session.staff, at:nowAt(), text:text, st:st, photos:photos.slice(), replies:[]};
+      var ncmId = uid('c');
+      var ncm = {id:ncmId, author:session.staff, at:nowAt(), text:text, st:st, photos:photoRefs(ncmId, photos), replies:[]};
       if(st==='예약' && rpick && rpick.resDate){
         ncm.resDate = rpick.resDate; ncm.resTime = rpick.resTime||'';
         if(rpick.memo){ ncm.memo = rpick.memo; if(ctx==='cust') item.memo = rpick.memo; }
@@ -6847,13 +7222,17 @@ document.addEventListener('submit', function(e){
       var cid = f.getAttribute('data-cid');
       var parent = (item.comments||[]).filter(function(c){ return c.id===cid; })[0];
       if(!parent){ toast('댓글을 찾지 못했어요.', true); return; }
-      if(!text){ toast('답글 내용을 입력해 주세요.', true); return; }
+      var rphotos = (ui.attach[fkey]||[]).filter(function(p){ return p && p.src; });
+      if(!text && !rphotos.length){ toast('답글 내용을 입력해 주세요.', true); return; }
       parent.replies = parent.replies||[];
       if(ctx==='cust') applyCustStatus(item, st);
-      parent.replies.push({id:uid('r'), author:session.staff, at:nowAt(), text:text, st:st, photos:[]});
+      var nrid = uid('r');
+      /* v8.34: 답글에 붙인 사진도 저장되게(예전에는 photos:[] 로 버려졌다) */
+      parent.replies.push({id:nrid, author:session.staff, at:nowAt(), text:text, st:st, photos:photoRefs(nrid, rphotos)});
+      if(rphotos.length) ui.openReplies[cid] = true;
       ui.replyOpen = null;
       ui.openReplies[cid] = true;
-      delete ui.drafts[fkey]; delete ui.cmtStatus[fkey];
+      delete ui.drafts[fkey]; delete ui.cmtStatus[fkey]; delete ui.attach[fkey];
       save(); render();
       toast('답글을 남겼어요' + (st? ' · '+stLabel(st) : ''));
       notifyBridge('답글 등록', (ctx==='cust'? (item.name||'고객') : (parent.author||'글'))+' · '+shortText(text, 60));
@@ -7122,9 +7501,61 @@ function registerSW(){
     }catch(e){}
   }
 }
+
+/* ================= v8.34: 앱을 켜 둔 채로 새 명단·새 버전 반영 ================= */
+/* 매일 아침 새 시드(index.html)가 배포되거나 앱 버전이 올라가면, 직원이 앱을 끄고 켜지 않아도
+   화면 파일의 수정 시각(Last-Modified)·크기를 가볍게(HEAD) 확인해 바뀌었으면 스스로 새로 고친다.
+   · 입력칸·댓글 창·모달·사진 첨부처럼 쓰던 중이면 건너뛰고, 다음 확인(7분)이나 화면 복귀 때 다시 본다. */
+var VER_KEY = 'kt_band_ver_sig_v1';
+var VER_INT = 7 * 60 * 1000;
+var verPrimed = false;
+function verBusy(){
+  try{
+    var ae = document.activeElement;
+    if(ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return true;
+    if(sheetSpec) return true;                                  /* 창(모달)이 열려 있음 */
+    if(photoMenu) return true;                                  /* 사진 메뉴 열려 있음 */
+    for(var k in (ui.attach||{})){ if(ui.attach[k] && ui.attach[k].length) return true; }
+    for(var d in (ui.drafts||{})){ if(ui.drafts[d] && String(ui.drafts[d]).trim()) return true; }
+    if(ui.replyOpen) return true;
+  }catch(e){}
+  return false;
+}
+function verCheck(){
+  if(!document || document.hidden) return;
+  fetch('./index.html?ver=' + Date.now(), {method:'HEAD', cache:'no-store'}).then(function(r){
+    if(!r || !r.ok) return;
+    var sig = [r.headers.get('last-modified') || '', r.headers.get('content-length') || '', r.headers.get('etag') || ''].join('|');
+    if(sig.replace(/\|/g, '') === '') return;
+    var prev = '';
+    try{ prev = localStorage.getItem(VER_KEY) || ''; }catch(e){}
+    if(!verPrimed && !prev){                        /* 처음 확인 — 지금 화면이 최신이라고 보고 기준만 저장 */
+      verPrimed = true;
+      try{ localStorage.setItem(VER_KEY, sig); }catch(e){}
+      return;
+    }
+    if(prev === sig) return;
+    if(verBusy()) return;                           /* 쓰던 중 — 다음 확인 때 */
+    var lastReload = 0;
+    try{ lastReload = parseInt(sessionStorage.getItem('ktBandVerReload') || '0', 10) || 0; }catch(e){}
+    if(Date.now() - lastReload < 60000) return;     /* 무한 새로고침 방지 */
+    try{ sessionStorage.setItem('ktBandVerReload', String(Date.now())); }catch(e){}
+    try{ localStorage.setItem(VER_KEY, sig); }catch(e){}
+    try{ toast('새 명단·새 버전이 나와 화면을 새로 칩니다…'); }catch(e){}
+    setTimeout(function(){ try{ location.reload(); }catch(e){} }, 700);
+  }).catch(function(){});
+}
+function verWatch(){
+  verCheck();
+  setInterval(function(){ if(!document.hidden) verCheck(); }, VER_INT);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) setTimeout(verCheck, 900); });
+  window.addEventListener('focus', function(){ setTimeout(verCheck, 900); });
+}
 function init(){
   session = loadSession();
   state = loadState();
+  try{ syncSinceGuard(SEED_FP); }catch(e){}   /* v8.34: 시드·버전이 바뀌면 다음 동기화는 전체 */
+  try{ verWatch(); }catch(e){}                /* v8.34: 켜 둔 채로 새 명단·새 버전이 나오면 스스로 새로 고침 */
   alarmLoad();   /* v8.25: 알람 이력은 기기에 영구 보관(200건) — 앱을 꺼도 남는다 */
   ledgerLoad();
   archInit();   /* v8: 과거 전체 명단(archive.json)을 백그라운드로 받아 IndexedDB에 */
