@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.37">
+<meta name="app-version" content="v8.38">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -174,9 +174,9 @@
   .post-title{margin:14px 0 0;font-size:16px;font-weight:700;letter-spacing:-.025em;line-height:1.45}
   .post-body{margin:6px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2);white-space:pre-wrap;word-break:break-word}
   .post-body:empty{display:none}
-  /* v8.37(#29924): 제목·본문을 눌러 글 창을 연다 — 데스크톱에서만 손가락 커서 */
-  .post-title[data-act],.post-body[data-act]{cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .post-title[data-act]:active,.post-body[data-act]:active{opacity:.72}
+  /* v8.37(#29924)·v8.38(#30081): 글 상단(프로필·작성자·시간·배지·제목·본문)을 누르면 글 창이 열린다 */
+  .post-top[data-act]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .post-top[data-act]:active{opacity:.82}
 
   .pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:14px}
   .pgrid.one{grid-template-columns:minmax(0,1fr)}
@@ -1733,18 +1733,23 @@
     .post{padding:14px 10px 0 14px}
   }
 
-  /* ================= v8.36(#29731): 댓글 입력 바 2단 — 입력칸은 한 줄 가득, 사진·등록은 그 아래 ================= */
-  .cbar .cbar-row{display:block}
-  .cbar .cbar-row input{display:block;width:100%;min-width:0}
-  .cbar-tools{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:nowrap}
-  .cbar-tools .attach{margin:0;display:flex;gap:6px;flex-wrap:wrap;min-width:0;flex:1 1 auto}
-  .cbar-tools .attach .athumb{width:52px;height:52px;border-radius:12px}
-  .cbar-tools .icobtn{flex:none}
-  .cbar-tools .send{margin-left:auto;flex:none}
-  .cbar-tools .send ~ .send{margin-left:8px}
+  /* ================= v8.38(#30070): 댓글 입력 바를 다시 한 줄로 ================= */
+  /* 2단으로 나누지 않고 [ 입력칸 flex:1 ][ 📷 ][ 등록 ] 을 한 줄에 — 사진·등록을 슬림하게 해서
+     입력칸이 최대한 넓게 나온다. 첨부한 사진 미리보기만 입력칸 아래 줄(붙였을 때만). */
+  .cbar .cbar-row{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+  .cbar .cbar-row input{flex:1 1 auto;min-width:0;width:auto;height:42px;font-size:14.5px;padding:0 12px;border-radius:11px}
+  .cbar .cbar-row .icobtn{flex:none;width:38px;height:42px;font-size:18px;border-radius:11px;background:#EFF3F8}
+  .cbar .cbar-row .icobtn:active{background:#E3E9F1}
+  .cbar .cbar-row .send{flex:none;height:42px;min-width:52px;padding:0 12px;font-size:14px;font-weight:800;border-radius:11px}
+  .cbar .cbar-row .send.ghost{min-width:0;padding:0 10px;font-size:13px}
+  .cbar .attach{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+  .cbar .attach .athumb{width:64px;height:64px;border-radius:12px;overflow:hidden;position:relative;display:block}
   @media (max-width:520px){
-    .cbar-tools{gap:7px;margin-top:7px}
-    .cbar-tools .attach .athumb{width:48px;height:48px}
+    .cbar .cbar-row{gap:6px}
+    .cbar .cbar-row input{height:42px;font-size:14px;padding:0 11px}
+    .cbar .cbar-row .icobtn{width:36px;height:42px;font-size:17px}
+    .cbar .cbar-row .send{min-width:50px;padding:0 11px;font-size:13.5px}
+    .cbar .attach .athumb{width:58px;height:58px}
   }
 
   /* ================= v8.36(#29755): 사진 확대 — 그림만 확대·이동, ✕ 는 늘 제자리 ================= */
@@ -5476,19 +5481,22 @@ function postCard(p, opts){
   var open = !!opts.sheet || !!ui.openThreads[p.id] || (nqOn() && nqCmtMatched(p));
   var kk = kindOf(p);
   var h = '<article class="post k-'+kk+(open?' thread-open':'')+'" data-pid="'+p.id+'" data-anc="post:'+p.id+'">';
-  h += '<div class="post-head">'
-     +   '<span class="av" style="--c:'+colorOf(p.author)+'">'+esc(initial(p.author))+'</span>'
-     +   '<div class="who"><div class="wname">'+hlHTML(p.author)+'</div>'
-     +     '<div class="wmeta">'+fmtAt(p.at)+'</div></div>'
-     +   '<span class="kbadge kb-'+kk+'">'+KIND_META[kk].label+'</span>'
-     +   (p.pinned? '<span class="pinbadge">📌 고정</span>' : '')   /* v8.13: 전체 피드에서도 고정 글임을 표시 */
-     +   '<button class="morebtn" data-act="post-menu" data-id="'+p.id+'" aria-label="글 관리">⋯</button>'
-     + '</div>';
-  /* v8.37(#29924): 글 제목·본문을 눌러도 고정 공지처럼 그 글 창(전체 글·댓글)이 바로 열린다.
+  /* v8.38(#30081): 제목·본문 글자만이 아니라 글 상단(프로필·작성자·시간·배지·제목·본문) 어디를 눌러도
+     그 글 창이 열린다 — ⋯(글 관리)·사진은 각자 동작 그대로(closest 가 가까운 data-act 를 고른다).
      글자를 길게 눌러 고르거나 드래그하는 중이면 열지 않는다(클릭 처리에서 확인). */
   var popen = opts.sheet? '' : ' data-act="open-post" data-id="'+esc(p.id)+'"';
-  if(p.title) h += '<h3 class="post-title"'+popen+'>'+hlHTML(p.title)+'</h3>';
-  if(p.body) h += '<p class="post-body"'+popen+'>'+hlHTML(p.body)+'</p>';
+  h += '<div class="post-top"'+popen+'>'
+     +   '<div class="post-head">'
+     +     '<span class="av" style="--c:'+colorOf(p.author)+'">'+esc(initial(p.author))+'</span>'
+     +     '<div class="who"><div class="wname">'+hlHTML(p.author)+'</div>'
+     +       '<div class="wmeta">'+fmtAt(p.at)+'</div></div>'
+     +     '<span class="kbadge kb-'+kk+'">'+KIND_META[kk].label+'</span>'
+     +     (p.pinned? '<span class="pinbadge">📌 고정</span>' : '')   /* v8.13: 전체 피드에서도 고정 글임을 표시 */
+     +     '<button class="morebtn" data-act="post-menu" data-id="'+p.id+'" aria-label="글 관리">⋯</button>'
+     +   '</div>'
+     +   (p.title? '<h3 class="post-title">'+hlHTML(p.title)+'</h3>' : '')
+     +   (p.body? '<p class="post-body">'+hlHTML(p.body)+'</p>' : '')
+     + '</div>';
   h += photoGrid(p.photos);
   if(p.reserve) h += reserveBlock(p);
   if(!open && !opts.sheet && cs.length) h += cmtPreview(cs, p.id);
@@ -5729,12 +5737,10 @@ function quickCmtHTML(p){
        +  '<div class="cbar-row">'
        +  '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'"'
        +  ' placeholder="댓글·사진 남기기" autocomplete="off" enterkeyhint="send">'
-       +  '</div>'
-       +  '<div class="cbar-tools">'   /* v8.36(#29731): 사진·등록은 입력칸 아래 줄에 */
        +  photoBtnHTML(key)
-       +  attachHTML(key)
        +  '<button class="send" type="submit"'+(fmtReady(key,'')?'':' disabled')+'>등록</button>'
        +  '</div>'
+       +  attachHTML(key)   /* v8.38(#30070): 사진 미리보기는 붙였을 때만 입력칸 아래 줄에 */
        +  '</form>';
 }
 function threadHTML(item, ctx, open){
@@ -5751,25 +5757,17 @@ function threadHTML(item, ctx, open){
     cs.forEach(function(c){ h += cmtHTML(c, item.id, ctx, mode); });
     h += '</ul>';
   }
-  if(att.length){
-    h += '<div class="attach">';
-    att.forEach(function(a,i){
-      h += '<span class="athumb"><img src="'+esc(a.src)+'" alt=""><button data-act="attach-del" data-key="'+key+'" data-i="'+i+'" aria-label="첨부 취소">×</button></span>';
-    });
-    h += '</div>';
-  }
   var ph = ctx==='cust'
     ? '부재중·재통화 예정·상담 내용을 적어주세요'
     : '고객 번호·생년월일 남기기';
   h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'" data-key="'+key+'" data-mode="'+mode+'">'
      + '<div class="cbar-row">'
      + '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'" placeholder="'+ph+'" autocomplete="off">'
-     + '</div>'
-     + '<div class="cbar-tools">'   /* v8.36(#29731): 사진·등록은 입력칸 아래 줄에 */
      + photoBtnHTML(key)
-     + attachHTML(key)
      + '<button class="send" type="submit"'+(fmtReady(key,mode)?'':' disabled')+'>등록</button>'
-     + '</div></form>';
+     + '</div>'
+     + attachHTML(key)   /* v8.38(#30070): 사진 미리보기는 붙였을 때만 입력칸 아래 줄에 */
+     + '</form>';
   h += '</div>';
   return h;
 }
@@ -5823,15 +5821,13 @@ function cmtHTML(c, parentId, ctx, mode){
     h += '<form class="cbar reply" data-form="reply" data-id="'+parentId+'" data-cid="'+c.id+'" data-ctx="'+ctx+'" data-key="'+rk+'" data-mode="">'
        + '<div class="cbar-row">'
        + '<input name="text" data-draft="'+rk+'" value="'+esc(ui.drafts[rk]||'')+'" placeholder="'+esc(c.author)+'님에게 진행 내용 남기기" autocomplete="off">'
-       + '</div>'
-       + '<div class="cbar-tools">'   /* v8.36(#29731) */
        + photoBtnHTML(rk)
-       + (ratt.length? '<div class="attach">'+ratt.map(function(a,i){
-           return '<span class="athumb"><img src="'+esc(a.src)+'" alt=""><button data-act="attach-del" data-key="'+rk+'" data-i="'+i+'" aria-label="첨부 취소">×</button></span>';
-         }).join('')+'</div>' : '')
        + '<button class="send ghost" type="button" data-act="reply-close">취소</button>'
        + '<button class="send" type="submit"'+(fmtReady(rk,'')?'':' disabled')+'>등록</button>'
        + '</div>'
+       + (ratt.length? '<div class="attach">'+ratt.map(function(a,i){
+           return '<span class="athumb"><img src="'+esc(a.src)+'" alt=""><button data-act="attach-del" data-key="'+rk+'" data-i="'+i+'" aria-label="첨부 취소">×</button></span>';
+         }).join('')+'</div>' : '')
        + '</form>';
   }
   return h+'</li>';
@@ -7649,8 +7645,8 @@ document.addEventListener('click', function(e){
     case 'open-post':
       /* v8.19: '상담 댓글' 목록(부재 등)에서 댓글 번호를 함께 넘기면 그 댓글까지 스크롤해 강조 */
       var opid = el.getAttribute('data-id'), ocid = el.getAttribute('data-cid');
-      /* v8.37(#29924): 글 제목·본문을 눌러 연 경우 — 글자를 고르는 중이면 글 창을 열지 않는다 */
-      if(el.classList && (el.classList.contains('post-title') || el.classList.contains('post-body'))){
+      /* v8.37(#29924)·v8.38(#30081): 글 상단(제목·본문·작성자 줄)을 눌러 연 경우 — 글자를 고르는 중이면 글 창을 열지 않는다 */
+      if(el.classList && (el.classList.contains('post-top') || el.classList.contains('post-title') || el.classList.contains('post-body'))){
         var selNow = '';
         try{ selNow = String((window.getSelection && window.getSelection().toString()) || ''); }catch(eSel){}
         if(selNow.replace(/\s+/g,'')) break;
