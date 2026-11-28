@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.38">
+<meta name="app-version" content="v8.39">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -2041,6 +2041,15 @@ var FILTERS = [
 
 /* ================= utils ================= */
 function $(id){ return document.getElementById(id); }
+/* v8.39: 화면에 적는 버전은 index.html 의 meta["app-version"] 한 곳만 본다.
+   예전에는 설정 하단에 v8.34 처럼 글자로 박아 두어 배포할 때마다 고쳐야 했고, 한 번 놓치면 옛 버전이 그대로 보였다. */
+function appVer(){
+  var v = '';
+  try{ v = String((document.querySelector('meta[name="app-version"]') || {}).content || ''); }catch(e){}
+  v = v.trim();
+  if(!v) return '';
+  return /^v/i.test(v) ? v : ('v' + v);
+}
 function pad(n){ return (n<10?'0':'')+n; }
 function esc(s){
   return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -6579,9 +6588,9 @@ function railHTML(){
   });
   h += '<p class="rail-note">명단에서 담당자를 바꾸면 바로 반영됩니다.</p></section>';
 
-  h += '<section class="card rail-card"><h3>데이터</h3><div class="qgrid">'
+  /* v8.39(#30182): 초기화 버튼을 없앴다 — 실수로 누르면 글·댓글·명단이 밴드 시드로 되돌아가므로 화면에서 감춘다. 남은 건 내보내기 하나. */
+  h += '<section class="card rail-card"><h3>데이터</h3><div class="qgrid" style="grid-template-columns:minmax(0,1fr)">'
      + '<button class="btn ghost" data-act="export">⬇ 내보내기</button>'
-     + '<button class="btn ghost" data-act="reset">↺ 초기화</button>'
      + '</div><p class="rail-note">이 기기 브라우저에 저장됩니다. 기기를 바꾸기 전에 내보내기로 백업하세요.</p></section>';
   return h;
 }
@@ -6594,7 +6603,7 @@ function menuHTML(){
   h += '<button class="menu-item" data-act="sync-now"><span>📡 전 직원 실시간 공유<small>'+esc(syncStatusText())+'</small></span><span class="arw">'+(sync.mode==='live'?'●':'↻')+'</span></button>';
   h += '<button class="menu-item" data-act="arch-load"><span>📚 과거 명단<small>'+esc(archStatusText())+'</small></span><span class="arw">'+(arch.loading?'⏳':'↻')+'</span></button>';
   h += '<button class="menu-item" data-act="export"><span>내보내기<small>글·댓글·명단을 JSON 파일로 저장</small></span><span class="arw">⬇</span></button>';
-  h += '<button class="menu-item" data-act="reset"><span>초기화<small>실제 밴드 시드(v8)로 되돌리기</small></span><span class="arw">↺</span></button>';
+  /* v8.39(#30182·#30185): '초기화(실제 밴드 시드(v8)로 되돌리기)' 메뉴를 없앴다 — 실수로 누르면 그동안 적은 글·댓글·명단이 사라진다. */
   h += '<button class="menu-item" data-act="admin">'
      + (adminOn
         ? '<span>🔓 관리자 모드 끄기<small>화면 캡처를 다시 막습니다</small></span><span class="arw">잠금</span>'
@@ -6602,7 +6611,8 @@ function menuHTML(){
      + '</button>';
   h += '<button class="menu-item" data-act="logout"><span>로그아웃</span><span class="arw">⎋</span></button>';
   h += '</div>';
-  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>v8.34</b><br>'
+  /* v8.39: 버전 글자는 고정 글자가 아니라 index.html 의 meta(app-version)에서 읽어 그때그때 맞춘다 */
+  h += '<p class="hint" style="margin-top:16px">충주 KT대리점 칠금점 · 가망고객 밴드 <b>' + esc(appVer() || '—') + '</b><br>'
      + '매장 043-856-5001 · 충주시 봉계1길 64 1층</p>';
   return h;
 }
@@ -7425,25 +7435,8 @@ function exportData(){
   setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1200);
   toast('JSON 파일로 내보냈어요');
 }
-function resetData(){
-  if(!confirm('실제 밴드 시드(v8)로 초기화할까요?\n지금까지 적은 글·댓글·명단이 모두 사라집니다. (먼저 내보내기로 백업할 수 있어요)')) return;
-  setAdmin(false, true);
-  state = seed();
-  custIdxDirty();
-  ui.dayShown = 6;
-  ui.openThreads = {};
-  ui.custThreads = {};
-  ui.openReplies = {};
-  ui.openCmts = {};
-  ui.replyOpen = null;
-  ui.drafts = {};
-  ui.attach = {};
-  ui.memoEdit = null;
-  ui.resvMemo = null;
-  ui.cMemo = null;
-  save(); closeSheet(); render();
-  toast('실제 밴드 시드로 초기화했어요');
-}
+/* v8.39(#30185): 초기화(resetData)를 없앴다 — 설정 메뉴·데이터 카드의 초기화 버튼과 함께 동작을 지워,
+   잘못 눌러 글·댓글·명단이 시드로 되돌아가는 일 자체가 생기지 않게 한다. */
 function logout(){
   setAdmin(false, true);
   syncStop();
@@ -7568,7 +7561,6 @@ document.addEventListener('click', function(e){
       break;
     case 'logout': logout(); break;
     case 'export': exportData(); break;
-    case 'reset': resetData(); break;
     case 'pin-toggle': ui.pinOpen = !ui.pinOpen; render(); break;
     case 'collapse-all':
       /* v8.20(#20658): 접기 전에 보던 글을 기억했다가 그 자리에 다시 맞춘다 */
@@ -8406,11 +8398,17 @@ function registerSW(){
 
 /* ================= v8.34: 앱을 켜 둔 채로 새 명단·새 버전 반영 ================= */
 /* 매일 아침 새 시드(index.html)가 배포되거나 앱 버전이 올라가면, 직원이 앱을 끄고 켜지 않아도
-   화면 파일의 수정 시각(Last-Modified)·크기를 가볍게(HEAD) 확인해 바뀌었으면 스스로 새로 고친다.
-   · 입력칸·댓글 창·모달·사진 첨부처럼 쓰던 중이면 건너뛰고, 다음 확인(7분)이나 화면 복귀 때 다시 본다. */
+   새 화면으로 넘어간다.
+   v8.39(#30187): GitHub Pages 가 index.html 을 10분 캐시해, 수정 시각만 보던 예전 방식으로는
+   새 버전이 폰에 바로 안 떴다. 이제 index.html?v=... 를 cache:'no-store' 로 받아 맨 앞의
+   meta[name="app-version"] 을 지금 화면 버전과 견주고, 다르면 sw 캐시를 비우고 바로 새로고침한다.
+   · 앞 16KB만 받아(Range) 버전 글자만 본다 — 서버가 Range 를 무시하면 받은 전체에서 같은 방식으로 읽는다.
+   · 입력칸·댓글 창·모달·사진 첨부처럼 쓰던 중이면 건너뛰고, 다음 확인(7분)이나 화면 복귀 때 다시 본다.
+   · 화면마다 한 번만 새로고침하고, 60초 안에는 다시 하지 않는다(무한 새로고침 방지). */
 var VER_KEY = 'kt_band_ver_sig_v1';
 var VER_INT = 7 * 60 * 1000;
-var verPrimed = false;
+var verSeen = '';              /* v8.39: 이미 알린 서버 버전 — '준비됐어요' 안내를 한 번만 */
+var verReloaded = false;       /* v8.39: 이 화면에서 새로고침을 이미 했는지 */
 function verBusy(){
   try{
     var ae = document.activeElement;
@@ -8423,29 +8421,84 @@ function verBusy(){
   }catch(e){}
   return false;
 }
+/* v8.39: index.html 맨 앞(16KB)만 받아 버전 글자를 읽는다 — 폰 데이터를 아낀다 */
+function verFetchRange(){
+  return fetch('./index.html?v=' + Date.now(), {cache:'no-store', headers:{'Range': 'bytes=0-16383'}}).then(function(r){
+    if(!r || !r.ok) return null;
+    return r.text().then(function(t){ return {text:t, sig:verSig(r)}; });
+  }).catch(function(){ return null; });
+}
+/* 앞부분에 버전이 없으면(서버가 Range 를 무시한 경우 등) 한 번만 전체를 받아 같은 방식으로 읽는다 */
+function verFetchFull(){
+  return fetch('./index.html?v=' + Date.now(), {cache:'no-store'}).then(function(r){
+    if(!r || !r.ok) return null;
+    return r.text().then(function(t){ return {text:t, sig:verSig(r)}; });
+  }).catch(function(){ return null; });
+}
+function verSig(r){
+  /* 206(앞부분) 응답은 content-length 가 잘린 길이라, 전체 크기(content-range)를 서명에 쓴다 */
+  return [r.headers.get('last-modified') || '', r.headers.get('etag') || '',
+          r.headers.get('content-range') || r.headers.get('content-length') || ''].join('|');
+}
+function verMeta(text){
+  var m = String(text || '').match(/<meta[^>]+name=["']app-version["'][^>]*content=["']([^"']*)["']/i);
+  if(!m) return '';
+  var v = String(m[1]).trim();
+  if(!v) return '';
+  return /^v/i.test(v) ? v : ('v' + v);
+}
+/* sw 캐시만 비운다 — 사진 썸네일 캐시(kt-band-img-*)는 그대로 둔다 */
+function verClearCache(){
+  try{
+    if(!(window.caches && caches.keys)) return Promise.resolve();
+    return caches.keys().then(function(keys){
+      return Promise.all(keys.filter(function(k){ return k.indexOf('kt-band-') === 0 && k.indexOf('kt-band-img-') !== 0; })
+                            .map(function(k){ return caches.delete(k); }));
+    }).catch(function(){});
+  }catch(e){ return Promise.resolve(); }
+}
+function verReload(remote){
+  if(verReloaded) return;                        /* 이 화면에서는 한 번만 */
+  var lastReload = 0;
+  try{ lastReload = parseInt(sessionStorage.getItem('ktBandVerReload') || '0', 10) || 0; }catch(e){}
+  if(Date.now() - lastReload < 60000) return;    /* 방금 새로고침했다 — 또 하지 않는다(1회 가드는 여기서 먼저) */
+  verReloaded = true;
+  try{ sessionStorage.setItem('ktBandVerReload', String(Date.now())); }catch(e){}
+  try{ sessionStorage.setItem('ktBandVerTry', remote || ''); }catch(e){}
+  try{ toast(remote ? ('새 버전 ' + remote + '이(가) 나와 화면을 새로 칩니다…') : '새 명단이 나와 화면을 새로 칩니다…'); }catch(e){}
+  verClearCache().then(function(){
+    setTimeout(function(){ try{ location.reload(); }catch(e){} }, 400);
+  });
+}
+function verAnnounce(remote){
+  if(verSeen === remote) return;                 /* 같은 안내를 7분마다 되풀이하지 않는다 */
+  verSeen = remote;
+  try{ toast('새 버전' + (remote ? ' ' + remote : '') + '이(가) 준비됐어요 — 입력을 마치면 화면을 새로 칩니다.'); }catch(e){}
+}
+function verApply(res, cur){
+  var remote = verMeta(res.text) || '';
+  var sig = res.sig || '';
+  var prev = '';
+  try{ prev = localStorage.getItem(VER_KEY) || ''; }catch(e){}
+  var verDiff = !!remote && remote !== cur;       /* 버전이 다르다 — 가장 확실한 신호 */
+  var sigDiff = !!sig && !!prev && prev !== sig;  /* 같은 버전에서 새 명단(시드)만 바뀐 날 */
+  if(!verDiff && !sigDiff){
+    if(sig && prev !== sig){ try{ localStorage.setItem(VER_KEY, sig); }catch(e){} }
+    return;
+  }
+  if(verBusy()){ verAnnounce(remote || ''); return; }   /* 쓰던 중 — 입력을 마치면 다음 확인 때 */
+  if(sig){ try{ localStorage.setItem(VER_KEY, sig); }catch(e){} }
+  verReload(remote);
+}
 function verCheck(){
-  if(!document || document.hidden) return;
-  fetch('./index.html?ver=' + Date.now(), {method:'HEAD', cache:'no-store'}).then(function(r){
-    if(!r || !r.ok) return;
-    var sig = [r.headers.get('last-modified') || '', r.headers.get('content-length') || '', r.headers.get('etag') || ''].join('|');
-    if(sig.replace(/\|/g, '') === '') return;
-    var prev = '';
-    try{ prev = localStorage.getItem(VER_KEY) || ''; }catch(e){}
-    if(!verPrimed && !prev){                        /* 처음 확인 — 지금 화면이 최신이라고 보고 기준만 저장 */
-      verPrimed = true;
-      try{ localStorage.setItem(VER_KEY, sig); }catch(e){}
-      return;
-    }
-    if(prev === sig) return;
-    if(verBusy()) return;                           /* 쓰던 중 — 다음 확인 때 */
-    var lastReload = 0;
-    try{ lastReload = parseInt(sessionStorage.getItem('ktBandVerReload') || '0', 10) || 0; }catch(e){}
-    if(Date.now() - lastReload < 60000) return;     /* 무한 새로고침 방지 */
-    try{ sessionStorage.setItem('ktBandVerReload', String(Date.now())); }catch(e){}
-    try{ localStorage.setItem(VER_KEY, sig); }catch(e){}
-    try{ toast('새 명단·새 버전이 나와 화면을 새로 칩니다…'); }catch(e){}
-    setTimeout(function(){ try{ location.reload(); }catch(e){} }, 700);
-  }).catch(function(){});
+  if(!document || document.hidden || verReloaded) return;
+  var cur = appVer();                             /* 화면에 박힌 지금 버전(meta) */
+  if(!cur) return;
+  verFetchRange().then(function(res){
+    if(!res) return null;
+    if(verMeta(res.text)) return res;
+    return verFetchFull();
+  }).then(function(res){ if(res) verApply(res, cur); });
 }
 function verWatch(){
   verCheck();

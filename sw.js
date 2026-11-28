@@ -1,4 +1,4 @@
-/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 (v8.38) */
+/* 충주 KT대리점 칠금점 · 가망고객 밴드 — 오프라인 캐시 (v8.39) */
 /* v8.7(#18345): 화면(HTML)은 HTTP 캐시까지 건너뛰고(cache:'no-store') 항상 네트워크에서 새로 받는다.
    GitHub Pages 가 index.html 을 10분(max-age=600) 캐시하기 때문에, 예전에는 한참 전 화면이 떠서
    "수정이 바로 반영되지 않는다"고 느껴졌다. 오프라인일 때만 캐시로 넘어간다.
@@ -38,8 +38,11 @@
           저장하면 노란 상자(📝 메모 · 쓴 시각 · 쓴 사람)로 보이고 탭해서 고친다. 검색은 메모 글자까지 찾아 노랗게 표시.
           밴드에서 가져온 예전 답글(c.replies)은 그대로 읽기만 한다. 화면+동기화가 바뀜(캐시 키 올림).
    v8.38: 댓글 입력 바를 다시 한 줄로 — [입력칸][📷][등록] 을 슬림하게(gap 6·높이 42) 둬 입력칸을 가장 넓게,
-          붙인 사진 미리보기는 있을 때만 아래 줄. 화면만 바뀜(캐시 키만 올림). */
-var CACHE = 'kt-band-v8.38';
+          붙인 사진 미리보기는 있을 때만 아래 줄. 화면만 바뀜(캐시 키만 올림).
+   v8.39: 설정의 '초기화(시드로 되돌리기)' 버튼 제거 · 설정 하단 버전은 meta(app-version)을 읽어 표시 ·
+          새 버전 확인을 HEAD 대신 index.html 앞부분(Range)의 app-version 으로 — 다르면 sw 캐시를 비우고 바로 새로고침.
+          화면만 바뀜(캐시 키만 올림). */
+var CACHE = 'kt-band-v8.39';
 var IMG = 'kt-band-img-v1';          /* 썸네일 전용 — 앱 버전이 올라가도 그대로 쓴다(주소가 내용 해시라 안전) */
 var CACHE_PREFIX = 'kt-band-';
 var SHELL = [
@@ -87,8 +90,12 @@ function isDocRequest(req, url){
 function networkFirstDoc(req){
   return fetch(req, { cache: 'no-store' }).then(function(res){
     if(res && res.ok){
-      var copy = res.clone();
-      caches.open(CACHE).then(function(c){ return c.put('./index.html', copy); }).catch(function(){});
+      /* v8.39: 앞부분만 받는 확인 요청(Range → 206)은 잘린 문서라 캐시에 넣지 않는다 —
+         넣으면 오프라인에서 8KB 짜리 깨진 화면이 뜬다. */
+      if(res.status !== 206){
+        var copy = res.clone();
+        caches.open(CACHE).then(function(c){ return c.put('./index.html', copy); }).catch(function(){});
+      }
       return res;
     }
     /* 404·5xx (배포 직후 등) 는 실패로 보고 캐시로 넘어간다 */
