@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.42">
+<meta name="app-version" content="v8.43">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -617,9 +617,12 @@
     max-height:92vh;display:flex;flex-direction:column;animation:up .22s ease-out}
   @keyframes up{from{transform:translateY(18px);opacity:.5}to{transform:none;opacity:1}}
   .sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 12px;flex:none}
-  .sheet-head b{font-size:17px;font-weight:700;letter-spacing:-.02em}
-  .sheet-head .x{background:none;border:0;height:32px;padding:0 4px;font-size:14px;font-weight:600;color:var(--hint)}
-  .sheet-head .x:hover{color:var(--ink-2)}
+  .sheet-head b{font-size:17px;font-weight:700;letter-spacing:-.02em;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* v8.43(#30767): 닫기가 있던 자리를 '버튼'으로 보이게 — 어느 창에서나 같은 자리·같은 모양 */
+  .sheet-head .x{height:34px;padding:0 13px;border-radius:999px;border:1px solid #DFE6EF;background:#F6F9FC;
+    font-size:13.5px;font-weight:800;letter-spacing:-.02em;color:#4B5B70;flex:none}
+  .sheet-head .x:hover{background:#EDF3FA;color:#2B3A4D}
+  .sheet-head .x:active{transform:translateY(1px)}
   /* v8.42(#30725·#30736): 고객 정보 시트 오른쪽 위 [저장] — 닫기 바로 왼쪽, 파란 버튼 */
   .sheet-head .sheet-acts{display:inline-flex;align-items:center;gap:8px;flex:none}
   .sheet-head .sheet-save{height:34px;padding:0 16px;border-radius:999px;border:0;background:#1B64DA;color:#fff;
@@ -1695,8 +1698,12 @@
     background:#fff;border:1px solid #DFE6EF;box-shadow:0 14px 34px rgba(16,24,40,.22);
     display:flex;flex-direction:column;gap:2px;animation:cmenuIn .12s ease-out}
   @keyframes cmenuIn{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
-  .cmenu-who{padding:6px 10px 5px;font-size:11.5px;font-weight:700;color:#8A95A5;letter-spacing:-.02em;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cmenu-who{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;font-size:11.5px;font-weight:700;color:#8A95A5;letter-spacing:-.02em}
+  .cmenu-who > span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* v8.43(#30767): 꾹 누르기 메뉴에도 명확한 닫기 버튼 */
+  .cmenu-who .cmx{flex:none;width:30px;height:30px;min-height:30px;padding:0;border:0;border-radius:50%;
+    background:#F1F5FA;color:#5C6B7F;font-size:12px;font-weight:800;line-height:1;display:grid;place-items:center}
+  .cmenu-who .cmx:hover,.cmenu-who .cmx:active{background:#E6EDF6;color:#2B3A4D}
   .cmenu button{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 10px;border:0;border-radius:10px;
     background:none;color:#2B3A4D;font-size:14px;font-weight:700;letter-spacing:-.02em;text-align:left}
   .cmenu button i{font-style:normal;font-size:15px;width:18px;text-align:center}
@@ -3498,12 +3505,14 @@ function openLB(src){
   $('lbImg').src = src;
   $('lightbox').classList.add('on');
   document.body.classList.add('lock');
+  navSync();
 }
 function closeLB(){
   $('lightbox').classList.remove('on');
   $('lbImg').removeAttribute('src');
   lbReset();   /* v8.36: 다음에 열 때 확대·이동이 남지 않게 */
   if(!sheetSpec) document.body.classList.remove('lock');
+  navSync();
 }
 function sheetPanel(){ return document.querySelector('.sheet-panel'); }
 /* v8.9(#18595): [취소][확인] 두 버튼짜리 확인 창 — 이미 체크된 상태(부재·예약·완료·개통완료)를 바꿀 때 */
@@ -3536,6 +3545,7 @@ function openSheet(spec){
       if(el) try{ el.focus({preventScroll:true}); }catch(e){}
     }, 240);
   }
+  navSync();
 }
 function closeSheet(){
   sheetSpec = null;
@@ -3555,7 +3565,86 @@ function closeSheet(){
       if(!sheetSpec && Math.abs(window.scrollY - back) >= 1) window.scrollTo(0, back);
     }, 60);
   }
+  navSync();
 }
+/* ================= v8.43(#30767): 뒤로가기 = 창 닫기 =================
+   왜 — 안드로이드 뒤로가기를 누르면 열려 있는 창이 닫히지 않고 앱이 꺼졌다.
+   이제 창(라이트박스 · 확인창 · 댓글/사진 메뉴 · 시트 · 알람 화면 · 홈 피드 검색)이 열릴 때마다
+   history 항목을 하나씩 쌓고, 뒤로가기(popstate)에서 가장 위에 열린 창부터 하나씩 닫는다.
+   쌓은 항목은 그때까지 열려 있던 창의 수(bandNav)를 기억하므로, 화면 안 닫기 버튼으로 닫아도
+   남는 항목을 스스로 걷어내 history 가 겹치거나 꼬이지 않는다. */
+var navDepth = 0;        /* 지금 쌓여 있는 history 항목 수 = 열려 있는 창의 수 */
+var navSyncT = 0;
+/* 지금 열려 있는 창 — 아래(먼저 닫히는 쪽이 위)에서부터 차례대로 */
+function navLayers(){
+  var L = [];
+  if(ui && ui.nqOpen) L.push('search');                        /* 홈 피드 검색 바 */
+  if(ui && ui.tab === 'alarm') L.push('alarm');                /* 🔔 알람 화면 */
+  if(sheetSpec) L.push('sheet');                               /* 시트 · 확인창 */
+  if(typeof photoMenu !== 'undefined' && photoMenu) L.push('pmenu');   /* 댓글 📷 메뉴 */
+  if(typeof cmtMenu !== 'undefined' && cmtMenu) L.push('cmenu');       /* 댓글 꾹 누르기 메뉴 */
+  var lb = $('lightbox');
+  if(lb && lb.classList && lb.classList.contains('on')) L.push('lb'); /* 사진 확대 */
+  return L;
+}
+/* 뒤로가기가 부른 닫기 — 그 창의 닫기 버튼과 똑같이 동작한다(저장하지 않고 취소) */
+function navCloseLayer(name){
+  if(name === 'lb'){ if($('lightbox').classList.contains('on')) closeLB(); return true; }
+  if(name === 'cmenu'){ closeCmtMenu(); return true; }
+  if(name === 'pmenu'){ closePhotoMenu(); return true; }
+  if(name === 'sheet'){
+    var t = sheetSpec && sheetSpec.type;
+    closeSheet();
+    if(t === 'confirm') toast('그대로 두었어요');   /* 취소와 같은 뜻 */
+    return true;
+  }
+  if(name === 'alarm'){
+    ui.tab = ui.alarmPrev || 'notice';
+    ui.filter = 'all';
+    render(); alarmBadge();
+    window.scrollTo(0, 0);
+    return true;
+  }
+  if(name === 'search'){ closeFeedSearch(); return true; }
+  return false;
+}
+function navSyncNow(){
+  navSyncT = 0;
+  var want = navLayers().length;
+  if(want > navDepth){
+    if(want > navDepth + 4) want = navDepth + 4;   /* 한 번에 지나치게 쌓지 않는다 */
+    while(navDepth < want){
+      try{ history.pushState({bandNav: navDepth + 1}, ''); navDepth++; }
+      catch(e){ break; }                            /* history 를 못 쓰는 화면이면 조용히 포기 */
+    }
+  } else if(want < navDepth){
+    navDepth--;                                     /* 이 항목은 이제 필요 없다 */
+    try{ history.back(); }catch(e){ navDepth++; }
+  }
+}
+/* 창이 열리거나 닫힌 뒤(같은 클릭 안의 여러 변화를 한 번에 모아) history 를 맞춘다 */
+function navSync(){
+  if(navSyncT) clearTimeout(navSyncT);
+  navSyncT = setTimeout(navSyncNow, 0);
+}
+/* 뒤로가기 — 앱을 끄지 않고 가장 위의 창 하나만 닫는다 */
+window.addEventListener('popstate', function(ev){
+  var n = 0;
+  try{ if(ev && ev.state && typeof ev.state.bandNav === 'number') n = ev.state.bandNav; }catch(e){ n = 0; }
+  var L = navLayers();
+  navDepth = n;                                     /* 지금 서 있는 항목이 기억하는 창 수 */
+  if(L.length > n) navCloseLayer(L[L.length - 1]);
+  navSync();
+});
+/* 화면을 새로 열 때(새로고침·앱 재실행)는 남아 있던 항목 기록을 지운다 */
+try{ history.replaceState({bandNav: 0}, ''); navDepth = 0; }catch(e){ navDepth = 0; }
+/* 뒤로가기로 되살아난 화면(bfcache)도 기록을 다시 0에서 시작 */
+window.addEventListener('pageshow', function(ev){
+  if(ev && ev.persisted){ try{ history.replaceState({bandNav: 0}, ''); }catch(e){} navDepth = 0; }
+});
+/* 화면 안 버튼으로 창을 여닫은 뒤에도 history 를 한 번 맞춘다(클릭 처리가 끝난 뒤) */
+document.addEventListener('click', function(){ navSync(); }, true);
+document.addEventListener('keydown', function(e){ if(e && e.key === 'Escape') navSync(); }, true);
 function renderSheet(){
   if(!sheetSpec) return;
   var b = $('sheetBody'), ttl = $('sheetTitle');
@@ -6843,6 +6932,7 @@ function render(opts){
     if(q){ try{ q.focus({preventScroll:true}); q.setSelectionRange(q.value.length, q.value.length); }catch(e){} }
   }
   dayMoreMaybe();   /* v8.25: 화면이 짧게 끝나면 지난 날짜 묶음을 바로 채운다 */
+  if(typeof navSync === 'function') navSync();   /* v8.43(#30767): 다시 그리며 닫힌 메뉴·창을 history 에 반영 */
 }
 
 /* ================= photos ================= */
@@ -6936,6 +7026,7 @@ var photoMenu = null, photoMenuForm = null, photoMenuAt = 0;
 function closePhotoMenu(){
   if(photoMenu && photoMenu.parentNode) photoMenu.parentNode.removeChild(photoMenu);
   photoMenu = null; photoMenuForm = null; photoMenuAt = 0;
+  navSync();
 }
 function openPhotoMenu(btn){
   closePhotoMenu();
@@ -6945,7 +7036,8 @@ function openPhotoMenu(btn){
   menu.className = 'pmenu';
   menu.setAttribute('role', 'menu');
   menu.innerHTML = '<button type="button" data-act="photo-cap" role="menuitem"><i>📷</i><span>바로 촬영</span></button>'
-                 + '<button type="button" data-act="photo-album" role="menuitem"><i>🖼</i><span>앨범에서 선택</span></button>';
+                 + '<button type="button" data-act="photo-album" role="menuitem"><i>🖼</i><span>앨범에서 선택</span></button>'
+                 + '<button type="button" data-act="photo-menu-close" role="menuitem"><i>✕</i><span>닫기</span></button>';   /* v8.43(#30767): 닫기 버튼이 없던 메뉴 */
   document.body.appendChild(menu);
   photoMenu = menu; photoMenuForm = form; photoMenuAt = Date.now();
   /* 사진 버튼 위에 띄우고(자리가 없으면 아래), 화면 오른쪽 끝을 맞춘다 */
@@ -6957,6 +7049,7 @@ function openPhotoMenu(btn){
   if(top < 8) top = Math.max(8, Math.min(vh - mh - 8, r.bottom + 8));
   menu.style.left = Math.round(left) + 'px';
   menu.style.top = Math.round(top) + 'px';
+  navSync();   /* v8.43(#30767): 열린 창 → 뒤로가기 한 번에 닫기 */
 }
 function pickPhoto(cap){
   var form = photoMenuForm;
@@ -6984,6 +7077,7 @@ function closeCmtMenu(){
   if(cmtMenu && cmtMenu.parentNode) cmtMenu.parentNode.removeChild(cmtMenu);
   cmtMenu = null; cmtMenuSpec = null;
   if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
+  navSync();
 }
 function cmtMenuTarget(el){
   if(!el || !el.closest) return null;
@@ -7024,17 +7118,22 @@ function openCmtMenu(sp, x, y){
   var when = f ? (f.r ? f.r.at : f.c.at) : '';
   var mine = !!(f && session && f.c.author === session.staff) && sp.kind === 'cmt';
   var canEdit = !!(f && sp.kind === 'cmt' && (isAdmin() || mine));
-  var canDel = !!f && isAdmin();
+  /* v8.43(#30797): 직원도 '내가 쓴 것'이면 삭제할 수 있다 — 서버에 올라간(id 있는) 댓글·답글만 */
+  var mineRep = !!(f && f.r && session && f.r.author === session.staff);
+  var hasId = !!(f && (sp.kind === 'rep' ? (f.r && f.r.id) : f.c.id));
+  var canDel = !!f && (isAdmin() || ((mine || mineRep) && hasId));
   var menu = document.createElement('div');
   menu.className = 'cmenu';
   menu.setAttribute('role', 'menu');
-  var h = '<div class="cmenu-who">' + (sp.kind === 'rep' ? '↳ ' : '') + esc(who) + (when ? ' · ' + fmtAt(when) : '') + '</div>';
+  var h = '<div class="cmenu-who"><span>' + (sp.kind === 'rep' ? '↳ ' : '') + esc(who) + (when ? ' · ' + fmtAt(when) : '') + '</span>'
+        + '<button type="button" class="cmx" data-act="cmt-menu-close" aria-label="메뉴 닫기">✕</button></div>';   /* v8.43(#30767): 닫기 버튼이 없던 메뉴 */
   h += '<button type="button" data-act="cmt-copy" role="menuitem"><i>📋</i><span>댓글 복사</span></button>';
   if(canEdit) h += '<button type="button" data-act="cmt-edit" role="menuitem"><i>✏️</i><span>수정하기</span></button>';
   if(canDel) h += '<button type="button" class="del" data-act="cmt-del" role="menuitem"><i>🗑</i><span>삭제하기</span></button>';
   menu.innerHTML = h;
   document.body.appendChild(menu);
   cmtMenu = menu; cmtMenuSpec = sp; cmtMenuAt = Date.now();
+  navSync();   /* v8.43(#30767): 열린 창 → 뒤로가기 한 번에 닫기 */
   var mw = menu.offsetWidth || 168, mh = menu.offsetHeight || 80;
   var vw = window.innerWidth, vh = window.innerHeight;
   var left = Math.max(8, Math.min(vw - mw - 8, x - mw / 2));
@@ -7831,7 +7930,14 @@ document.addEventListener('click', function(e){
     case 'cmt-del':
       var dsp = cmtMenuSpec;
       closeCmtMenu();
-      if(!isAdmin()){ toast('삭제는 관리자만 할 수 있어요', true); break; }
+      if(!isAdmin()){
+        /* v8.43(#30797): 관리자가 아니어도 내가 쓴 댓글·답글(id 있는 것)은 지울 수 있다 */
+        var dfo = cmtOfSpec(dsp);
+        var dOwn = !!(dsp && dfo && session) && (dsp.kind === 'rep'
+          ? !!(dfo.r && dfo.r.id && dfo.r.author === session.staff)
+          : !!(dfo.c.id && dfo.c.author === session.staff));
+        if(!dOwn){ toast('내가 쓴 댓글만 삭제할 수 있어요', true); break; }
+      }
       openConfirm({title: (dsp && dsp.kind === 'rep') ? '답글 삭제' : '댓글 삭제',
                    msg: (dsp && dsp.kind === 'rep') ? '이 답글을 삭제할까요?' : '이 댓글을 삭제할까요?',
                    ok: '삭제', onOk: function(){ cmtDoDelete(dsp); }});
@@ -8034,6 +8140,9 @@ document.addEventListener('click', function(e){
       openLB(img.getAttribute('data-full') || img.getAttribute('src'));
       break;
     case 'close-lb': closeLB(); break;
+    /* v8.43(#30767): 닫기 버튼이 없던 작은 메뉴 두 개 */
+    case 'cmt-menu-close': closeCmtMenu(); break;
+    case 'photo-menu-close': closePhotoMenu(); break;
     /* ---- v8.37: 글의 댓글 한 줄 메모 ---- */
     case 'cmt-memo': openCmtMemo(el.getAttribute('data-pid'), el.getAttribute('data-cid')); break;
     case 'cmt-memo-save': saveCmtMemo(el.getAttribute('data-pid'), el.getAttribute('data-cid')); break;
