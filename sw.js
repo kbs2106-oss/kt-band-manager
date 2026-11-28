@@ -81,8 +81,15 @@
    v8.45(#31052): 홈 피드 미리보기 댓글(.cmt-preview)도 꾹 누르기 메뉴 대상에 넣고(짧은 탭은 그대로
           댓글 창), 꾹 누르는 판정을 400ms·22px 로 안드로이드 기본 롱프레스보다 먼저·관대하게 잡았다.
           터치 중 pointerleave 로 접지 않고, 메뉴를 연 직후 0.5초 스크롤에도 닫히지 않는다.
-          contextmenu 좌표가 0,0 일 때는 누른 줄 가운데에 띄운다. 화면·동작이 바뀜. */
-var CACHE = 'kt-band-v8.45';
+          contextmenu 좌표가 0,0 일 때는 누른 줄 가운데에 띄운다. 화면·동작이 바뀜.
+   v8.46(#31161): v8.45 로도 안드로이드 실기기에서 여전히 메뉴가 안 뜨던 마지막 원인.
+          · 안드로이드 Chrome/WebView 는 롱프레스·스크롤 판정 때 pointercancel 과 함께 touchcancel 도
+            보내는데, touchcancel 이 타이머를 끊고 있었다 — 터치 중에는 touchcancel 로도 접지 않는다
+            (손을 뗀 touchend·pointerup, 25px 넘는 움직임에서만 취소).
+          · 일부 WebView 는 touchstart 의 target 으로 텍스트 노드를 주는데 closest 가 없어
+            대상 판정이 null 이 되던 것을 부모 요소로 올려 잡는다.
+          · 판정을 350ms 로 당겨 안드로이드 기본 OnLongClick(~450~500ms)보다 확실히 먼저 연다. 화면·동작이 바뀜. */
+var CACHE = 'kt-band-v8.46';
 var IMG = 'kt-band-img-v1';          /* 썸네일 전용 — 앱 버전이 올라가도 그대로 쓴다(주소가 내용 해시라 안전) */
 var CACHE_PREFIX = 'kt-band-';
 var SHELL = [
