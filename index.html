@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.48">
+<meta name="app-version" content="v8.49">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1714,7 +1714,10 @@
      먼저 잡혀(진동만 울리고 메뉴는 안 뜸) 롱프레스가 끊겼다. 댓글·답글 글자는 기본 선택·콜아웃을 끄고
      그 자리는 꾹 누르기 메뉴(복사·수정·삭제)가 맡는다 — 글자 고르기로 복사하려면 메뉴의 '댓글 복사'.
      입력칸·메모 입력처럼 글자를 써 넣는 곳은 그대로 고를 수 있게 둔다. */
-  .cmt,.replies li,.cmt-preview{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .cmt,.cmt *,.replies li,.replies li *,.cmt-preview,.cmt-preview *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  /* v8.49(#31230): 사진(.pcell img) 위를 꾹 누를 때 브라우저가 이미지를 끌어당기거나 '이미지 저장' 메뉴를
+     띄우지 않게 — 그 자리는 댓글 메뉴가 맡는다(짧은 탭은 그대로 사진 크게 보기). */
+  .cmt img,.replies li img,.cmt-preview img{-webkit-user-drag:none;user-drag:none}
   /* v8.45(#31052): 홈 피드의 미리보기 댓글도 같은 규칙 — 꾹 누르면 기본 글자 선택 대신 메뉴 */
   .cmt input,.cmt textarea,.cmt [contenteditable],
   .replies li input,.replies li textarea,.replies li [contenteditable],
@@ -7093,7 +7096,8 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape' && photoMe
    밴드(22013)처럼 댓글을 450~500ms 꾹 누르거나 PC에서 우클릭하면 작은 메뉴가 뜬다.
    · 직원 화면 : 댓글 복사 (항상) + 수정하기·삭제하기 (본인이 쓴 댓글만 — #30640)
    · 관리자 화면(isAdmin) : 댓글 복사 + 수정하기 + 삭제하기 (모든 댓글·옛 답글)
-   스크롤·글자 드래그로 움직이면 취소하고, 버튼·메모·사진 위에서는 뜨지 않는다. */
+   스크롤·글자 드래그로 움직이면 취소한다. v8.49 부터는 댓글 영역 전체(글자·사진·상태 버튼·메모 줄·답글 보기)에서 뜨고,
+   글을 쓰거나 고치는 입력칸(input·textarea·select·label·.cmemo-edit·.cedit)과 글쓰기 폼(.post-actions) 위에서만 안 뜬다. */
 var cmtMenu = null, cmtMenuSpec = null, cmtPress = null, cmtMenuAt = 0, cmtMenuOrigin = null;
 /* v8.47: 꾹 눌러 연 메뉴에서 손을 떼며 따라오는 click 한 번만 무시하기 위한 표시.
    새 터치(pointerdown)가 시작되면 곧바로 꺼지므로, 그 다음 탭부터는 정상으로 동작한다. */
@@ -7137,7 +7141,13 @@ function cmtMenuTarget(el){
   var pid = art ? (art.getAttribute('data-pid') || '') : '';
   if(!pid && inSheet && typeof sheetSpec !== 'undefined' && sheetSpec && sheetSpec.type === 'post' && sheetSpec.id) pid = String(sheetSpec.id);
   if(!pid) return null;                    /* 글의 댓글창(글 카드·글 창)에서만 */
-  if(el.closest('button,a,input,textarea,select,label,.cmemo,.cmemo-edit,.pgrid,.pcell,.rep-toggle,.cseg,.cst,.post-actions')) return null;
+  /* v8.49(#31230): 댓글 영역 '전부' — 글자·작성자·사진(.pgrid .pcell)·상태 버튼(.cseg)·메모 줄(.cmemo)·
+     답글 보기(.rep-toggle)·답글 상태칩(.cst) 어디를 꾹 눌러도 메뉴가 뜬다(김태양 님 "댓글쪽전부지 임마").
+     예전에는 button·a·.pgrid·.pcell·.cseg·.cmemo·.rep-toggle·.cst 를 통째로 빼서 그 위에서는 아무 일도 없었다.
+     지금은 '글을 쓰거나 고치는 칸'만 뺀다 — input·textarea·select·label(사진 고르기),
+     .cmemo-edit(메모 입력 중)·.cedit(댓글 고치기 중)·.post-actions(글쓰기 폼).
+     짧게 탭하면 예전 그대로 동작한다 — 손을 떼며 따라오는 click 한 번은 cmtSwallowClick 이 무시한다. */
+  if(el.closest('input,textarea,select,label,.cmemo-edit,.cedit,.post-actions')) return null;
   var rli = el.closest('.replies li');
   if(rli){
     var cli0 = rli.closest('li.cmt');
