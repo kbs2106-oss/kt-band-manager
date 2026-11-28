@@ -7093,11 +7093,11 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape' && photoMe
    · 직원 화면 : 댓글 복사 (항상) + 수정하기·삭제하기 (본인이 쓴 댓글만 — #30640)
    · 관리자 화면(isAdmin) : 댓글 복사 + 수정하기 + 삭제하기 (모든 댓글·옛 답글)
    스크롤·글자 드래그로 움직이면 취소하고, 버튼·메모·사진 위에서는 뜨지 않는다. */
-var cmtMenu = null, cmtMenuSpec = null, cmtPress = null, cmtMenuAt = 0;
+var cmtMenu = null, cmtMenuSpec = null, cmtPress = null, cmtMenuAt = 0, cmtMenuOrigin = null;
 var CMT_PRESS_MS = 470;
 function closeCmtMenu(){
   if(cmtMenu && cmtMenu.parentNode) cmtMenu.parentNode.removeChild(cmtMenu);
-  cmtMenu = null; cmtMenuSpec = null;
+  cmtMenu = null; cmtMenuSpec = null; cmtMenuOrigin = null;
   if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
   navSync();
 }
@@ -7160,6 +7160,8 @@ function openCmtMenu(sp, x, y){
   menu.innerHTML = h;
   document.body.appendChild(menu);
   cmtMenu = menu; cmtMenuSpec = sp; cmtMenuAt = Date.now();
+  /* v8.44: 꾹 누른 손가락을 떼면 따라오는 click 이 방금 연 메뉴를 바로 닫지 않게 그 댓글 줄을 기억해 둔다 */
+  cmtMenuOrigin = (sp && sp.el) ? sp.el : null;
   navSync();   /* v8.43(#30767): 열린 창 → 뒤로가기 한 번에 닫기 */
   var mw = menu.offsetWidth || 168, mh = menu.offsetHeight || 80;
   var vw = window.innerWidth, vh = window.innerHeight;
@@ -7900,6 +7902,10 @@ document.addEventListener('click', function(e){
   if(photoMenu && e.target.closest && !e.target.closest('.pmenu') && !e.target.closest('[data-act="photo-menu"]')) closePhotoMenu();
   /* v8.42: 댓글 메뉴 바깥을 누르면 닫는다 — 단, 꾹 누른 뒤 따라오는 click(470ms 직후)으로
      방금 연 메뉴가 바로 닫히지 않도록 여는 순간의 0.45초는 무시한다. */
+  /* v8.44: 꾹 눌렀다가 0.5초 넘게 더 누르고 손을 떼도 메뉴가 그대로 남게 —
+     손을 떼며 따라오는 click(꾹 눌렀던 그 댓글 줄)은 메뉴를 닫지도, 댓글을 누르지도 않는다. */
+  if(cmtMenu && cmtMenuOrigin && e.target && e.target.closest
+     && !e.target.closest('.cmenu') && cmtMenuOrigin.contains(e.target)) return;
   if(cmtMenu && e.target.closest && !e.target.closest('.cmenu') && Date.now() - cmtMenuAt > 450) closeCmtMenu();
   if((ui.memoEdit || ui.resvMemo || ui.keepMemo || ui.cMemo)
      && !(e.target.closest && e.target.closest('.c-edit,.rmemo-edit,.k-edit,.cmemo-edit'))){
