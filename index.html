@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.51">
+<meta name="app-version" content="v8.52">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -3865,8 +3865,10 @@ function pressKey(k){}   /* v8.2: 자판 없음 (비밀번호 입력 제거) */
    실개통이 확인된 가망고객·사전예약 예약자를 자동으로 '개통완료'로 바꿉니다.
 
    · 장부는 읽기만 합니다. deviceId 없이 pin=5001 로 조회하므로 장부의 기기 승인제에 걸리지 않습니다.
-   · 자동 확인은 30분에 한 번, 먼저 ping(작은 응답)으로 건수만 보고
-     건수가 달라졌을 때만 목록(약 5MB)을 받습니다. 6시간이 지나면 건수가 같아도 한 번 새로 받습니다.
+   · 자동 확인(v8.52)은 75초에 한 번, 서버의 달 색인(list_months — Code.gs v10.1이 0.9초에 응답)과
+     이 기기에 저장해 둔 달별 체크섬을 먼저 견줍니다. 달라진 달이 있으면 그 달의 행만(list_month — 100~300KB) 받고,
+     없으면 거기서 끝납니다. 6시간에 한 번, 또는 저장한 달 색인이 없을 때만 전체 목록(약 5MB)을 받습니다.
+     (예전에는 ping 으로 장부 '건수'만 보고 4분에 한 번씩 — 다른 직원 개통이 5분~6시간 뒤에나 보였습니다.)
    · 받은 목록은 [전화번호 숫자, 개통일, 담당자, 기종] 4칸만 남겨 이 기기에 캐시합니다.
      (v8.35: 기종은 카드의 '📱 기존 개통 모델명' 한 줄에 쓴다. 예전 캐시(3칸)는 기종 없이 그대로 읽힌다.)
    · 매칭 기준 (v8.5) : 전화번호 뒤 8자리 일치 + 아래 둘 중 하나
@@ -3880,10 +3882,12 @@ var LEDGER_URL = 'https://script.google.com/macros/s/AKfycbz502Kzj6P_p3ku_i-91a4
 var LEDGER_PIN = '5001';
 var LKEY = 'kt_band_ledger_v1';
 var LEDGER_CD = 60 * 1000;              /* '지금 확인' 최소 간격 */
-var LEDGER_TTL = 4 * 60 * 1000;         /* v8.12: 자동 확인 주기 4분 — 화면을 오갈 때마다 5MB 를 받지 않는다 */
-var LEDGER_FULL = 6 * 60 * 60 * 1000;   /* 이 시간이 지나면 건수가 같아도 목록을 새로 받는다 */
+var LEDGER_TTL = 70 * 1000;             /* v8.52: 자동 확인 주기 75초(화면 켜 둔 동안) — 먼저 달 색인만 본다 */
+var LEDGER_FULL = 6 * 60 * 60 * 1000;   /* 이 시간이 지나면 달 색인이 같아도 목록을 새로 받는다 */
+var LEDGER_MONTH_MAX = 12;              /* list_month 한 번에 12달 (Code.gs MONTH_MAX_REQ 와 같다) */
 var LEDGER_TMO = 25000;                 /* 요청 제한 시간 */
-var ledger = {at:0, checked:0, count:0, rows:[], map:null, busy:false, err:'', lastNew:0, lastBack:0, lastRun:0};
+var ledger = {at:0, checked:0, count:0, rows:[], map:null, sig:null, idxDead:false,
+              busy:false, err:'', lastNew:0, lastBack:0, lastRun:0, lastMs:0};
 
 function ledgerBase(){
   return LEDGER_URL + (LEDGER_URL.indexOf('?') < 0 ? '?' : '&') + 'pin=' + LEDGER_PIN;
@@ -3942,13 +3946,15 @@ function ledgerLoad(){
     ledger.checked = +d.checked || ledger.at;
     ledger.count = +d.count || 0;
     ledger.rows = d.rows;
+    ledger.sig = (d.sig && typeof d.sig === 'object') ? d.sig : null;   /* v8.52: 달별 체크섬(서버 색인과 비교용) */
     ledger.map = null;
     return ledger.rows.length > 0;
   }catch(e){ return false; }
 }
 function ledgerSave(){
   try{
-    localStorage.setItem(LKEY, JSON.stringify({at:ledger.at, checked:ledger.checked, count:ledger.count, rows:ledger.rows}));
+    localStorage.setItem(LKEY, JSON.stringify({at:ledger.at, checked:ledger.checked, count:ledger.count,
+                                              rows:ledger.rows, sig:ledger.sig || null}));
     return true;
   }catch(e){ return false; }
 }
@@ -3963,6 +3969,33 @@ function ledgerCompact(recs){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(dt)) dt = '';
     out.push([ph, dt, String(r['담당자'] || '').slice(0, 10), String(r['기종'] || '').slice(0, 40)]);
   }
+  return out;
+}
+/* ---------- v8.52: 달별 체크섬 (서버 list_months 의 checksum 과 같은 값) ---------- */
+function ledgerMonthOf(v){
+  var s = String(v == null ? '' : v).slice(0, 7);
+  return /^\d{4}-\d{2}$/.test(s) ? s : '';
+}
+/* FNV-1a 32bit — Code.gs fnv1a_ 와 같은 식 (바꾸면 서버도 같이 바꿔야 한다) */
+function ledgerFnv1a(s){
+  var h = 2166136261, i;
+  for(i = 0; i < s.length; i++){
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return ('00000000' + h.toString(16)).slice(-8);
+}
+/* 장부 응답 records → { 'YYYY-MM': 체크섬 }. 서버는 id|수정일시 를 사전순으로 이어 붙여 해시한다 */
+function ledgerSigOfRecords(recs){
+  var acc = {}, i, m, r;
+  for(i = 0; i < recs.length; i++){
+    r = recs[i] || {};
+    m = ledgerMonthOf(r['개통일']);
+    if(!m) continue;                      /* 달이 없는 줄(직원명부)은 어느 달 체크섬에도 안 들어간다 */
+    (acc[m] || (acc[m] = [])).push(String(r['id'] || '') + '|' + String(r['수정일시'] || ''));
+  }
+  var out = {}, k;
+  for(k in acc) if(acc.hasOwnProperty(k)){ acc[k].sort(); out[k] = ledgerFnv1a(acc[k].join('\n')); }
   return out;
 }
 function ledgerIndex(){
@@ -4096,6 +4129,7 @@ function ledgerPing(){
     return +d.count || 0;
   });
 }
+/* 전체 목록(약 5MB) — 처음 한 번, 6시간마다 한 번, 서버가 달 색인을 모를 때만 */
 function ledgerPull(){
   return ledgerFetchJson(ledgerBase() + '&action=list&t=' + Date.now()).then(function(d){
     if(d && d.pending) throw new Error('기기 승인 대기');
@@ -4103,6 +4137,7 @@ function ledgerPull(){
     if(!d || d.ok !== true) throw new Error((d && d.error) || '장부 응답 오류');
     var recs = Array.isArray(d.records) ? d.records : [];
     ledger.rows = ledgerCompact(recs);
+    ledger.sig = ledgerSigOfRecords(recs);      /* v8.52 — 다음부터는 이 체크섬으로 달만 골라 받는다 */
     ledger.count = recs.length;
     ledger.at = Date.now();
     ledger.checked = ledger.at;
@@ -4111,13 +4146,99 @@ function ledgerPull(){
     return 0;
   });
 }
-function ledgerCheck(){
-  /* 캐시가 없거나 오래됐으면 목록을, 아니면 건수만 확인 */
-  if(!ledger.rows.length || !ledger.at || (Date.now() - ledger.at) > LEDGER_FULL) return ledgerPull();
+/* 달 색인 — 달별 건수·체크섬·마지막 수정시각 (수 KB · 서버 캐시 적중 시 0.9초) */
+function ledgerMonthsIndex(){
+  return ledgerFetchJson(ledgerBase() + '&action=list_months&t=' + Date.now()).then(function(d){
+    if(!d || d.ok !== true) throw new Error((d && d.error) || '장부 응답 오류');
+    if(String(d.action || '') !== 'list_months' || !Array.isArray(d.months)) throw new Error('지원하지 않는 요청입니다: list_months');
+    return d;
+  });
+}
+/* 고른 달의 행만 — 12달씩 나눠 받는다 (달 하나 100~300KB) */
+function ledgerMonthsPull(months){
+  var out = [], i;
+  var chain = Promise.resolve();
+  for(i = 0; i < months.length; i += LEDGER_MONTH_MAX){
+    (function(batch){
+      chain = chain.then(function(){
+        return ledgerFetchJson(ledgerBase() + '&action=list_month&months=' + batch.join(',') + '&t=' + Date.now())
+          .then(function(d){
+            if(!d || d.ok !== true) throw new Error((d && d.error) || '장부 응답 오류');
+            if(!Array.isArray(d.records)) throw new Error('지원하지 않는 요청입니다: list_month');
+            out.push(d);
+          });
+      });
+    })(months.slice(i, i + LEDGER_MONTH_MAX));
+  }
+  return chain.then(function(){ return out; });
+}
+/* 색인과 저장해 둔 체크섬을 견준다 — 바뀐 달·사라진 달 */
+function ledgerIndexDiff(ix){
+  var sig = ledger.sig || (ledger.sig = {});
+  var byMonth = {}, changed = [], gone = [], i, m;
+  for(i = 0; i < ix.months.length; i++){
+    m = ix.months[i] || {};
+    if(!m.month) continue;
+    byMonth[m.month] = m;
+    if(sig[m.month] !== m.checksum) changed.push(m.month);
+  }
+  for(m in sig) if(sig.hasOwnProperty(m) && !byMonth[m]) gone.push(m);
+  return {byMonth:byMonth, changed:changed, gone:gone};
+}
+/* 바뀐 달의 행만 받아 캐시에서 그 달만 갈아끼운다 */
+function ledgerMergeMonths(list, changed, gone){
+  var drop = {}, i, j, k;
+  for(i = 0; i < changed.length; i++) drop[changed[i]] = 1;
+  for(i = 0; i < gone.length; i++) drop[gone[i]] = 1;
+  var keep = [];
+  for(i = 0; i < ledger.rows.length; i++){
+    var mm = ledgerMonthOf(ledger.rows[i][1]);
+    if(mm && drop[mm]) continue;
+    keep.push(ledger.rows[i]);
+  }
+  var sig = ledger.sig || (ledger.sig = {});
+  for(i = 0; i < changed.length; i++) delete sig[changed[i]];
+  for(i = 0; i < gone.length; i++) delete sig[gone[i]];
+  for(i = 0; i < list.length; i++){
+    var d = list[i] || {}, cs = d.checksums || {};
+    for(k in cs) if(cs.hasOwnProperty(k)) sig[k] = cs[k];   /* 받은 달은 응답의 체크섬으로 */
+    var comp = ledgerCompact(Array.isArray(d.records) ? d.records : []);
+    for(j = 0; j < comp.length; j++) keep.push(comp[j]);
+  }
+  ledger.rows = keep;
+  ledger.map = null;
+}
+/* v8.52: 달 색인으로 확인 — 달라진 달만 받는다. 바뀐 게 없으면 0.9초에 끝난다 */
+function ledgerCheckIndex(){
+  return ledgerMonthsIndex().then(function(ix){
+    var diff = ledgerIndexDiff(ix);
+    ledger.count = (+ix.total || 0) + (+(ix.meta && ix.meta.count) || 0);
+    if(!diff.changed.length && !diff.gone.length){ ledger.checked = Date.now(); return 0; }
+    return ledgerMonthsPull(diff.changed).then(function(list){
+      ledgerMergeMonths(list, diff.changed, diff.gone);
+      ledger.checked = Date.now();
+      ledgerSave();
+      return 0;
+    });
+  });
+}
+/* 예전 서버(달 색인 없음)용 — 건수만 보고 다를 때만 전체 목록 */
+function ledgerCheckLegacy(){
   return ledgerPing().then(function(count){
     if(ledger.count && count !== ledger.count) return ledgerPull();
     ledger.checked = Date.now();
     return 0;
+  });
+}
+function ledgerCheck(){
+  /* 전체 목록이 없거나, 6시간이 지났거나, 달 체크섬을 아직 모르면 통째로 한 번 받는다 */
+  if(!ledger.rows.length || !ledger.at || (Date.now() - ledger.at) > LEDGER_FULL || !ledger.sig) return ledgerPull();
+  if(ledger.idxDead) return ledgerCheckLegacy();
+  return ledgerCheckIndex().then(null, function(e){
+    var msg = (e && e.message) || '';
+    /* 서버가 아직 list_months·list_month 를 모르면 조용히 예전 방식으로 */
+    if(/지원하지 않는|알 수 없는/.test(msg)){ ledger.idxDead = true; return ledgerCheckLegacy(); }
+    throw e;
   });
 }
 function ledgerSync(force){
@@ -4134,9 +4255,11 @@ function ledgerSync(force){
   ledger.err = '';
   ledger.lastNew = 0;
   ledger.lastRun = now;
+  var t0 = now;
   refreshLedgerUI(true);
-  (force ? ledgerPull() : ledgerCheck()).then(function(){
+  ledgerCheck().then(function(){
     ledger.busy = false;
+    ledger.lastMs = Date.now() - t0;
     var added = ledgerApply();
     ledger.lastNew = added;
     ledger.checked = Date.now();
@@ -4146,6 +4269,7 @@ function ledgerSync(force){
     if(added) render(); else refreshLedgerUI(true);
     if(added) toast('장부에서 ' + added + '명 개통완료로 자동 반영했어요'
                    + (ledger.lastBack ? ' (기개통 ' + ledger.lastBack + '명)' : ''));
+    else if(force) toast('장부 ' + ledgerNum(ledger.count) + '건 · 최신 상태예요');
   }, function(e){
     ledger.busy = false;
     ledger.err = (e && e.message) || '연결 실패';
@@ -4248,6 +4372,7 @@ var sync = {
   alarmMute: false,   /* v8.25: 처음 전체 받아오기에서는 알람을 만들지 않는다 */
   caps: {ph: 0},      /* v8.34: 서버가 댓글 사진(_밴드사진·band_ph)을 알면 1 */
   pendPh: {},         /* v8.34: 댓글보다 먼저 도착한 사진 — 댓글이 생기면 붙인다 */
+  phUp: 0,            /* v8.52: 지금 서버로 올리는 중인 사진 장수 — 상단 칩이 '사진 전송 중…' */
   lastNote: '',
   phTryAt: 0
 };
@@ -4317,26 +4442,38 @@ function syncMergePhotoList(local, remote){
 function syncReplies(list){
   var out = [];
   (list || []).slice(-20).forEach(function(r){
-    out.push({id: r.id || '', author: r.author || '', at: r.at || '', text: String(r.text || '').slice(0, 2000),
-              st: r.st || '', photos: syncPhotos(r.photos)});
+    var o = {id: r.id || '', author: r.author || '', at: r.at || '', text: String(r.text || '').slice(0, 2000),
+             st: r.st || '', photos: syncPhotos(r.photos)};
+    /* v8.52: 지운 답글 표시도 함께 — 예전에는 목록 길이만 견줘 지운 것이 다른 폰에 전달되지 않았다 */
+    if(r.del === true){ o.del = true; o.delAt = r.delAt || ''; o.delBy = r.delBy || ''; }
+    out.push(o);
   });
   return out;
 }
 function syncCmtPayload(c){
   if(!c || !c.id) return null;
-  return {
+  var p = {
     id: c.id, author: c.author || '', at: c.at || '', text: String(c.text || '').slice(0, 2000),
     st: c.st || '', stBy: c.stBy || '', stAt: c.stAt || '', resDate: c.resDate || '', resTime: c.resTime || '',
     memo: String(c.memo || '').slice(0, 200), memoAt: c.memoAt || '', memoBy: c.memoBy || '', sys: !!c.sys,
     photos: syncPhotos(c.photos), replies: syncReplies(c.replies), u: syncNow()
   };
+  /* v8.52: 댓글 삭제 표시 — 서버(v10.2)가 보관해 다른 폰에서도 지워진다 */
+  if(c.del === true){ p.del = true; p.delAt = c.delAt || ''; p.delBy = c.delBy || ''; }
+  return p;
 }
 /* v8.37: 메모를 고치면 그 댓글이 다시 올라가게 — 메모가 있는 댓글만 쓴 시각·쓴 사람을 지문 끝에 붙인다.
+   v8.52: 지운 표시(댓글·답글)도 지문에 넣는다 — 지우면 바로 다시 올라간다.
    (메모가 없는 예전 댓글의 지문은 그대로라, 앱을 새로 켰다고 전 직원 댓글이 한꾸번에 다시 오르지 않는다) */
 function syncCmtFp(c){
   var base = [c.author || '', c.at || '', c.text || '', c.st || '', c.stBy || '', c.stAt || '',
           c.resDate || '', c.resTime || '', c.memo || '', (c.photos || []).length, (c.replies || []).length].join('\u001f');
   if(String(c.memo || '').trim()) base += '\u001f' + (c.memoAt || '') + '\u001f' + (c.memoBy || '');
+  if(c.del === true) base += '\u001fdel';
+  var rr = c.replies || [];
+  for(var i = 0; i < rr.length; i++){
+    if(rr[i] && rr[i].del === true) base += '\u001frdel:' + (rr[i].id || i);
+  }
   return base;
 }
 function syncNewCmts(list, rec){
@@ -4688,6 +4825,10 @@ function syncPush(force){
   });
   if(cur.length) chunks.push(cur);
   sync.pushBusy = true;
+  /* v8.52: 사진을 올리는 동안 상단 칩을 '● 사진 전송 중…' 으로 — 긴 사진 업로드에 답답함을 줄인다 */
+  var phTotal = 0;
+  for(var pi = 0; pi < items.length; pi++){ if(items[pi] && items[pi].t === 'ph') phTotal++; }
+  if(phTotal){ sync.phUp = phTotal; syncChip(); }
   var chain = Promise.resolve();
   chunks.forEach(function(ch){
     chain = chain.then(function(){
@@ -4711,17 +4852,25 @@ function syncPush(force){
           if(!sync.caps.ph && d.ph) sync.caps.ph = 1;
           sync.lastAt = Date.now();
           sync.fails = 0;
+          if(sync.phUp){               /* v8.52: 이 묶음에 실린 사진만큼 줄인다 */
+            var donePh = 0;
+            for(var pj = 0; pj < ch.length; pj++){ if(ch[pj] && ch[pj].t === 'ph') donePh++; }
+            if(donePh){ sync.phUp = Math.max(0, sync.phUp - donePh); syncChip(); }
+          }
         });
     });
   });
   chain.then(function(){
     sync.pushBusy = false;
     sync.dirty = false;
+    if(sync.phUp){ sync.phUp = 0; }   /* v8.52: 사진 전송 끝 — 칩을 '● 실시간' 으로 되돌린다 */
     syncChip();
     if(sync.again){ sync.again = false; sync.dirty = true; syncFlush(0); }   /* v8.25 */
   }, function(e){
     sync.pushBusy = false;
     sync.again = false;
+    if(sync.phUp){ sync.phUp = 0; }
+    syncChip();
     syncFail((e && e.message) || '저장 실패');
   });
 }
@@ -4760,7 +4909,7 @@ function syncMergeCmts(arr, list, rec){
     var lr = rec.cm[rc.id];
     if(lr && lr.u && rc.u && (+rc.u) < (+lr.u)) return;      /* 내가 더 최근에 고친 댓글 */
     if(!cur){ cur = {id: rc.id, photos: [], replies: []}; arr.push(cur); }
-    ['author', 'at', 'text', 'st', 'stBy', 'stAt', 'resDate', 'resTime', 'memo', 'memoAt', 'memoBy', 'sys'].forEach(function(k){
+    ['author', 'at', 'text', 'st', 'stBy', 'stAt', 'resDate', 'resTime', 'memo', 'memoAt', 'memoBy', 'del', 'delAt', 'delBy', 'sys'].forEach(function(k){
       if(rc[k] !== undefined && rc[k] !== null) cur[k] = rc[k];
     });
     if(rc.photos && rc.photos.length) cur.photos = syncMergePhotoList(cur.photos, rc.photos);
@@ -5110,9 +5259,13 @@ function syncChip(){
   var el = $('liveChip');
   if(!el) return;
   var on = !!session && sync.mode === 'live';
-  var txt = on ? '● 실시간' : (sync.mode === 'wait' && sync.lastErr ? '○ 대기' : '');
+  var uploading = on && sync.phUp > 0;                 /* v8.52: 사진 올리는 중 */
+  var txt = uploading ? '● 사진 전송 중…'
+          : (on ? '● 실시간' : (sync.mode === 'wait' && sync.lastErr ? '○ 대기' : ''));
   var cls = 'livechip' + (on ? ' on' : ' wait') + (sync.lastErr ? ' warn' : '');
-  var tip = on ? ('전 직원 실시간 공유 중' + (sync.lastErr ? ' · ' + sync.lastErr : '') + ' — 눌러서 지금 반영') : ((sync.lastErr || '실시간 공유 준비 중') + ' — 눌러서 지금 확인');
+  var tip = uploading ? ('사진 ' + sync.phUp + '장을 서버로 올리는 중 — 끝나면 ● 실시간')
+          : (on ? ('전 직원 실시간 공유 중' + (sync.lastErr ? ' · ' + sync.lastErr : '') + ' — 눌러서 지금 반영')
+                : ((sync.lastErr || '실시간 공유 준비 중') + ' — 눌러서 지금 확인'));
   var sig = txt + '|' + cls + '|' + tip;
   if(sync.chipSig === sig){ return; }
   sync.chipSig = sig;
@@ -5400,9 +5553,10 @@ function nqCmtFilter(cs){
   return nqOn() ? all.filter(nqCmtHit) : all;
 }
 /* ================= v8.42: 지운 댓글·답글 =================
-   서버(_밴드공유)는 Code.gs 가 아는 칸만 돌려주므로 '삭제' 표시를 새 칸으로 보낼 수 없다.
-   → 지운 댓글은 memo 첫머리에, 지운 옛 답글은 text 에 보이지 않는 표시(\u200b삭제)를 남긴다.
-     서버에 그대로 남아 다시 살아나지 않고, 옛 버전 앱에서는 '삭제된 댓글'로만 보인다. */
+   v8.52: 서버(Code.gs v10.2)가 del·delAt·delBy 를 보관·반환하므로 지운 표시가 전 직원 폰에 그대로 간다.
+   → 지운 댓글은 del=true, 지운 답글도 del=true. 서버가 아직 옛 버전이거나 옛 앱과 섮일 때를 위해
+     지운 댓글은 memo 첫머리에, 지운 옛 답글은 text 에 보이지 않는 표시(\u200b삭제)를 함께 남긴다.
+     그 표시가 있으면 어느 경로로 받아도 '삭제된 댓글'로만 보이고 다시 살아나지 않는다. */
 var CMT_DEL_MARK = '\u200b삭제';
 function cmtGone(c){ return !!(c && (c.del === true || String(c.memo||'').indexOf(CMT_DEL_MARK) === 0)); }
 function repGone(r){ return !!(r && (r.del === true || String(r.text||'').indexOf(CMT_DEL_MARK) === 0)); }
@@ -9247,7 +9401,9 @@ function init(){
      관리자 PIN 을 넣어 관리자 모드가 되면 setAdmin(true) 가 다시 허용으로 바꾼다. */
   applyCapture();
   setInterval(adminTick, 20 * 1000);
-  setInterval(function(){ if(session && !document.hidden) ledgerSync(false); }, 5*60*1000);
+  /* v8.52: 장부 자동 확인 75초 — 달 색인(list_months, 0.9초)과 체크섬만 먼저 보고 달라진 달만 받는다.
+     (예전 5분 주기 · 건수만 비교 → 다른 직원 개통이 5분~6시간 뒤에야 반영) */
+  setInterval(function(){ if(session && !document.hidden) ledgerSync(false); }, 75*1000);
   setInterval(function(){ if(session){ alarmScanDday(); alarmBadge(); } }, 5*60*1000);   /* v8.25: 자정이 지나도 오늘 D-DAY 가 바로 */
   document.addEventListener('pointerdown', alarmUnlockAudio, {passive:true});            /* v8.25: 첫 터치에 알람 소리 허용 */
   document.addEventListener('visibilitychange', function(){ if(!document.hidden){ adminTick(); ledgerSync(false); alarmScanDday(); alarmBadge(); } });
