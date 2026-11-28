@@ -77,8 +77,12 @@
           · 안드로이드 폰에서 글자를 꾹 누르면 브라우저 기본 글자 선택이 먼저 잡혀 pointercancel 로
             롱프레스가 끊겼다(진동만 울리고 메뉴가 안 뜸) — 댓글·답글 글자의 기본 선택을 끄고
             입력칸·메모 입력만 그대로 선택되게 둔다. 터치일 때는 pointercancel 로 접지 않고
-            touchend·touchcancel·움직임에서만 접는다. 화면·동작이 바뀜. */
-var CACHE = 'kt-band-v8.44';
+            touchend·touchcancel·움직임에서만 접는다. 화면·동작이 바뀜.
+   v8.45(#31052): 홈 피드 미리보기 댓글(.cmt-preview)도 꾹 누르기 메뉴 대상에 넣고(짧은 탭은 그대로
+          댓글 창), 꾹 누르는 판정을 400ms·22px 로 안드로이드 기본 롱프레스보다 먼저·관대하게 잡았다.
+          터치 중 pointerleave 로 접지 않고, 메뉴를 연 직후 0.5초 스크롤에도 닫히지 않는다.
+          contextmenu 좌표가 0,0 일 때는 누른 줄 가운데에 띄운다. 화면·동작이 바뀜. */
+var CACHE = 'kt-band-v8.45';
 var IMG = 'kt-band-img-v1';          /* 썸네일 전용 — 앱 버전이 올라가도 그대로 쓴다(주소가 내용 해시라 안전) */
 var CACHE_PREFIX = 'kt-band-';
 var SHELL = [
