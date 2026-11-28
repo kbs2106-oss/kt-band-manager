@@ -187,7 +187,9 @@
   /* v8.34: 다른 폰에서 올린 사진을 아직 받는 중인 칸 */
   .pcell.phload{display:grid;place-items:center;aspect-ratio:1;background:#EEF2F8;box-shadow:inset 0 0 0 1px #DCE3EE}
   .pgrid.sm .pcell.phload{width:76px;aspect-ratio:1}
-  .pcell .phwait{font-size:22px;opacity:.5;line-height:1}
+  .pcell .phwait{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1}
+  .pcell .phwait i{font-size:16px;font-style:normal;opacity:.6}
+  .pcell .phwait em{font-size:8.5px;font-style:normal;color:#7A8697;letter-spacing:-.02em}
 
   .post-actions{display:flex;align-items:center;gap:8px;margin-top:14px;padding:6px 0;border-top:1px solid var(--line-soft)}
   .act{background:none;border:0;padding:11px 8px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--sub);
@@ -4845,7 +4847,7 @@ function photoGrid(ps, size){
     if(!src && ph.ref){
       phWant(ph.ref, ph.name);
       out += '<button class="pcell phload" data-act="photo" data-phref="'+esc(ph.ref)+'" aria-label="사진 불러오기">'
-           + '<span class="phwait">📷</span></button>';
+           + '<span class="phwait"><i>📷</i><em>불러오는 중</em></span></button>';
       continue;
     }
     if(!src) continue;
