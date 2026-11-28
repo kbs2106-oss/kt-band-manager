@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.49">
+<meta name="app-version" content="v8.50">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -635,8 +635,9 @@
     @keyframes pop{from{transform:translate(-50%,-46%) scale(.98);opacity:.6}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
     .sheet-body{padding-bottom:22px}
   }
-  .sheet-full{max-height:96vh;height:96vh;border-radius:22px 22px 0 0}
-  @media (min-width:700px){ .sheet-full{height:auto;max-height:86vh} }
+  /* v8.50: 이 규칙은 '패널'에만 — #sheet 에도 sheet-full 이 붙으므로 .sheet-full 로 두면 96vh 로 줄어든다 */
+  .sheet-panel.sheet-full{max-height:96vh;height:96vh;border-radius:22px 22px 0 0}
+  @media (min-width:700px){ .sheet-panel.sheet-full{height:auto;max-height:86vh} }
   .menu-list{display:grid;gap:0;padding:2px 0 6px}
   .menu-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;
     padding:15px 2px;border:0;border-top:1px solid var(--line-soft);background:none;font-size:15px;font-weight:600;color:var(--ink)}
@@ -1818,6 +1819,47 @@
 
   /* 사진 확대·시트가 열려 있는 동안에는 우측 아래 ＋ 를 감춘다 */
   body.lock .fab{display:none}
+
+  /* ================= v8.50: 글 창 = X 상세 화면 ================= */
+  /* 왜 — 글 창이 하단 시트로 떠서 위에 흐린 배경·빈 공간이 남았고(김태양 님 "맨위에 빈공간이왜생겨"),
+     댓글 입력칸이 댓글 목록 맨 끝에 있어 끝까지 내려야 보였다.
+     이제 글 창(type:'post')만 화면 맨 위부터 맨 아래까지 꽉 차게 — ← 뒤로가기 / 본문 / 댓글 쭉 / 하단 고정 입력바.
+     작은 시트(cust·postmenu·resvdate·confirm·menu …)는 예전처럼 아래에서 올라오는 시트 그대로다. */
+  .sheet.sheet-full .sheet-backdrop{display:none}       /* 뒤 화면이 비치지 않게 — 빈 공간·흐린 배경 없음 */
+  .sheet.sheet-full .sheet-panel{
+    position:absolute;left:0;right:0;top:0;bottom:0;
+    width:100%;max-width:720px;height:100%;max-height:100dvh;
+    margin:0 auto;border-radius:0;
+    display:flex;flex-direction:column;
+    padding-top:env(safe-area-inset-top);
+    animation:sheetDrop .2s ease-out}
+  @keyframes sheetDrop{from{transform:translateY(10px);opacity:.6}to{transform:none;opacity:1}}
+  /* 상단 바 — X의 '← 게시물'. 왼쪽 44x44 뒤로가기 + 제목, 아래 얇은 구분선, 오른쪽 닫기 알약 없음 */
+  .sheet.sheet-full .sheet-head{
+    display:flex;align-items:center;gap:2px;flex:none;
+    padding:4px 12px 4px 6px;min-height:52px;
+    border-bottom:1px solid var(--line-soft);background:#fff}
+  .sheet-head .sback{display:none}
+  .sheet.sheet-full .sheet-head .sback{
+    display:grid;place-items:center;width:44px;height:44px;flex:none;
+    border:0;border-radius:999px;background:none;color:#0F1419;
+    padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .sheet.sheet-full .sheet-head .sback:active{background:#EFF2F6}
+  .sheet.sheet-full .sheet-head b{font-size:16.5px;font-weight:800;letter-spacing:-.02em;padding-left:4px}
+  .sheet.sheet-full .sheet-head .sheet-acts{display:none}
+  /* 본문 — 메인 글이 먼저, 그 아래로 댓글이 쭉 */
+  .sheet.sheet-full .sheet-body{
+    flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0;
+    overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .sheet.sheet-full .sheet-body > article.post{
+    border:0;border-radius:0;box-shadow:none;padding:12px 16px 0}
+  .sheet.sheet-full .sheet-body > article.post::before{display:none}   /* 카드 왼쪽 색 띠 없이 */
+  /* 하단 고정 댓글 입력바 — 댓글을 위아래로 스크롤해도 늘 화면 바닥 */
+  .sheet-foot{flex:none;background:#fff;border-top:1px solid var(--line-soft);
+    padding:8px 14px calc(8px + env(safe-area-inset-bottom))}
+  .sheet-foot[hidden]{display:none}
+  .sheet-foot .cbar{margin-top:0}
+  .sheet-foot .cbar .attach{margin:0 0 8px}
 </style>
 </head>
 <body>
@@ -1892,8 +1934,9 @@
   <div id="sheet" class="sheet" aria-hidden="true">
     <div class="sheet-backdrop" data-act="close"></div>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-      <div class="sheet-head"><b id="sheetTitle">제목</b><span class="sheet-acts"><button class="sheet-save" type="button" data-act="cust-save" hidden>저장</button><button class="x" data-act="close">닫기</button></span></div>
+      <div class="sheet-head"><button class="sback" id="sheetBack" type="button" data-act="close-sheet" aria-label="뒤로 가기" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true"><path d="M20.5 12H4.2m7-7.2L4 12l7.2 7.2" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></button><b id="sheetTitle">제목</b><span class="sheet-acts"><button class="sheet-save" type="button" data-act="cust-save" hidden>저장</button><button class="x" data-act="close">닫기</button></span></div>
       <div class="sheet-body" id="sheetBody"></div>
+      <div class="sheet-foot" id="sheetFoot" hidden></div>
     </div>
   </div>
 
@@ -3572,9 +3615,12 @@ function closeSheet(){
   sheetSpec = null;
   ui.resvMemo = null;
   $('sheet').classList.remove('on');
+  $('sheet').classList.remove('sheet-full');   /* v8.50: 글 창 전체 화면 해제 */
   $('sheet').setAttribute('aria-hidden','true');
   $('sheetBody').innerHTML = '';
   var p = sheetPanel(); if(p) p.classList.remove('sheet-full');
+  var bk0 = $('sheetBack'); if(bk0) bk0.hidden = true;
+  var ft0 = $('sheetFoot'); if(ft0){ ft0.innerHTML = ''; ft0.hidden = true; }
   document.body.classList.remove('lock');
   /* v8.24: 스크롤 잠금을 풀면서 위치가 튀었으면 열기 전 자리로 되돌린다 */
   var back = sheetOpenY;
@@ -3678,6 +3724,15 @@ function renderSheet(){
   var sc = b.scrollTop;
   var type = sheetSpec.type, id = sheetSpec.id;
 
+  /* v8.50: 글 창만 X 상세 화면처럼 100% 전체 화면 — #sheet 에 .sheet-full 을 붙이고 ← 뒤로가기 버튼을 보인다.
+     다른 작은 시트(cust·postmenu·confirm …)는 예전 그대로 아래에서 올라오는 하단 시트. */
+  var sheetEl = $('sheet');
+  var fullPost = (type === 'post');
+  if(sheetEl) sheetEl.classList.toggle('sheet-full', fullPost);
+  var backBtn = $('sheetBack'); if(backBtn) backBtn.hidden = !fullPost;
+  var foot = $('sheetFoot');
+  if(foot){ foot.innerHTML = ''; foot.hidden = true; }
+
   if(panel) panel.classList.toggle('sheet-full', type==='compose');
 
   if(type==='post'){
@@ -3685,6 +3740,9 @@ function renderSheet(){
     if(!p){ closeSheet(); return; }
     ttl.textContent = KIND_LABEL[kindOf(p)] || '글';   /* v8.4: 매장 공지 · 상담 · 사전예약 */
     b.innerHTML = postCard(p, {sheet:true});
+    /* v8.50: 댓글 입력바(.cbar)를 본문 스크롤 밖 footer 로 옮긴다 — 댓글을 어디까지 내려도 화면 바닥에 고정 */
+    var cbar = b.querySelector('.thread > .cbar');
+    if(cbar && foot){ foot.appendChild(cbar); foot.hidden = false; }
   } else if(type==='compose'){
     ttl.textContent = '새 글';
     b.innerHTML = composerHTML();
@@ -8150,7 +8208,7 @@ document.addEventListener('click', function(e){
     case 'menu': openSheet({type:'menu'}); break;
     case 'admin': openSheet({type:'admin'}); break;
     case 'admin-off': setAdmin(false); closeSheet(); break;
-    case 'close': closeSheet(); break;
+    case 'close': case 'close-sheet': closeSheet(); break;   /* v8.50: 글 창 상단 ← 뒤로가기 */
     case 'confirm-ok':
       var okFn = sheetSpec && sheetSpec.onOk;
       closeSheet();
@@ -8916,6 +8974,7 @@ document.addEventListener('keydown', function(e){
   if(e.key==='Escape'){
     if($('lightbox').classList.contains('on')){ closeLB(); }
     else if(cmtMenu){ closeCmtMenu(); }   /* v8.42: 댓글 메뉴 먼저 닫기 */
+    else if(typeof photoMenu !== 'undefined' && photoMenu){ closePhotoMenu(); }   /* v8.50: 📷 메뉴만 닫고 글 창은 그대로 */
     else if(e.target && e.target.id==='feedSearch'){ closeFeedSearch(); }   /* v8.36: 검색 바 닫기 */
     else if(ui.resvMemo){ ui.resvMemo = null; render(); }
     else if(ui.memoEdit){ ui.memoEdit = null; render(); }
