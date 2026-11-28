@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.43">
+<meta name="app-version" content="v8.44">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -1710,7 +1710,15 @@
   .cmenu button:hover,.cmenu button:active{background:#F2F6FB}
   .cmenu button.del{color:#D63A2F}
   .cmenu button.del:hover,.cmenu button.del:active{background:#FDEEEC}
-  .cmt,.replies li{-webkit-touch-callout:none}
+  /* v8.44(#30888·#30897·#30898): 안드로이드 폰에서 댓글 글자를 꾹 누르면 브라우저 기본 글자 선택이
+     먼저 잡혀(진동만 울리고 메뉴는 안 뜸) 롱프레스가 끊겼다. 댓글·답글 글자는 기본 선택·콜아웃을 끄고
+     그 자리는 꾹 누르기 메뉴(복사·수정·삭제)가 맡는다 — 글자 고르기로 복사하려면 메뉴의 '댓글 복사'.
+     입력칸·메모 입력처럼 글자를 써 넣는 곳은 그대로 고를 수 있게 둔다. */
+  .cmt,.replies li{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .cmt input,.cmt textarea,.cmt [contenteditable],
+  .replies li input,.replies li textarea,.replies li [contenteditable],
+  .cmt .cmemo-edit,.cmt .cmemo-edit *,
+  .cmt .cedit input{-webkit-touch-callout:default;-webkit-user-select:text;user-select:text}
   /* 댓글 고치기 — 그 자리 입력칸 */
   .cedit{margin-top:7px}
   .cedit input{width:100%;height:44px;padding:0 13px;border-radius:11px;border:1px solid #C9D8EE;background:#fff;
@@ -3521,7 +3529,16 @@ function openConfirm(opts){
   /* 확인 창이 열리면 그 위에 겹쳐 보이던 토스트는 먼저 지운다 */
   try{ clearTimeout(toastTimer); var t = $('toast'); t.className = 'toast'; t.textContent = ''; }catch(e){}
   openSheet({type:'confirm', title:opts.title || '확인', msg:opts.msg || '',
-             ok:opts.ok || '확인', cancel:opts.cancel || '추소', onOk:opts.onOk || null});
+             ok:opts.ok || '확인', cancel:opts.cancel || '추소', onOk:opts.onOk || null,
+             back:opts.back || null});   /* v8.44: 글 창 안에서 연 확인창이면 취소·삭제 뒤 그 글 창으로 */
+}
+/* v8.44(#30888·#30897·#30898): 글 창 안에서 띄운 댓글 삭제 확인창 — 닫힌 뒤 원래 글 창으로 돌아오기 */
+function reopenConfirmBack(bk){
+  if(!bk) return;
+  setTimeout(function(){
+    if(sheetSpec) return;                       /* 그 사이 다른 창이 열렸으면 그대로 둔다 */
+    if(bk.type === 'post' && findPost(bk.id)) openSheet({type:'post', id: bk.id});
+  }, 40);
 }
 function openSheet(spec){
   /* v7: 시트를 열면 저장하지 않은 인라인 메모 수정은 버린다 */
@@ -3595,8 +3612,12 @@ function navCloseLayer(name){
   if(name === 'pmenu'){ closePhotoMenu(); return true; }
   if(name === 'sheet'){
     var t = sheetSpec && sheetSpec.type;
+    var bk = (t === 'confirm' && sheetSpec.back) ? sheetSpec.back : null;   /* v8.44 */
     closeSheet();
-    if(t === 'confirm') toast('그대로 두었어요');   /* 취소와 같은 뜻 */
+    if(t === 'confirm'){
+      toast('그대로 두었어요');   /* 취소와 같은 뜻 */
+      reopenConfirmBack(bk);
+    }
     return true;
   }
   if(name === 'alarm'){
@@ -7083,9 +7104,14 @@ function closeCmtMenu(){
 function cmtMenuTarget(el){
   if(!el || !el.closest) return null;
   var art = el.closest('article.post');
-  if(!art) return null;                    /* 글의 댓글창에서만 */
+  /* v8.44(#30888·#30897·#30898): 글 창(openSheet({type:'post'})) 안에서도 똑같이 잡는다.
+     · 시트는 #sheetBody 안에 댓글만 그리는 자리가 있어 article.post 가 없을 수 있다 → 열려 있는 글 id 로 판단.
+     · 옛 답글(.replies li)도 같은 방식. */
+  var inSheet = !!(el.closest && el.closest('#sheetBody, .sheet'));
+  var pid = art ? (art.getAttribute('data-pid') || '') : '';
+  if(!pid && inSheet && typeof sheetSpec !== 'undefined' && sheetSpec && sheetSpec.type === 'post' && sheetSpec.id) pid = String(sheetSpec.id);
+  if(!pid) return null;                    /* 글의 댓글창(글 카드·글 창)에서만 */
   if(el.closest('button,a,input,textarea,select,label,.cmemo,.cmemo-edit,.pgrid,.pcell,.rep-toggle,.cseg,.cst,.post-actions,.cmt-preview')) return null;
-  var pid = art.getAttribute('data-pid') || '';
   var rli = el.closest('.replies li');
   if(rli){
     var cli0 = rli.closest('li.cmt');
@@ -7198,30 +7224,44 @@ function cmtDoDelete(sp){
   toast(sp.kind === 'rep' ? '답글을 지웠어요' : '댓글을 지웠어요');
 }
 /* 댓글 꾹 누르기 — 470ms 동안 움직이지 않으면 메뉴, 10px 넘게 움직이면 취소 */
+function cmtPressCancel(){
+  if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
+}
 document.addEventListener('pointerdown', function(e){
   if(e.button && e.button !== 0) return;
   if(e.target && e.target.closest && e.target.closest('.cmenu')) return;
   var t = cmtMenuTarget(e.target);
   if(!t) return;
   var x = e.clientX, y = e.clientY;
-  if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
+  cmtPressCancel();
   var timer = setTimeout(function(){
     cmtPress = null;
     openCmtMenu(t, x, y);
   }, CMT_PRESS_MS);
-  cmtPress = {x: x, y: y, timer: timer};
+  cmtPress = {x: x, y: y, timer: timer, touch: (e.pointerType === 'touch')};
 }, {passive: true});
 document.addEventListener('pointermove', function(e){
   if(!cmtPress) return;
-  if(Math.abs(e.clientX - cmtPress.x) > 10 || Math.abs(e.clientY - cmtPress.y) > 10){
-    clearTimeout(cmtPress.timer); cmtPress = null;
-  }
+  if(Math.abs(e.clientX - cmtPress.x) > 10 || Math.abs(e.clientY - cmtPress.y) > 10) cmtPressCancel();
 }, {passive: true});
-['pointerup', 'pointercancel', 'pointerleave'].forEach(function(ev){
-  document.addEventListener(ev, function(){
-    if(cmtPress){ clearTimeout(cmtPress.timer); cmtPress = null; }
-  }, {passive: true});
+/* v8.44(#30888): 안드로이드 폰에서 글자를 꾹 누르면 브라우저가 기본 글자 선택을 시작하며
+   pointer 흐름만 끊는다(pointercancel). 손가락은 아직 눌려 있는데 롱프레스가 접히면 메뉴가 안 뜬다
+   (진동만 울리고 메뉴가 없는 증상). 터치일 때는 pointercancel 로 접지 않고,
+   진짜로 손을 뗀 touchend·touchcancel, 또는 움직임(touchmove)일 때만 접는다. */
+document.addEventListener('pointercancel', function(){
+  if(cmtPress && cmtPress.touch) return;
+  cmtPressCancel();
+}, {passive: true});
+['pointerup', 'pointerleave'].forEach(function(ev){
+  document.addEventListener(ev, cmtPressCancel, {passive: true});
 });
+document.addEventListener('touchmove', function(e){
+  if(!cmtPress || !e.touches || !e.touches.length) return;
+  var t0 = e.touches[0];
+  if(Math.abs(t0.clientX - cmtPress.x) > 10 || Math.abs(t0.clientY - cmtPress.y) > 10) cmtPressCancel();
+}, {passive: true});
+document.addEventListener('touchend', cmtPressCancel, {passive: true});
+document.addEventListener('touchcancel', cmtPressCancel, {passive: true});
 /* PC 우클릭 (및 안드로이드 길게 누르기의 contextmenu) — 같은 메뉴 */
 document.addEventListener('contextmenu', function(e){
   var t = cmtMenuTarget(e.target);
@@ -7931,6 +7971,8 @@ document.addEventListener('click', function(e){
       break;
     case 'cmt-del':
       var dsp = cmtMenuSpec;
+      /* v8.44: 글 창 안에서 삭제해도 삭제 뒤 그 글 창으로 돌아온다(예전에는 시트까지 닫혔다) */
+      var dBack = (sheetSpec && sheetSpec.type === 'post' && sheetSpec.id) ? {type:'post', id: String(sheetSpec.id)} : null;
       closeCmtMenu();
       if(!isAdmin()){
         /* v8.43(#30797): 관리자가 아니어도 내가 쓴 댓글·답글(id 있는 것)은 지울 수 있다 */
@@ -7942,7 +7984,8 @@ document.addEventListener('click', function(e){
       }
       openConfirm({title: (dsp && dsp.kind === 'rep') ? '답글 삭제' : '댓글 삭제',
                    msg: (dsp && dsp.kind === 'rep') ? '이 답글을 삭제할까요?' : '이 댓글을 삭제할까요?',
-                   ok: '삭제', onOk: function(){ cmtDoDelete(dsp); }});
+                   ok: '삭제', back: dBack,
+                   onOk: function(){ cmtDoDelete(dsp); reopenConfirmBack(dBack); }});
       break;
     case 'alarm-f':
       ui.alarmF = el.getAttribute('data-f') || 'all';
@@ -8003,7 +8046,12 @@ document.addEventListener('click', function(e){
       closeSheet();
       if(okFn) setTimeout(okFn, 0);
       break;
-    case 'confirm-cancel': closeSheet(); toast('그대로 두었어요'); break;
+    case 'confirm-cancel':
+      /* v8.44: 글 창 안에서 연 확인창이면 취소한 뒤 그 글 창으로 돌아온다 */
+      var cbBack = (sheetSpec && sheetSpec.type === 'confirm' && sheetSpec.back) ? sheetSpec.back : null;
+      closeSheet(); toast('그대로 두었어요');
+      reopenConfirmBack(cbBack);
+      break;
     /* v8.40(#30320): 'staff-switch'(직원 전환) 메뉴와 함께 이 처리도 없앴다 — 같은 일은 로그아웃(logout)이 한다. */
     case 'logout': logout(); break;
     /* v8.40: 내보내기는 관리자 모드(PIN 0525)에서만 — 버튼이 안 보여도 실행 경로 자체를 막는다. */
@@ -8761,7 +8809,12 @@ document.addEventListener('keydown', function(e){
     else if(e.target && e.target.id==='feedSearch'){ closeFeedSearch(); }   /* v8.36: 검색 바 닫기 */
     else if(ui.resvMemo){ ui.resvMemo = null; render(); }
     else if(ui.memoEdit){ ui.memoEdit = null; render(); }
-    else if(sheetSpec){ closeSheet(); }
+    else if(sheetSpec){
+      /* v8.44: 글 창 안에서 띄운 확인창은 ESC 로 닫아도 그 글 창으로 돌아온다 */
+      var escBack = (sheetSpec.type === 'confirm' && sheetSpec.back) ? sheetSpec.back : null;
+      closeSheet();
+      reopenConfirmBack(escBack);
+    }
     return;
   }
   if(e.target && e.target.id==='feedSearch' && e.key==='Enter'){
