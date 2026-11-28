@@ -7905,7 +7905,7 @@ document.addEventListener('click', function(e){
   /* v8.44: 꾹 눌렀다가 0.5초 넘게 더 누르고 손을 떼도 메뉴가 그대로 남게 —
      손을 떼며 따라오는 click(꾹 눌렀던 그 댓글 줄)은 메뉴를 닫지도, 댓글을 누르지도 않는다. */
   if(cmtMenu && cmtMenuOrigin && e.target && e.target.closest
-     && !e.target.closest('.cmenu') && cmtMenuOrigin.contains(e.target)) return;
+     && !e.target.closest('.cmenu') && !e.target.closest('[data-act]') && cmtMenuOrigin.contains(e.target)) return;
   if(cmtMenu && e.target.closest && !e.target.closest('.cmenu') && Date.now() - cmtMenuAt > 450) closeCmtMenu();
   if((ui.memoEdit || ui.resvMemo || ui.keepMemo || ui.cMemo)
      && !(e.target.closest && e.target.closest('.c-edit,.rmemo-edit,.k-edit,.cmemo-edit'))){
