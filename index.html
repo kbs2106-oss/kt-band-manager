@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.36">
+<meta name="app-version" content="v8.37">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -174,6 +174,9 @@
   .post-title{margin:14px 0 0;font-size:16px;font-weight:700;letter-spacing:-.025em;line-height:1.45}
   .post-body{margin:6px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2);white-space:pre-wrap;word-break:break-word}
   .post-body:empty{display:none}
+  /* v8.37(#29924): 제목·본문을 눌러 글 창을 연다 — 데스크톱에서만 손가락 커서 */
+  .post-title[data-act],.post-body[data-act]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .post-title[data-act]:active,.post-body[data-act]:active{opacity:.72}
 
   .pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:14px}
   .pgrid.one{grid-template-columns:minmax(0,1fr)}
@@ -1140,6 +1143,30 @@
 .replybtn{min-height:34px;padding:5px 12px;font-size:13px;border-radius:9px}
 .cmt .cseg{margin:10px 0 4px;max-width:520px}
 .cmt .cseg-b{min-height:40px;font-size:14px}
+/* v8.37(#29852·#29867): 댓글 한 줄 메모 — 없으면 머리의 📝 메모, 있으면 노란 상자(탭하면 수정) */
+.memobtn{min-height:38px;padding:0 12px;border-radius:10px;background:#F7F9FC;border:1px solid var(--line);
+  color:#475569;font-size:13px;font-weight:800;letter-spacing:-.01em}
+.memobtn:hover{background:#EEF3FA;border-color:#D7DFE9;color:var(--blue-deep)}
+.cmemo{display:flex;gap:8px;width:100%;max-width:100%;margin:8px 0 2px;padding:9px 11px;text-align:left;
+  border-radius:11px;border:1px solid #F3E0A9;background:#FFFBEB;color:#6B3F05}
+.cmemo:active{background:#FFF3D2}
+.cmemo .cmemo-ic{flex:none;font-size:13px;line-height:1.6}
+.cmemo .cmemo-body{flex:1;min-width:0;display:block}
+.cmemo .cmemo-t{display:block;font-size:14px;line-height:1.55;font-weight:700;letter-spacing:-.01em;word-break:break-word}
+.cmemo .cmemo-w{display:block;margin-top:2px;font-size:11.5px;font-weight:600;color:#A16207}
+.cmemo-edit{display:flex;align-items:center;gap:6px;margin:8px 0 2px}
+.cmemo-edit input{flex:1;min-width:0;height:40px;border-radius:10px;border:1px solid var(--blue);
+  background:#fff;padding:0 12px;font-size:14.5px}
+.cmemo-edit input:focus{outline:none;box-shadow:0 0 0 3px rgba(49,130,246,.12)}
+.cmemo-edit .mini-ok,.cmemo-edit .mini-x{height:40px;border-radius:10px;font-size:13px;padding:0 12px}
+.cmemo-edit .mini-x{width:40px;padding:0}
+@media (max-width:520px){
+  .cmemo{padding:8px 10px}
+  .cmemo .cmemo-t{font-size:13.5px}
+  .cmemo-edit input{height:42px;font-size:14px}
+  .cmemo-edit .mini-ok,.cmemo-edit .mini-x{height:42px}
+  .cmemo-edit .mini-x{width:42px}
+}
 .cmt.cmt-done{padding:13px 12px;margin:6px 0}
 /* 댓글·답글 입력창 크게 */
 .cbar{margin-top:12px}
@@ -1160,6 +1187,9 @@
 .cmt-preview p{margin:6px 0 8px;font-size:15px;line-height:1.65;color:#3D4A5C;white-space:pre-wrap;word-break:break-word;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .cmt-preview .pgrid{margin:4px 0 2px}
+.cmt-preview .cp-memo{display:block;margin:0 0 6px;padding:5px 9px;border-radius:8px;background:#FFFBEB;
+  border:1px solid #F3E0A9;font-size:12.5px;line-height:1.5;font-weight:700;color:#6B3F05;
+  white-space:pre-wrap;word-break:break-word}
 .pgrid.sm img{max-height:180px}
 @media (max-width:520px){
   .cbar .icobtn{width:52px;height:52px;font-size:21px}
@@ -2340,6 +2370,22 @@ function memoStampText(c){
   if(by && by !== String(c.owner || '').trim()) s += ' · ' + by;
   return s;
 }
+/* v8.37(#29852·#29867): 글의 댓글(c) 한 줄 메모 — 고객 카드 메모와 같은 모양(메모 · 쓴 시각 · 쓴 사람).
+   예약 댓글로 예전에 들어온 c.memo 도 그대로 이 상자에 보인다(값이 있으면 수정, 없으면 📝 메모). */
+function cmtMemoStamp(c){
+  if(!c || !String(c.memo || '').trim()) return '';
+  if(!c.memoAt) return '';
+  var s = fmtMemoAt(c.memoAt);
+  var by = String(c.memoBy || '').trim();
+  return by ? s + ' · ' + by : s;
+}
+/* 댓글 하나 찾기 — 글(posts)과 고객 카드(customers) 둘 다 */
+function findCmt(pid, cid){
+  var it = findPost(pid) || findCust(pid);
+  var cs = (it && it.comments) || [];
+  for(var i = 0; i < cs.length; i++){ if(cs[i] && cs[i].id === cid) return cs[i]; }
+  return null;
+}
 /* v8.35: v8.34 이하에서 저장해 둔 기기 — 시드에 붙여 둔 메모 작성시각을 같은 메모 글자일 때만 한 번 옮긴다. */
 var MEMO_STAMP_SYNC = '2026-11-28.1';
 function syncMemoStamp(d, s){
@@ -2433,6 +2479,7 @@ var ui = {
   keepMemo:null,
   memoEdit:null,
   resvMemo:null,
+  cMemo:null,        /* v8.37: 글의 댓글 한 줄 메모 — 지금 펼쳐 둔 댓글 id */
   loginStaff:'김태양',
   composing:false,
   phoneOnly:false,
@@ -3413,8 +3460,8 @@ function openConfirm(opts){
 }
 function openSheet(spec){
   /* v7: 시트를 열면 저장하지 않은 인라인 메모 수정은 버린다 */
-  if(ui.memoEdit || ui.resvMemo || ui.keepMemo){
-    ui.memoEdit = null; ui.resvMemo = null; ui.keepMemo = null;
+  if(ui.memoEdit || ui.resvMemo || ui.keepMemo || ui.cMemo){
+    ui.memoEdit = null; ui.resvMemo = null; ui.keepMemo = null; ui.cMemo = null;
     render();
   }
   /* v8.24: 시트를 열 때 보던 자리를 기억해 둔다 — body 스크롤을 잠그는 사이
@@ -4047,13 +4094,17 @@ function syncCmtPayload(c){
   return {
     id: c.id, author: c.author || '', at: c.at || '', text: String(c.text || '').slice(0, 2000),
     st: c.st || '', stBy: c.stBy || '', stAt: c.stAt || '', resDate: c.resDate || '', resTime: c.resTime || '',
-    memo: String(c.memo || '').slice(0, 200), sys: !!c.sys,
+    memo: String(c.memo || '').slice(0, 200), memoAt: c.memoAt || '', memoBy: c.memoBy || '', sys: !!c.sys,
     photos: syncPhotos(c.photos), replies: syncReplies(c.replies), u: syncNow()
   };
 }
+/* v8.37: 메모를 고치면 그 댓글이 다시 올라가게 — 메모가 있는 댓글만 쓴 시각·쓴 사람을 지문 끝에 붙인다.
+   (메모가 없는 예전 댓글의 지문은 그대로라, 앱을 새로 켰다고 전 직원 댓글이 한꾸번에 다시 오르지 않는다) */
 function syncCmtFp(c){
-  return [c.author || '', c.at || '', c.text || '', c.st || '', c.stBy || '', c.stAt || '',
+  var base = [c.author || '', c.at || '', c.text || '', c.st || '', c.stBy || '', c.stAt || '',
           c.resDate || '', c.resTime || '', c.memo || '', (c.photos || []).length, (c.replies || []).length].join('\u001f');
+  if(String(c.memo || '').trim()) base += '\u001f' + (c.memoAt || '') + '\u001f' + (c.memoBy || '');
+  return base;
 }
 function syncNewCmts(list, rec){
   var out = [];
@@ -4463,7 +4514,7 @@ function syncMergeCmts(arr, list, rec){
     var lr = rec.cm[rc.id];
     if(lr && lr.u && rc.u && (+rc.u) < (+lr.u)) return;      /* 내가 더 최근에 고친 댓글 */
     if(!cur){ cur = {id: rc.id, photos: [], replies: []}; arr.push(cur); }
-    ['author', 'at', 'text', 'st', 'stBy', 'stAt', 'resDate', 'resTime', 'memo', 'sys'].forEach(function(k){
+    ['author', 'at', 'text', 'st', 'stBy', 'stAt', 'resDate', 'resTime', 'memo', 'memoAt', 'memoBy', 'sys'].forEach(function(k){
       if(rc[k] !== undefined && rc[k] !== null) cur[k] = rc[k];
     });
     if(rc.photos && rc.photos.length) cur.photos = syncMergePhotoList(cur.photos, rc.photos);
@@ -5433,8 +5484,11 @@ function postCard(p, opts){
      +   (p.pinned? '<span class="pinbadge">📌 고정</span>' : '')   /* v8.13: 전체 피드에서도 고정 글임을 표시 */
      +   '<button class="morebtn" data-act="post-menu" data-id="'+p.id+'" aria-label="글 관리">⋯</button>'
      + '</div>';
-  if(p.title) h += '<h3 class="post-title">'+hlHTML(p.title)+'</h3>';
-  if(p.body) h += '<p class="post-body">'+hlHTML(p.body)+'</p>';
+  /* v8.37(#29924): 글 제목·본문을 눌러도 고정 공지처럼 그 글 창(전체 글·댓글)이 바로 열린다.
+     글자를 길게 눌러 고르거나 드래그하는 중이면 열지 않는다(클릭 처리에서 확인). */
+  var popen = opts.sheet? '' : ' data-act="open-post" data-id="'+esc(p.id)+'"';
+  if(p.title) h += '<h3 class="post-title"'+popen+'>'+hlHTML(p.title)+'</h3>';
+  if(p.body) h += '<p class="post-body"'+popen+'>'+hlHTML(p.body)+'</p>';
   h += photoGrid(p.photos);
   if(p.reserve) h += reserveBlock(p);
   if(!open && !opts.sheet && cs.length) h += cmtPreview(cs, p.id);
@@ -5442,10 +5496,11 @@ function postCard(p, opts){
      +   (opts.sheet
             ? '<span class="act cmt-act static">💬 댓글 <b class="cnt">'+cs.length+'</b></span>'
             : (open || cs.length
-                ? '<button class="act cmt-act'+(open?' on':'')+'" data-act="thread-toggle" data-id="'+p.id+'" aria-expanded="'+(open?'true':'false')+'">'
-                  +     (open? '💬 댓글 접기 <span class="chev">▴</span>'
-                           : '💬 댓글 <b class="cnt">'+cs.length+'</b>개 모두 보기 <span class="chev">▾</span>')
-                  +   '</button>'
+                ? (open
+                    ? '<button class="act cmt-act on" data-act="thread-toggle" data-id="'+p.id+'" aria-expanded="true">'
+                      + '💬 댓글 접기 <span class="chev">▴</span></button>'
+                    : '<button class="act cmt-act" data-act="open-post" data-id="'+p.id+'" aria-expanded="false" aria-label="댓글 '+cs.length+'개 — 글·댓글 창 열기">'
+                      + '💬 댓글 <b class="cnt">'+cs.length+'</b>개 모두 보기 <span class="chev">›</span></button>')
                 : ''))   /* v8.13: 댓글이 없으면 아래 바로 쓰는 입력칸이 그 자리를 대신한다 */
      +   (isAdmin()? '<button class="act post-del" data-act="post-del" data-id="'+p.id+'" aria-label="'+esc(shortText(p.title||p.body||'글',20))+' 삭제">🗑️ 삭제</button>' : '')
      +   postStatHTML(p)
@@ -5536,6 +5591,8 @@ function cmtPreview(cs, pid){
         + '<b>'+hlHTML(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
         + '<span class="cp-go" aria-hidden="true">댓글 '+cs.length+' ›</span></div>';
   if(c.text) h += '<p>'+hlHTML(c.text)+'</p>';
+  /* v8.37: 접힌 카드에서도 그 댓글에 메모가 있는지 바로 보이게 */
+  if(String(c.memo||'').trim()) h += '<span class="cp-memo">📝 '+hlHTML(c.memo)+'</span>';
   h += photoGrid(c.photos, 'sm');
   return h + '</div>';
 }
@@ -5720,6 +5777,12 @@ function threadHTML(item, ctx, open){
 function cmtHTML(c, parentId, ctx, mode){
   var reps = c.replies||[];
   var isPost = ctx==='post' && !c.sys;   /* v5: 글의 1단계 댓글만 상태 관리 */
+  /* v8.37(#29875): 글의 댓글 머리 오른쪽 '답글' 쓰기 버튼 자리에 '📝 메모' —
+     예전에 밴드에서 가져온 답글(c.replies)은 읽기 전용으로 그대로 둔다(아래 '답글 N개 보기').
+     메모가 이미 있으면 머리에는 버튼을 두지 않고 아래 노란 상자를 탭해 고친다. */
+  var memoBtn = (isPost && !String(c.memo||'').trim())
+    ? '<button class="replybtn memobtn" data-act="cmt-memo" data-pid="'+esc(parentId)+'" data-cid="'+esc(c.id||'')+'">📝 메모</button>'
+    : '';
   var rOpen = ui.replyOpen===c.id;
   var nh = nqOn() && nqCmtHit(c);        /* v8.36: 검색어와 맞은 댓글(답글까지) */
   /* 검색 중이면 맞은 답글이 바로 보이게 펼친다 — 단, 사용자가 직접 접은 댓글은 그대로 둔다. */
@@ -5728,11 +5791,16 @@ function cmtHTML(c, parentId, ctx, mode){
         + '<div class="cmt-head"><span class="av xs" style="--c:'+colorOf(c.author)+'">'+esc(initial(c.author))+'</span>'
         + '<b>'+hlHTML(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
         + (!isPost && c.st? '<span class="cst" data-st="'+esc(c.st)+'">'+esc(stLabel(c.st))+'</span>' : '')
-        + (c.sys?'':'<button class="replybtn" data-act="reply-open" data-cid="'+c.id+'">답글</button>')+'</div>';
+        + memoBtn
+        + (c.sys || isPost? '' : '<button class="replybtn" data-act="reply-open" data-cid="'+c.id+'">답글</button>')+'</div>';
+  /* v8.37: 메모를 쓰는 동안에는 방금 누른 버튼 바로 아래에 입력칸이 열린다 */
+  if(isPost && ui.cMemo===c.id) h += cmtMemoHTML(c, parentId, true);
   if(c.text) h += '<p>'+hlHTML(c.text)+'</p>';
   h += photoGrid(c.photos, 'sm');
   if(isPost) h += csegHTML(c, parentId);
   if(isPost && c.st==='예약' && c.resDate) h += '<div class="cmt-resv">⏰ 예약 '+esc(resvText(c))+'</div>';
+  /* v8.37: 저장해 둔 메모는 노란 상자로 — 상자를 탭하면 위 입력칸이 열린다 */
+  if(isPost && ui.cMemo!==c.id) h += cmtMemoHTML(c, parentId, false);
   if(reps.length){
     h += '<button class="rep-toggle" data-act="rep-toggle" data-cid="'+c.id+'" aria-expanded="'+(rExp?'true':'false')+'">'
        + (rExp? '답글 접기 <span class="chev">▴</span>' : '답글 '+reps.length+'개 보기 <span class="chev">▾</span>')
@@ -5767,6 +5835,29 @@ function cmtHTML(c, parentId, ctx, mode){
        + '</form>';
   }
   return h+'</li>';
+}
+
+/* v8.37(#29852·#29867): 댓글 한 줄 메모.
+   · 없으면 머리의 '📝 메모' → 누르면 한 줄 입력칸이 열린다.
+   · 있으면 노란 상자(📝 메모 · 쓴 시각 · 쓴 사람) — 상자를 탭하면 다시 입력칸.
+   · 검색 중에는 메모 글자도 hlHTML 로 노랗게 표시한다. */
+function cmtMemoHTML(c, parentId, edit){
+  var memo = String(c.memo||'').trim();
+  if(edit){
+    return '<div class="cmemo-edit">'
+      + '<input id="cmemo_'+esc(c.id||'')+'" data-cmemoid="'+esc(c.id||'')+'" data-pid="'+esc(parentId)+'"'
+      +  ' value="'+esc(memo)+'" placeholder="메모 한 줄 (예) 오전 10시 재통화" enterkeyhint="done" autocomplete="off">'
+      + '<button class="mini-ok" type="button" data-act="cmt-memo-save" data-pid="'+esc(parentId)+'" data-cid="'+esc(c.id||'')+'">저장</button>'
+      + '<button class="mini-x" type="button" data-act="cmt-memo-cancel" aria-label="취소">✕</button>'
+      + '</div>';
+  }
+  if(!memo) return '';
+  var st = cmtMemoStamp(c);
+  return '<button type="button" class="cmemo" data-act="cmt-memo" data-pid="'+esc(parentId)+'" data-cid="'+esc(c.id||'')+'" aria-label="댓글 메모 수정">'
+    + '<span class="cmemo-ic" aria-hidden="true">📝</span>'
+    + '<span class="cmemo-body"><span class="cmemo-t">'+hlHTML(memo)+'</span>'
+    + (st? '<span class="cmemo-w">'+esc(st)+'</span>' : '')
+    + '</span></button>';
 }
 
 /* ---------- band view ---------- */
@@ -7154,6 +7245,30 @@ function setCmtStatusNow(pid, cid, target, el){
   if(anc) anchorKeep(anc);
   toast('댓글 상태 · '+stLabel(target));
 }
+/* v8.37(#29852·#29867): 글의 댓글 한 줄 메모 — 저장하면 쓴 시각(c.memoAt)·쓴 사람(c.memoBy)을 남기고
+   전 직원 폰으로 바로 올린다(save → syncChanged). 빈 칸으로 저장하면 메모를 지운다. */
+function saveCmtMemo(pid, cid){
+  var c = findCmt(pid, cid);
+  if(!c){ toast('댓글을 찾지 못했어요.', true); return; }
+  var el = $('cmemo_'+cid);
+  var was = String(c.memo||'').trim();
+  if(el) c.memo = String(el.value||'').trim();
+  if(c.memo && c.memo !== was) stampMemo(c);
+  if(!c.memo){ c.memoAt = ''; c.memoBy = ''; }
+  ui.cMemo = null;
+  save(); render();
+  toast(c.memo? '메모를 저장했어요' : '메모를 지웠어요');
+  if(c.memo) notifyBridge('댓글 메모', (c.author||'댓글')+' · '+shortText(c.memo, 60));
+}
+function openCmtMemo(pid, cid){
+  ui.cMemo = cid;
+  render();
+  setTimeout(function(){
+    var el = $('cmemo_'+cid);
+    if(el) try{ el.focus({preventScroll:true}); el.setSelectionRange(el.value.length, el.value.length); }catch(e){}
+  }, 70);
+}
+
 /* v5: 사전예약 예약자 한 줄 메모 */
 function saveResvMemo(pid, rid){
   var p = findPost(pid);
@@ -7329,6 +7444,7 @@ function resetData(){
   ui.attach = {};
   ui.memoEdit = null;
   ui.resvMemo = null;
+  ui.cMemo = null;
   save(); closeSheet(); render();
   toast('실제 밴드 시드로 초기화했어요');
 }
@@ -7348,10 +7464,11 @@ function logout(){
 /* ================= events ================= */
 /* v7: 저장을 누르지 않은 인라인 메모 수정은 버리고 원래 메모로 돌아간다 */
 function cancelInlineEdit(){
-  if(!ui.memoEdit && !ui.resvMemo && !ui.keepMemo) return false;
+  if(!ui.memoEdit && !ui.resvMemo && !ui.keepMemo && !ui.cMemo) return false;
   ui.memoEdit = null;
   ui.resvMemo = null;
   ui.keepMemo = null;
+  ui.cMemo = null;
   render();
   return true;
 }
@@ -7369,8 +7486,8 @@ document.addEventListener('click', function(e){
   if(e.target && e.target.id==='lightbox'){ closeLB(); return; }
   /* v8.13: 사진 메뉴 밖을 누르면 메뉴를 닫는다 */
   if(photoMenu && e.target.closest && !e.target.closest('.pmenu') && !e.target.closest('[data-act="photo-menu"]')) closePhotoMenu();
-  if((ui.memoEdit || ui.resvMemo || ui.keepMemo)
-     && !(e.target.closest && e.target.closest('.c-edit,.rmemo-edit,.k-edit'))){
+  if((ui.memoEdit || ui.resvMemo || ui.keepMemo || ui.cMemo)
+     && !(e.target.closest && e.target.closest('.c-edit,.rmemo-edit,.k-edit,.cmemo-edit'))){
     cancelInlineEdit();
   }
   var el = e.target.closest('[data-act]');
@@ -7532,6 +7649,12 @@ document.addEventListener('click', function(e){
     case 'open-post':
       /* v8.19: '상담 댓글' 목록(부재 등)에서 댓글 번호를 함께 넘기면 그 댓글까지 스크롤해 강조 */
       var opid = el.getAttribute('data-id'), ocid = el.getAttribute('data-cid');
+      /* v8.37(#29924): 글 제목·본문을 눌러 연 경우 — 글자를 고르는 중이면 글 창을 열지 않는다 */
+      if(el.classList && (el.classList.contains('post-title') || el.classList.contains('post-body'))){
+        var selNow = '';
+        try{ selNow = String((window.getSelection && window.getSelection().toString()) || ''); }catch(eSel){}
+        if(selNow.replace(/\s+/g,'')) break;
+      }
       if(ocid){ openPostCmt(opid, ocid); break; }
       openSheet({type:'post', id: opid}); break;
     case 'preview-open':
@@ -7582,6 +7705,10 @@ document.addEventListener('click', function(e){
       openLB(img.getAttribute('data-full') || img.getAttribute('src'));
       break;
     case 'close-lb': closeLB(); break;
+    /* ---- v8.37: 글의 댓글 한 줄 메모 ---- */
+    case 'cmt-memo': openCmtMemo(el.getAttribute('data-pid'), el.getAttribute('data-cid')); break;
+    case 'cmt-memo-save': saveCmtMemo(el.getAttribute('data-pid'), el.getAttribute('data-cid')); break;
+    case 'cmt-memo-cancel': ui.cMemo = null; render(); break;
     case 'reply-open':
       var roc = el.getAttribute('data-cid');
       ui.replyOpen = roc;
@@ -7594,9 +7721,10 @@ document.addEventListener('click', function(e){
       break;
     case 'rep-toggle':
       var rtc = el.getAttribute('data-cid');
-      /* v8.36: 검색 중에는 맞은 답글이 자동으로 펼쳐진다 — '답글 접기'를 누르면 닫힌 상태를 기억한다 */
+      /* v8.36: 검색 중에는 맞은 답글이 자동으로 펼쳐진다 — '답글 접기'를 누르면 닫힌 상태를 기억한다.
+         v8.37: 답글 쓰기 버튼을 없앴으니 '답글 N개 보기'로 예전 답글을 실제로 펼칠 수 있어야 한다. */
       if(el.getAttribute('aria-expanded') === 'true') ui.openReplies[rtc] = false;
-      else delete ui.openReplies[rtc];
+      else ui.openReplies[rtc] = true;
       render(); break;
     case 'reply-close': ui.replyOpen = null; render(); break;
     case 'cust': openSheet({type:'cust', id: el.getAttribute('data-id')}); break;
@@ -7789,11 +7917,11 @@ document.addEventListener('click', function(e){
 document.addEventListener('focusout', function(e){
   var t = e.target;
   if(!t || !t.getAttribute) return;
-  if(!(t.getAttribute('data-memo') || t.getAttribute('data-resvmemo') || t.getAttribute('data-keepmemo'))) return;
+  if(!(t.getAttribute('data-memo') || t.getAttribute('data-resvmemo') || t.getAttribute('data-keepmemo') || t.getAttribute('data-cmemoid'))) return;
   setTimeout(function(){
     if(document.activeElement === t) return;
     var ae = document.activeElement;
-    if(ae && ae.closest && ae.closest('.c-edit,.rmemo-edit,.k-edit')) return;  /* 저장·취소 버튼으로 이동 */
+    if(ae && ae.closest && ae.closest('.c-edit,.rmemo-edit,.k-edit,.cmemo-edit')) return;  /* 저장·취소 버튼으로 이동 */
     cancelInlineEdit();
   }, 220);
 });
@@ -8195,6 +8323,19 @@ document.addEventListener('keydown', function(e){
     if(e.key==='Escape'){
       e.preventDefault();
       ui.resvMemo = null; render();
+      return;
+    }
+  }
+  if(e.target && e.target.getAttribute && e.target.getAttribute('data-cmemoid')){
+    /* v8.37: 댓글 메모 — Enter 로 저장, Esc 로 취소 */
+    if(e.key==='Enter'){
+      e.preventDefault();
+      saveCmtMemo(e.target.getAttribute('data-pid'), e.target.getAttribute('data-cmemoid'));
+      return;
+    }
+    if(e.key==='Escape'){
+      e.preventDefault();
+      ui.cMemo = null; render();
       return;
     }
   }
