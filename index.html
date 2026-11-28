@@ -7278,8 +7278,15 @@ document.addEventListener('pointerdown', function(e){
   var x = e.clientX, y = e.clientY;
   cmtPressCancel();
   /* v8.47: 같은 댓글 메뉴가 방금 떠 있는데 또 눌러도(두 손가락·짧은 간격) 새로 그리지 않는다
-     — 메뉴가 닫혔다 다시 뜨고 진동이 두 번 울리던 증상 방지 */
-  if(cmtMenu && cmtMenuSpec && cmtSameSpec(cmtMenuSpec, t) && Date.now() - cmtMenuAt < CMT_DUP_MS) return;
+     — 메뉴가 닫혔다 다시 뜨고 진동이 두 번 울리던 증상 방지.
+     다만 짧은 탭이면 위 규칙대로 닫히고, 길게 누른 채 뗀 click 으로는 닫히지 않게 따로 표시만 한다. */
+  if(cmtMenu && cmtMenuSpec && cmtSameSpec(cmtMenuSpec, t) && Date.now() - cmtMenuAt < CMT_DUP_MS){
+    cmtPress = {x: x, y: y, touch: (e.pointerType === 'touch'), spec: t, timer: setTimeout(function(){
+      cmtPress = null;
+      cmtSwallowClick = true;
+    }, CMT_PRESS_MS)};
+    return;
+  }
   var timer = setTimeout(function(){
     cmtPress = null;
     openCmtMenu(t, x, y);
