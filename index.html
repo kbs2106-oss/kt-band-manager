@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KT 충주 KT대리점 칠금점 · 가망고객 밴드</title>
 <meta name="theme-color" content="#FFFFFF">
-<meta name="app-version" content="v8.35">
+<meta name="app-version" content="v8.36">
 <meta name="description" content="충주 KT대리점 칠금점 가망고객 밴드 — 공지·상담놓침·730/550/3년 명단·사전예약을 직원끼리 공유하는 웹앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" sizes="64x64">
@@ -676,8 +676,10 @@
   .lightbox{position:fixed;inset:0;z-index:90;display:none;background:rgba(8,15,30,.94);place-items:center;padding:16px}
   .lightbox.on{display:grid}
   .lightbox img{max-width:100%;max-height:88vh;border-radius:12px;object-fit:contain}
-  .lightbox .x{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;border:0;
-    background:rgba(255,255,255,.14);color:#fff;font-size:16px}
+  /* v8.36(#29740): 사진 확대를 닫는 ✕ — 안드로이드 상태바에 걸리지 않게 내리고, 테두리·배경으로 또렷하게 */
+  .lightbox .x{position:absolute;top:max(44px, calc(16px + env(safe-area-inset-top)));right:16px;z-index:5;
+    width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);
+    background:rgba(0,0,0,.6);color:#fff;font-size:20px;line-height:1;display:grid;place-items:center;padding:0}
 
   /* fab */
   .fab{position:fixed;right:20px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:50;width:56px;height:56px;
@@ -1607,6 +1609,121 @@
     border-top-color:#9FB3CC;animation:dayspin .9s linear infinite}
   @keyframes dayspin{to{transform:rotate(360deg)}}
   @media (max-width:430px){ .day-head{padding:11px 13px 9px} .dh-cnts i{height:22px;padding:0 7px;font-size:11px} }
+
+  /* ================= v8.36: 홈 피드 글·댓글 검색 ================= */
+  /* 헤더 🔍 — 🔔 바로 왼쪽, 같은 크기·테두리, 진한 아이콘 */
+  .bellbtn[hidden]{display:none}
+  .bellbtn.sbtn{color:#1E293B}
+  .bellbtn.sbtn svg{width:20px;height:20px}
+  .bellbtn.sbtn:hover{background:#F1F4F9}
+  .bellbtn.sbtn.on{border-color:#9CC4F7;background:#E8F0FE;color:#1B4FBF}
+  /* 검색 바 — 헤더 🔍 를 누르면 홈 피드 맨 위에 열린다 */
+  .nqbar{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+  .nqbar .qbox{flex:1;min-width:0;height:46px;padding:0 15px;gap:7px;font-size:15px;
+    background:#fff;border-color:#D5DEE9;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .nqbar .qbox input{flex:1;width:auto;min-width:0;font-size:15px;font-weight:600;letter-spacing:-.015em;color:var(--ink)}
+  .nqbar .qbox input::placeholder{font-weight:500;color:#9AA6B5}
+  .nqx{flex:none;width:46px;height:46px;border-radius:999px;border:1px solid #D5DEE9;background:#fff;
+    color:#4E5968;font-size:15px;font-weight:800;line-height:1;display:grid;place-items:center;padding:0}
+  .nqx:hover{background:#F5F8FC}
+  @media (max-width:430px){ .nqbar{gap:7px;margin-bottom:11px} .nqbar .qbox{height:44px;padding:0 13px} .nqx{width:44px;height:44px} }
+  /* 검색 결과 줄 */
+  .nqres{display:flex;align-items:center;gap:8px;padding:2px 2px 10px}
+  .nqres b{font-size:14px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+  .nqres b em{font-style:normal;color:#1B64DA;font-weight:800}
+  .nqclr{margin-left:auto;flex:none;height:32px;padding:0 12px;border-radius:999px;border:1px solid #D5DEE9;
+    background:#fff;color:var(--sub);font-size:12.5px;font-weight:800;letter-spacing:-.02em}
+  .nqclr:hover{background:#F5F8FC}
+  .noticecard.nqh{display:none}
+  /* 검색어 표시(노란 형광펜) */
+  mark.hl{background:#FFE9A0;color:inherit;border-radius:3px;padding:0 1px;font-weight:inherit}
+  /* 검색에 걸린 댓글 — 왼쪽 노란 선 + 연한 배경으로 눈에 띄게 */
+  .cmt.nqhit{background:#FFFBEA;border-radius:12px;padding:11px 10px;box-shadow:inset 3px 0 0 #F0C64B;border-bottom-color:transparent}
+  .cmt.cmt-done.nqhit{background:#FFFBEA;opacity:1}
+  .cmt.nqhit .cmt-head b{color:#8A5A05}
+  @media (max-width:520px){ .cmt.nqhit{padding:12px 9px} }
+
+  /* ================= v8.36: 홈 피드 가독성 — 네이버 밴드처럼 크고 시원하게 ================= */
+  /* 글 본문 */
+  .post-body{font-size:15.5px;line-height:1.62;color:#111827}
+  .post-title{font-size:17.5px;line-height:1.45;color:#0F172A}
+  @media (max-width:430px){
+    .post-body{font-size:15.5px;line-height:1.62;color:#111827}
+    .post-title{font-size:17px;line-height:1.44}
+  }
+  /* 댓글 — 작성자·시간·본문을 또렷하게, 댓글 사이는 넉넉히 */
+  .cmt p{font-size:15.5px;line-height:1.66;color:#111827}
+  .cmt-head b{font-size:14.5px;font-weight:800;color:#0F172A}
+  .cmt-head time{font-size:12.5px;color:#8A95A3;font-weight:600}
+  .cmt{padding:14px 6px 15px}
+  .cmt .replies li{font-size:15px;line-height:1.6;color:#1F2937}
+  .cmt .replies li b{font-size:14.5px;font-weight:800;color:#334155}
+  .cmt.sys p{color:#6B7688}
+  .cmt.cmt-done p,.cmt.cmt-done .cmt-head b{color:#5A6675}
+  /* 접힌 카드의 댓글 미리보기도 같이 크게 */
+  .cmt-preview .cp-head b{font-size:14.5px;font-weight:800;color:#0F172A}
+  .cmt-preview .cp-head time{font-size:12.5px}
+  .cmt-preview p{font-size:15.5px;line-height:1.6;color:#111827}
+  /* 댓글·답글 사진 — 작은 정사각 썸네일 대신 큼직하게(눌러서 크게 보기) */
+  .pgrid.sm{gap:8px;margin-top:10px}
+  .pgrid.sm .pcell{width:140px;border-radius:12px}
+  .pgrid.sm .pcell.phload{width:140px;aspect-ratio:1}
+  .pgrid.sm img{max-height:140px;width:100%;height:140px;aspect-ratio:1;object-fit:cover}
+  @media (max-width:360px){
+    .pgrid.sm .pcell,.pgrid.sm .pcell.phload{width:112px}
+    .pgrid.sm img{height:112px;max-height:112px}
+  }
+  /* 📌 고정 공지 제목 */
+  .nc-head b{font-size:15px;font-weight:800}
+  .nc-head .nc-n{font-size:11.5px}
+
+  /* ================= v8.36: 홈 피드를 더 편하게 ================= */
+  /* 우측 아래 ＋ — 알람 탭처럼 숨겨야 할 때 확실히 사라지게 */
+  .fab[hidden]{display:none}
+  .fab{transition:background .14s,transform .12s,opacity .16s}
+  .fab.fab-hide{opacity:0;pointer-events:none;transform:scale(.92)}   /* 댓글 입력 중에는 등록 버튼을 가리지 않는다 */
+  /* 모바일: 글 카드 좌우 여백을 줄여 본문·댓글이 가로로 넓게 */
+  @media (max-width:600px){
+    .page{padding:14px 11px 146px}
+    .feed{gap:13px}
+    .post{padding:15px 12px 0 16px}
+    .post::before{top:10px;bottom:10px;width:3px}
+    .thread{padding:0 0 8px}
+    .thread .cmts{margin:0 -2px}
+    .cmt{padding:13px 2px 14px}
+    .cmt.nqhit{padding:12px 9px}
+    .cmt-preview{padding:10px 2px 2px;margin-top:6px}
+    .cmt-preview:active{border-radius:10px}
+    .post-actions{margin-top:12px}
+    .fab{width:52px;height:52px;right:13px;bottom:calc(16px + env(safe-area-inset-bottom))}
+    .fab svg{width:24px;height:24px}
+  }
+  @media (max-width:340px){
+    .page{padding:12px 8px 140px}
+    .post{padding:14px 10px 0 14px}
+  }
+
+  /* ================= v8.36(#29731): 댓글 입력 바 2단 — 입력칸은 한 줄 가득, 사진·등록은 그 아래 ================= */
+  .cbar .cbar-row{display:block}
+  .cbar .cbar-row input{display:block;width:100%;min-width:0}
+  .cbar-tools{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:nowrap}
+  .cbar-tools .attach{margin:0;display:flex;gap:6px;flex-wrap:wrap;min-width:0;flex:1 1 auto}
+  .cbar-tools .attach .athumb{width:52px;height:52px;border-radius:12px}
+  .cbar-tools .icobtn{flex:none}
+  .cbar-tools .send{margin-left:auto;flex:none}
+  .cbar-tools .send ~ .send{margin-left:8px}
+  @media (max-width:520px){
+    .cbar-tools{gap:7px;margin-top:7px}
+    .cbar-tools .attach .athumb{width:48px;height:48px}
+  }
+
+  /* ================= v8.36(#29755): 사진 확대 — 그림만 확대·이동, ✕ 는 늘 제자리 ================= */
+  .lightbox{touch-action:none;overflow:hidden}
+  .lightbox img{transform-origin:50% 50%;will-change:transform;max-height:calc(100vh - 40px);user-select:none;-webkit-user-drag:none}
+  .lightbox .x{position:fixed;z-index:100}
+
+  /* 사진 확대·시트가 열려 있는 동안에는 우측 아래 ＋ 를 감춘다 */
+  body.lock .fab{display:none}
 </style>
 </head>
 <body>
@@ -1642,6 +1759,12 @@
         </div>
       </div>
       <div class="topacts">
+        <button class="bellbtn sbtn" id="feedSearchBtn" data-act="feed-q-open" aria-label="홈 피드 글·댓글 검색" aria-expanded="false" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+            <circle cx="10.7" cy="10.7" r="6.5" stroke="currentColor" stroke-width="2.2"/>
+            <path d="m15.6 15.6 4.4 4.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </button>
         <button class="bellbtn" id="alarmBell" data-act="alarm-open" aria-label="알람 모음">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true">
             <path d="M12 3.2c-3.1 0-5.3 2.3-5.3 5.4v2.6c0 .9-.3 1.7-.9 2.4l-1 1.2c-.5.6-.1 1.6.7 1.6h13c.8 0 1.2-1 .7-1.6l-1-1.2c-.6-.7-.9-1.5-.9-2.4V8.6c0-3.1-2.2-5.4-5.3-5.4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
@@ -2318,7 +2441,9 @@ var ui = {
   composer:{kind:'store', photos:[], pin:false},   /* v8.4: 매장 공지·상담·사전예약 */
   addPick:'resv',    /* v8.17: 관리자 + 창에서 고른 종류(resv | cust) */
   alarmF:'all',      /* v8.25: 알람 탭 필터(all | dday | staff) */
-  dayOpen:{}         /* v8.25: 날짜 접기 상태 — 전체 보기에서 지난 날짜는 접힌 채로 시작 */
+  dayOpen:{},        /* v8.25: 날짜 접기 상태 — 전체 보기에서 지난 날짜는 접힌 채로 시작 */
+  nq:'',             /* v8.36: 홈 피드 글·댓글 검색어 (730·550·3년 탭의 ui.q 와 따로) */
+  nqOpen:false       /* v8.36: 헤더 🔍 로 연 검색 바가 열려 있는지 */
 };
 var sheetSpec = null;
 var sheetOpenY = -1;    /* v8.24: 시트를 열 때의 스크롤 위치 — 닫을 때 그 자리로 */
@@ -3175,8 +3300,98 @@ function toast(msg, isErr){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ el.className = 'toast'; }, 2500);
 }
+/* v8.36(#29755): 사진 확대 — 두 손가락 핀치(1~4배)·한 손가락 이동·더블탭(1 ↔ 2.2배).
+   브라우저 화면 전체가 확대되지 않으므로 ✕ 는 언제나 같은 자리에 있다. */
+var lbView = {s:1, tx:0, ty:0, x0:0, y0:0, d0:0, s0:1, lastTap:0};
+function lbApply(){
+  var im = $('lbImg');
+  if(!im) return;
+  im.style.transform = 'translate(' + lbView.tx + 'px,' + lbView.ty + 'px) scale(' + lbView.s + ')';
+  im.style.cursor = lbView.s > 1? 'grab' : 'zoom-in';
+}
+function lbClamp(){
+  var im = $('lbImg');
+  if(!im) return;
+  var mx = Math.max( 0, (im.clientWidth  * lbView.s - im.clientWidth ) / 2 );
+  var my = Math.max( 0, (im.clientHeight * lbView.s - im.clientHeight) / 2 );
+  lbView.tx = Math.max(-mx, Math.min(mx, lbView.tx));
+  lbView.ty = Math.max(-my, Math.min(my, lbView.ty));
+}
+function lbReset(){
+  lbView.s = 1; lbView.tx = 0; lbView.ty = 0; lbView.d0 = 0;
+  lbApply();
+}
+function lbZoomAt(s, cx, cy){
+  var im = $('lbImg');
+  if(!im) return;
+  var next = Math.max(1, Math.min(4, s));
+  var k = next / lbView.s;
+  /* 손가락(더블탭 지점) 아래의 그림이 그 자리에 머무르게 */
+  lbView.tx = cx - k * (cx - lbView.tx);
+  lbView.ty = cy - k * (cy - lbView.ty);
+  lbView.s = next;
+  if(lbView.s <= 1.01){ lbView.s = 1; lbView.tx = 0; lbView.ty = 0; }
+  lbClamp(); lbApply();
+}
+document.addEventListener('touchstart', function(e){
+  var lb = $('lightbox');
+  if(!lb || !lb.classList.contains('on')) return;
+  if(e.target && e.target.closest && e.target.closest('.x')) return;
+  var ts = e.touches;
+  lbView.tap = true;
+  if(ts.length >= 2){
+    lbView.d0 = Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY);
+    lbView.s0 = lbView.s;
+    lbView.tap = false;
+  } else if(ts.length === 1){
+    lbView.x0 = ts[0].clientX - lbView.tx;
+    lbView.y0 = ts[0].clientY - lbView.ty;
+    lbView.px = ts[0].clientX; lbView.py = ts[0].clientY;
+    var now = Date.now();
+    if(now - (lbView.lastTap || 0) < 300){
+      lbView.lastTap = 0;
+      lbView.tap = false;
+      lbZoomAt(lbView.s > 1? 1 : 2.2, ts[0].clientX, ts[0].clientY);
+    } else {
+      lbView.lastTap = now;
+    }
+  }
+}, {passive:true});
+document.addEventListener('touchmove', function(e){
+  var lb = $('lightbox');
+  if(!lb || !lb.classList.contains('on')) return;
+  if(e.cancelable) e.preventDefault();   /* 브라우저 전체 확대·스크롤 대신 그림만 */
+  var ts = e.touches;
+  if(ts.length >= 2){
+    var d = Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY);
+    if(lbView.d0 > 0){
+      lbZoomAt(Math.max(1, Math.min(4, lbView.s0 * d / lbView.d0)), (ts[0].clientX+ts[1].clientX)/2, (ts[0].clientY+ts[1].clientY)/2);
+    }
+    lbView.tap = false;
+  } else if(ts.length === 1 && lbView.s > 1){
+    lbView.tx = ts[0].clientX - lbView.x0;
+    lbView.ty = ts[0].clientY - lbView.y0;
+    lbClamp(); lbApply();
+    lbView.tap = false;
+  }
+}, {passive:false});
+document.addEventListener('touchend', function(e){
+  var lb = $('lightbox');
+  if(!lb || !lb.classList.contains('on')) return;
+  if(e.touches.length === 1){
+    lbView.x0 = e.touches[0].clientX - lbView.tx;
+    lbView.y0 = e.touches[0].clientY - lbView.ty;
+    lbView.d0 = 0;
+  } else if(e.touches.length === 0){
+    lbView.d0 = 0;
+    if(lbView.s <= 1.02){ lbReset(); }
+    /* 확대한 사진 바깥(어두운 배경)을 톡 치면 닫기 */
+    if(lbView.tap && e.target && e.target.id === 'lightbox'){ closeLB(); }
+  }
+});
 function openLB(src){
   if(!src) return;
+  lbReset();
   $('lbImg').src = src;
   $('lightbox').classList.add('on');
   document.body.classList.add('lock');
@@ -3184,6 +3399,7 @@ function openLB(src){
 function closeLB(){
   $('lightbox').classList.remove('on');
   $('lbImg').removeAttribute('src');
+  lbReset();   /* v8.36: 다음에 열 때 확대·이동이 남지 않게 */
   if(!sheetSpec) document.body.classList.remove('lock');
 }
 function sheetPanel(){ return document.querySelector('.sheet-panel'); }
@@ -4843,13 +5059,75 @@ function todoBar(){
     + '</section>';
 }
 
-function noticeView(){
-  var pinnedAll = state.posts.filter(function(p){ return p.pinned; }).sort(byAtDesc);
-  var pinned = pinnedAll.slice(0,5);   /* v8.35(#29389): 고정 공지 박스에 5건까지 (사용자 지시) */
-  var notices = state.posts.filter(function(p){ return !!p.isNotice; }).sort(byAtDesc);
-  /* v8.4(#17819): 홈 피드 = 매장 공지 · 상담 · 사전예약만.
-     730·550·3년 일일 표 글은 명단 탭에만 두고 피드에서는 뺀다. */
-  var feedAllList = state.posts.filter(function(p){
+/* ================= v8.36: 홈 피드 글·댓글 검색 ================= */
+/* 730·550·3년 검색(ui.q)과 같은 방식 — 띄어쓰기·하이픈은 무시하고 대소문자도 무시한다. */
+function nqNorm(s){ return String(s==null? '' : s).replace(/[\s\u00a0\-]+/g,'').toLowerCase(); }
+function nqOn(){ return !!nqNorm(ui.nq); }
+function nqHas(q, list){
+  for(var i=0;i<list.length;i++){ if(nqNorm(list[i]).indexOf(q) >= 0) return true; }
+  return false;
+}
+/* 댓글 하나(그 안의 답글까지)가 검색어와 맞는지 */
+function nqCmtHit(c){
+  var q = nqNorm(ui.nq);
+  if(!q || !c) return false;
+  if(nqHas(q, [c.text, c.author, c.memo])) return true;
+  var rs = c.replies||[];
+  for(var i=0;i<rs.length;i++){ if(nqHas(q, [rs[i].text, rs[i].author])) return true; }
+  return false;
+}
+/* 글 자체(제목·본문·작성자 · 사전예약 확정건의 이름·번호·기종·메모·담당)가 맞는지 */
+function nqPostHit(p){
+  var q = nqNorm(ui.nq);
+  if(!q || !p) return false;
+  if(nqHas(q, [p.title, p.body, p.author])) return true;
+  if(p.reserve){
+    var rs = p.reservations||[];
+    for(var i=0;i<rs.length;i++){
+      if(nqHas(q, [rs[i].name, rs[i].phone, digits(rs[i].phone), rs[i].model, rs[i].memo, rs[i].owner])) return true;
+    }
+  }
+  return false;
+}
+/* 그 글 안에 맞는 댓글·답글이 있는지 — 있으면 카드의 댓글 창을 자동으로 펼친다 */
+function nqCmtMatched(p){
+  var cs = (p && p.comments)||[];
+  for(var i=0;i<cs.length;i++){ if(nqCmtHit(cs[i])) return true; }
+  return false;
+}
+/* 홈 피드에 남길 글인지 — 검색어가 없으면 전부 통과 */
+function nqPostAny(p){
+  if(!nqOn()) return true;
+  return nqPostHit(p) || nqCmtMatched(p);
+}
+/* 검색어를 노랗게 표시 — 화면에 그릴 때 esc() 대신 쓴다 */
+function hlHTML(s){
+  var txt = esc(String(s==null? '' : s));
+  var q = String(ui.nq||'').trim();
+  if(!q) return txt;
+  var terms = [];
+  [q, q.replace(/[\s\-]+/g,'')].forEach(function(t){
+    t = esc(t);
+    if(t && terms.indexOf(t) < 0) terms.push(t.toLowerCase());
+  });
+  if(!terms.length) return txt;
+  var low = txt.toLowerCase(), out = '', i = 0;
+  while(i < txt.length){
+    var at = -1, len = 0;
+    for(var k=0;k<terms.length;k++){
+      var p2 = low.indexOf(terms[k], i);
+      if(p2 < 0) continue;
+      if(at < 0 || p2 < at || (p2 === at && terms[k].length > len)){ at = p2; len = terms[k].length; }
+    }
+    if(at < 0) break;
+    out += txt.slice(i, at) + '<mark class="hl">' + txt.slice(at, at+len) + '</mark>';
+    i = at + len;
+  }
+  return out + txt.slice(i);
+}
+/* 홈 피드 글 목록 — 매장 공지 · 상담 · 사전예약만(730·550·3년 표 글은 명단 탭에만) */
+function feedBaseList(){
+  return state.posts.filter(function(p){
     if(!postMatch(p)) return false;
     if(isTablePost(p)) return false;
     /* v8.13: 고정 공지도 위 박스에 그대로 두면서 아래 '전체'에서도 빠지지 않고 함께 보인다. */
@@ -4860,20 +5138,59 @@ function noticeView(){
     if(pa !== pb) return pb - pa;
     return byAtDesc(a,b);
   });
-  /* v8.4(#17280): '전체'는 최신 6건만 — 나머지는 '더 보기'로 펼친다
-     v8.15: 이 6건은 '일반 글' 기준. 고정 공지는 몇 건이든 최상단에 전부 남기고 6건 자르기에서 빼지 않는다. */
+}
+/* 헤더 🔍 를 누르면 열리는 검색 바 — 평소에는 홈 피드 공간을 차지하지 않는다 */
+function feedSearchBarHTML(){
+  return '<div class="nqbar" id="feedSearchBar">'
+    + '<label class="qbox">🔍<input id="feedSearch" type="text" value="'+esc(ui.nq||'')+'"'
+    +   ' placeholder="글 제목·내용·댓글·작성자 검색" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"'
+    +   ' enterkeyhint="search" aria-label="홈 피드 글·댓글 검색"></label>'
+    + '<button type="button" class="nqx" data-act="feed-q-close" aria-label="검색 닫기">✕</button>'
+    + '</div>';
+}
+/* 검색 결과 영역 — 검색어를 칠 때는 이 부분만 다시 그린다(입력창·커서·한글 조합이 튀지 않게) */
+function feedBodyHTML(){
   var FEED_MAX = 6;
-  var pinnedFeed = feedAllList.filter(function(p){ return !!p.pinned; });
-  var normalFeed = feedAllList.filter(function(p){ return !p.pinned; });
-  var canFold = ui.filter==='all' && normalFeed.length > FEED_MAX;
-  var feed = (canFold && !ui.feedAll)? pinnedFeed.concat(normalFeed.slice(0, FEED_MAX)) : feedAllList;
-  var feedMoreN = feedAllList.length - feed.length;
+  var on = nqOn();
+  var all = feedBaseList();
+  if(on) all = all.filter(nqPostAny);
+  var h = '';
+  if(on){
+    h += '<div class="nqres"><b>검색 결과 <em>'+all.length+'</em>건</b>'
+       + '<button type="button" class="nqclr" data-act="feed-q-clear">검색 초기화</button></div>';
+  }
+  /* v8.4(#17280): '전체'는 최신 6건만 — 나머지는 '더 보기'로 펼친다
+     v8.15: 이 6건은 '일반 글' 기준. 고정 공지는 몇 건이든 최상단에 전부 남기고 6건 자르기에서 빼지 않는다.
+     v8.36: 검색 중에는 자르지 않고 맞는 글을 모두 보여 준다. */
+  var pinnedFeed = all.filter(function(p){ return !!p.pinned; });
+  var normalFeed = all.filter(function(p){ return !p.pinned; });
+  var canFold = !on && ui.filter==='all' && normalFeed.length > FEED_MAX;
+  var feed = (canFold && !ui.feedAll)? pinnedFeed.concat(normalFeed.slice(0, FEED_MAX)) : all;
+  var feedMoreN = all.length - feed.length;
+  var emptyTxt = on ? '‘'+esc(String(ui.nq||'').trim())+'’와 맞는 글·댓글이 없어요.<br>다른 말로 찾아보세요.'
+               : (ui.filter==='all' ? '아직 글이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 첫 글을 남겨보세요.'
+               : (ui.filter==='consult'? '상담 글이 아직 없어요.' : (ui.filter==='reserve'? '사전예약 글이 아직 없어요.' : '매장 공지가 아직 없어요.')));
+  h += '<div class="feed">' + (feed.length? feed.map(function(p){ return postCard(p); }).join('')
+     : '<div class="emptycard">'+emptyTxt+'</div>');
+  if(canFold) h += '<button class="feedmore" data-act="feed-all">'
+     + (ui.feedAll? '접기 ▴' : '글 '+feedMoreN+'건 더 보기 ▾') + '</button>';
+  h += '</div>';
+  return h;
+}
+
+function noticeView(){
+  var pinnedAll = state.posts.filter(function(p){ return p.pinned; }).sort(byAtDesc);
+  var pinned = pinnedAll.slice(0,5);   /* v8.35(#29389): 고정 공지 박스에 5건까지 (사용자 지시) */
+  var notices = state.posts.filter(function(p){ return !!p.isNotice; }).sort(byAtDesc);
   /* v7: '모두 접기' 대상은 피드 글의 댓글만 — 고정 공지는 자기 '접기' 버튼으로만 접힌다 */
   var openN = state.posts.filter(function(p){ return !!ui.openThreads[p.id]; }).length;
   var anyOpen = openN>0;
-  var h = todoBar() + resvAlarmHTML();   /* v8.3: 홈 피드에도 예약 알람 */
+  var h = '';
+  if(ui.nqOpen) h += feedSearchBarHTML();   /* v8.36: 헤더 🔍 로 연 검색 바 — 홈 피드 맨 위 */
+  h += todoBar() + resvAlarmHTML();   /* v8.3: 홈 피드에도 예약 알람 */
   if(pinned.length){
-    h += '<section class="noticecard '+(ui.pinOpen?'':'closed')+'">'
+    /* v8.36: 검색 중에는 고정 공지 박스를 접어 두고 결과를 바로 보여 준다(맞는 고정 글은 아래 결과에 그대로 나온다). */
+    h += '<section class="noticecard '+(ui.pinOpen?'':'closed')+(nqOn()?' nqh':'')+'" id="pinBox">'
        + '<div class="nc-head"><b><span class="pindot">📌</span>고정 공지<span class="nc-n">'+pinnedAll.length+'</span></b>'
        + (ui.filter!=='noticeall'? '<button class="nc-all" data-act="filter" data-f="noticeall">📢 전체 공지 '+notices.length+'건 ›</button>' : '')
        + '<button class="nc-toggle" data-act="pin-toggle" aria-expanded="'+(ui.pinOpen?'true':'false')+'">'
@@ -4887,16 +5204,10 @@ function noticeView(){
      +   '</button>')
      +   '<div class="filterbar">'+kindChips()+'</div>'
      + '</div>';
-  if(ui.filter==='noticeall'){
+  if(ui.filter==='noticeall' && !nqOn()){
     h += noticeListHTML(notices);
   } else {
-    var emptyTxt = ui.filter==='all' ? '아직 글이 없어요.<br>오른쪽 아래 <b>＋</b> 버튼으로 첫 글을 남겨보세요.'
-                 : (ui.filter==='consult'? '상담 글이 아직 없어요.' : (ui.filter==='reserve'? '사전예약 글이 아직 없어요.' : '매장 공지가 아직 없어요.'));
-    h += '<div class="feed">' + (feed.length? feed.map(function(p){ return postCard(p); }).join('')
-       : '<div class="emptycard">'+emptyTxt+'</div>');
-    if(canFold) h += '<button class="feedmore" data-act="feed-all">'
-       + (ui.feedAll? '접기 ▴' : '글 '+feedMoreN+'건 더 보기 ▾') + '</button>';
-    h += '</div>';
+    h += '<div id="feedBody">' + feedBodyHTML() + '</div>';
   }
   return h;
 }
@@ -5110,19 +5421,20 @@ function pinItem(p){
 function postCard(p, opts){
   opts = opts||{};
   var cs = p.comments||[];
-  var open = !!opts.sheet || !!ui.openThreads[p.id];
+  /* v8.36: 검색 중에 그 댓글이 맞았으면 찾은 댓글을 바로 볼 수 있게 댓글 창을 펼친다(검색어를 지우면 원래대로). */
+  var open = !!opts.sheet || !!ui.openThreads[p.id] || (nqOn() && nqCmtMatched(p));
   var kk = kindOf(p);
   var h = '<article class="post k-'+kk+(open?' thread-open':'')+'" data-pid="'+p.id+'" data-anc="post:'+p.id+'">';
   h += '<div class="post-head">'
      +   '<span class="av" style="--c:'+colorOf(p.author)+'">'+esc(initial(p.author))+'</span>'
-     +   '<div class="who"><div class="wname">'+esc(p.author)+'</div>'
+     +   '<div class="who"><div class="wname">'+hlHTML(p.author)+'</div>'
      +     '<div class="wmeta">'+fmtAt(p.at)+'</div></div>'
      +   '<span class="kbadge kb-'+kk+'">'+KIND_META[kk].label+'</span>'
      +   (p.pinned? '<span class="pinbadge">📌 고정</span>' : '')   /* v8.13: 전체 피드에서도 고정 글임을 표시 */
      +   '<button class="morebtn" data-act="post-menu" data-id="'+p.id+'" aria-label="글 관리">⋯</button>'
      + '</div>';
-  if(p.title) h += '<h3 class="post-title">'+esc(p.title)+'</h3>';
-  if(p.body) h += '<p class="post-body">'+esc(p.body)+'</p>';
+  if(p.title) h += '<h3 class="post-title">'+hlHTML(p.title)+'</h3>';
+  if(p.body) h += '<p class="post-body">'+hlHTML(p.body)+'</p>';
   h += photoGrid(p.photos);
   if(p.reserve) h += reserveBlock(p);
   if(!open && !opts.sheet && cs.length) h += cmtPreview(cs, p.id);
@@ -5221,9 +5533,9 @@ function cmtPreview(cs, pid){
   var h = '<div class="cmt-preview" data-act="preview-open" data-id="'+esc(pid)+'" data-cid="'+esc(c.id||'')+'"'
         + ' role="button" tabindex="0" aria-label="댓글 '+cs.length+'개 — 댓글 창 열기">'
         + '<div class="cp-head"><span class="av xs" style="--c:'+colorOf(c.author)+'">'+esc(initial(c.author))+'</span>'
-        + '<b>'+esc(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
+        + '<b>'+hlHTML(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
         + '<span class="cp-go" aria-hidden="true">댓글 '+cs.length+' ›</span></div>';
-  if(c.text) h += '<p>'+esc(c.text)+'</p>';
+  if(c.text) h += '<p>'+hlHTML(c.text)+'</p>';
   h += photoGrid(c.photos, 'sm');
   return h + '</div>';
 }
@@ -5279,7 +5591,9 @@ function openPostCmt(pid, cid){
 
 function reserveBlock(p){
   var rs = p.reservations||[];
-  var done = rs.filter(function(r){return r.done;}).length;
+  var done = rs.filter(function(r){return r.done;}).length;  /* v8.36(#29703): '사전예약 확정건' 박스는 화면에서 뺐다(댓글로 관리).
+     예전에 등록해 둔 확정건 데이터가 있는 글에서만 그대로 보여 준다. */
+  if(!rs.length) return '';
   var h = '<div class="resv"><div class="resv-head"><b>사전예약 확정건</b>'
         + '<span class="pill">'+done+'/'+rs.length+' 개통</span></div><div class="rtable">';
   if(!rs.length){
@@ -5358,10 +5672,12 @@ function quickCmtHTML(p){
        +  '<div class="cbar-row">'
        +  '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'"'
        +  ' placeholder="댓글·사진 남기기" autocomplete="off" enterkeyhint="send">'
+       +  '</div>'
+       +  '<div class="cbar-tools">'   /* v8.36(#29731): 사진·등록은 입력칸 아래 줄에 */
        +  photoBtnHTML(key)
+       +  attachHTML(key)
        +  '<button class="send" type="submit"'+(fmtReady(key,'')?'':' disabled')+'>등록</button>'
        +  '</div>'
-       +  attachHTML(key)
        +  '</form>';
 }
 function threadHTML(item, ctx, open){
@@ -5391,7 +5707,10 @@ function threadHTML(item, ctx, open){
   h += '<form class="cbar" data-form="cmt" data-id="'+item.id+'" data-ctx="'+ctx+'" data-key="'+key+'" data-mode="'+mode+'">'
      + '<div class="cbar-row">'
      + '<input name="text" data-draft="'+key+'" value="'+esc(ui.drafts[key]||'')+'" placeholder="'+ph+'" autocomplete="off">'
+     + '</div>'
+     + '<div class="cbar-tools">'   /* v8.36(#29731): 사진·등록은 입력칸 아래 줄에 */
      + photoBtnHTML(key)
+     + attachHTML(key)
      + '<button class="send" type="submit"'+(fmtReady(key,mode)?'':' disabled')+'>등록</button>'
      + '</div></form>';
   h += '</div>';
@@ -5402,13 +5721,15 @@ function cmtHTML(c, parentId, ctx, mode){
   var reps = c.replies||[];
   var isPost = ctx==='post' && !c.sys;   /* v5: 글의 1단계 댓글만 상태 관리 */
   var rOpen = ui.replyOpen===c.id;
-  var rExp = !!ui.openReplies[c.id];
-  var h = '<li class="cmt '+(c.sys?'sys':'')+(isPost && isDoneSt(c.st)?' cmt-done':'')+'" data-cid="'+esc(c.id||'')+'" data-anc="cmt:'+parentId+':'+esc(c.id||'')+'">'
+  var nh = nqOn() && nqCmtHit(c);        /* v8.36: 검색어와 맞은 댓글(답글까지) */
+  /* 검색 중이면 맞은 답글이 바로 보이게 펼친다 — 단, 사용자가 직접 접은 댓글은 그대로 둔다. */
+  var rExp = (ui.openReplies[c.id] === false)? false : (!!ui.openReplies[c.id] || nh);
+  var h = '<li class="cmt '+(c.sys?'sys':'')+(isPost && isDoneSt(c.st)?' cmt-done':'')+(nh?' nqhit':'')+'" data-cid="'+esc(c.id||'')+'" data-anc="cmt:'+parentId+':'+esc(c.id||'')+'">'
         + '<div class="cmt-head"><span class="av xs" style="--c:'+colorOf(c.author)+'">'+esc(initial(c.author))+'</span>'
-        + '<b>'+esc(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
+        + '<b>'+hlHTML(c.author)+'</b><time>'+fmtAt(c.at)+'</time>'
         + (!isPost && c.st? '<span class="cst" data-st="'+esc(c.st)+'">'+esc(stLabel(c.st))+'</span>' : '')
         + (c.sys?'':'<button class="replybtn" data-act="reply-open" data-cid="'+c.id+'">답글</button>')+'</div>';
-  if(c.text) h += '<p>'+esc(c.text)+'</p>';
+  if(c.text) h += '<p>'+hlHTML(c.text)+'</p>';
   h += photoGrid(c.photos, 'sm');
   if(isPost) h += csegHTML(c, parentId);
   if(isPost && c.st==='예약' && c.resDate) h += '<div class="cmt-resv">⏰ 예약 '+esc(resvText(c))+'</div>';
@@ -5419,9 +5740,9 @@ function cmtHTML(c, parentId, ctx, mode){
     if(rExp){
       h += '<ul class="replies">';
       reps.forEach(function(r){
-        h += '<li><span class="rav">↳</span><b>'+esc(r.author)+'</b>'
+        h += '<li><span class="rav">↳</span><b>'+hlHTML(r.author)+'</b>'
            + (r.st? '<i class="rst" data-st="'+esc(r.st)+'">'+esc(stLabel(r.st))+'</i>' : '')
-           + '<span>'+esc(r.text)+'</span><time>'+fmtAt(r.at)+'</time>'
+           + '<span>'+hlHTML(r.text)+'</span><time>'+fmtAt(r.at)+'</time>'
            + photoGrid(r.photos,'sm')+'</li>';
       });
       h += '</ul>';
@@ -5434,13 +5755,15 @@ function cmtHTML(c, parentId, ctx, mode){
     h += '<form class="cbar reply" data-form="reply" data-id="'+parentId+'" data-cid="'+c.id+'" data-ctx="'+ctx+'" data-key="'+rk+'" data-mode="">'
        + '<div class="cbar-row">'
        + '<input name="text" data-draft="'+rk+'" value="'+esc(ui.drafts[rk]||'')+'" placeholder="'+esc(c.author)+'님에게 진행 내용 남기기" autocomplete="off">'
-       + photoBtnHTML(rk)
-       + '<button class="send" type="submit"'+(fmtReady(rk,'')?'':' disabled')+'>등록</button>'
-       + '<button class="send ghost" type="button" data-act="reply-close">취소</button>'
        + '</div>'
+       + '<div class="cbar-tools">'   /* v8.36(#29731) */
+       + photoBtnHTML(rk)
        + (ratt.length? '<div class="attach">'+ratt.map(function(a,i){
            return '<span class="athumb"><img src="'+esc(a.src)+'" alt=""><button data-act="attach-del" data-key="'+rk+'" data-i="'+i+'" aria-label="첨부 취소">×</button></span>';
          }).join('')+'</div>' : '')
+       + '<button class="send ghost" type="button" data-act="reply-close">취소</button>'
+       + '<button class="send" type="submit"'+(fmtReady(rk,'')?'':' disabled')+'>등록</button>'
+       + '</div>'
        + '</form>';
   }
   return h+'</li>';
@@ -6011,7 +6334,7 @@ function composerHTML(){
             }).join('')
         + '</div>'
         + (isConsult? '<div class="resvbanner cmtbanner"><b>📞 상담</b><span>통화 결과·전달사항을 남기는 글입니다. 홈 피드 <b>상담</b> 탭에 모입니다.</span></div>' : '')
-        + (isRes? '<div class="resvbanner"><b>📢 사전예약 공지</b><span>등록하면 <b>상단 고정 공지</b> + <b>사전예약 탭</b>에 바로 뜹니다. 확정된 예약은 글 안에서 <b>＋ 확정건 추가</b>로 받고 <b>개통 체크</b>로 관리하세요.</span></div>' : '')
+        + (isRes? '<div class="resvbanner"><b>📢 사전예약 공지</b><span>등록하면 <b>상단 고정 공지</b> + <b>사전예약 탭</b>에 바로 뜹니다. 확정된 예약은 이 글의 <b>댓글</b>로 남겨 관리하세요.</span></div>' : '')
         + '<input class="inp inp-title" id="cTitle" data-draft="cmp:title" value="'+esc(ui.drafts['cmp:title']||'')+'" placeholder="'+(isRes?'제목 (선택) — 예) S26 사전예약 접수 중':'제목 (선택)')+'">'
         + '<textarea class="inp" id="cBody" data-draft="cmp:body" rows="7" placeholder="'+ph+'">'+esc(ui.drafts['cmp:body']||'')+'</textarea>'
         + '<div class="cmp-photos">'
@@ -6132,9 +6455,7 @@ function keepRow(c){
 function postMenuHTML(p){
   var h = '<div class="menu-list">';
   h += '<button class="menu-item" data-act="post-pin" data-id="'+p.id+'"><span>'+(p.pinned?'공지 고정 해제':'맨 위 공지로 고정')+'</span><span class="arw">📌</span></button>';
-  if(p.reserve){
-    h += '<button class="menu-item" data-act="resv-add" data-id="'+p.id+'"><span>사전예약 확정건 추가</span><span class="arw">＋</span></button>';
-  }
+  /* v8.36(#29703): 사전예약 확정건은 더 이상 글 안에서 받지 않는다 — 댓글로 관리(메뉴 항목 제거). */
   /* v8.18: 글(공지) 삭제 — 관리자 모드에서만 */
   if(isAdmin()){
     h += '<button class="menu-item danger" data-act="post-del" data-id="'+p.id+'"><span>🗑️ 글 삭제<small>전 직원 폰의 홈 피드에서도 함께 사라집니다</small></span><span class="arw">🗑️</span></button>';
@@ -6272,6 +6593,13 @@ function render(opts){
 
   var tabs = document.querySelectorAll('#tabbar .tab');
   for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('on', tabs[i].getAttribute('data-tab')===ui.tab);
+  /* v8.36: 헤더 🔍 — 홈 피드에서만 보이고, 검색 바가 열려 있으면 진한 파랑으로 표시 */
+  var fsb = $('feedSearchBtn');
+  if(fsb){
+    fsb.hidden = (ui.tab !== 'notice');
+    fsb.classList.toggle('on', !!ui.nqOpen);
+    fsb.setAttribute('aria-expanded', ui.nqOpen? 'true' : 'false');
+  }
 
   var todayLeft = custsOfDay(todayStr()).filter(function(c){ return !isDoneSt(c.status); }).length;
   $('t1n').textContent = '';
@@ -7037,6 +7365,8 @@ document.addEventListener('error', function(e){
 }, true);
 
 document.addEventListener('click', function(e){
+  /* v8.36(#29740): 사진 확대 — 그림 바깥(어두운 배경)을 눌러도 닫힌다 */
+  if(e.target && e.target.id==='lightbox'){ closeLB(); return; }
   /* v8.13: 사진 메뉴 밖을 누르면 메뉴를 닫는다 */
   if(photoMenu && e.target.closest && !e.target.closest('.pmenu') && !e.target.closest('[data-act="photo-menu"]')) closePhotoMenu();
   if((ui.memoEdit || ui.resvMemo || ui.keepMemo)
@@ -7094,6 +7424,20 @@ document.addEventListener('click', function(e){
       if(!dayToggleInPlace(tday, tOpen)) render({anchor:true});
       break;
     case 'compose': compose(); break;
+    /* ---- v8.36: 헤더 🔍 홈 피드 글·댓글 검색 ---- */
+    case 'feed-q-open':
+      if(ui.nqOpen){ closeFeedSearch(); break; }
+      ui.nqOpen = true;
+      ui.tab = 'notice';
+      if(ui.filter==='noticeall') ui.filter = 'all';
+      render();
+      window.scrollTo(0, 0);   /* 검색 바는 홈 피드 맨 위에 열린다 */
+      focusFeedSearch();
+      break;
+    case 'feed-q-close':
+      closeFeedSearch(); break;
+    case 'feed-q-clear':
+      clearFeedSearch(); break;
     case 'menu': openSheet({type:'menu'}); break;
     case 'admin': openSheet({type:'admin'}); break;
     case 'admin-off': setAdmin(false); closeSheet(); break;
@@ -7250,7 +7594,9 @@ document.addEventListener('click', function(e){
       break;
     case 'rep-toggle':
       var rtc = el.getAttribute('data-cid');
-      if(ui.openReplies[rtc]) delete ui.openReplies[rtc]; else ui.openReplies[rtc] = true;
+      /* v8.36: 검색 중에는 맞은 답글이 자동으로 펼쳐진다 — '답글 접기'를 누르면 닫힌 상태를 기억한다 */
+      if(el.getAttribute('aria-expanded') === 'true') ui.openReplies[rtc] = false;
+      else delete ui.openReplies[rtc];
       render(); break;
     case 'reply-close': ui.replyOpen = null; render(); break;
     case 'cust': openSheet({type:'cust', id: el.getAttribute('data-id')}); break;
@@ -7459,9 +7805,48 @@ function updateCustList(){
   body.innerHTML = custListHTML();
   dayMoreMaybe();   /* v8.25: 검색어를 지웠을 때 화면이 짧아도 다음 묶음이 자동으로 */
 }
+
+/* v8.36: 홈 피드 검색 — 730·550·3년 검색과 같은 방식.
+   입력창(#feedSearch)과 검색 바는 그대로 두고 결과 영역(#feedBody)만 다시 그린다(한글 조합·커서 보호). */
+function updateFeedSearch(){
+  var body = $('feedBody');
+  if(!body){ render(); return; }
+  body.innerHTML = feedBodyHTML();
+  var pb = $('pinBox');
+  if(pb) pb.classList.toggle('nqh', nqOn());   /* 검색 중에는 고정 공지 박스를 잠시 감춘다 */
+}
+function focusFeedSearch(){
+  var el = $('feedSearch');
+  if(!el || !el.focus) return;
+  try{ el.focus({preventScroll:true}); var n = el.value.length; el.setSelectionRange(n, n); }catch(e){}
+}
+function closeFeedSearch(){
+  ui.nqOpen = false;
+  ui.nq = '';
+  render();
+  try{ var b = $('feedSearchBtn'); if(b) b.focus({preventScroll:true}); }catch(e){}
+}
+function clearFeedSearch(){
+  ui.nq = '';
+  var el = $('feedSearch');
+  if(el) el.value = '';
+  updateFeedSearch();
+  focusFeedSearch();
+}
+/* v8.36: 댓글 입력 중에는 우측 아래 ＋ 가 '등록' 버튼을 가리지 않게 잠시 숨긴다 */
+function syncFabCover(){
+  var fab = $('fab');
+  if(!fab) return;
+  var a = document.activeElement;
+  var typing = !!(a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA') && a.closest && a.closest('.cbar'));
+  fab.classList.toggle('fab-hide', typing);
+}
+document.addEventListener('focusin', syncFabCover);
+document.addEventListener('focusout', function(){ setTimeout(syncFabCover, 60); });
 document.addEventListener('input', function(e){
   var t = e.target;
   if(t.id==='custSearch'){ ui.q = t.value; updateCustList(); return; }
+  if(t.id==='feedSearch'){ ui.nq = t.value; updateFeedSearch(); return; }   /* v8.36: 홈 피드 검색 */
   /* v8.17: 예약 날짜·시간을 고르면 아래 한글 날짜 줄도 바로 바뀐다 */
   if(t.id==='resvDate' || t.id==='resvTime'){ updateResvWhen(); return; }
   var dk = t.getAttribute && t.getAttribute('data-draft');
@@ -7482,7 +7867,9 @@ document.addEventListener('compositionend', function(e){
     ui.composing = false;
     ui.q = t.value;
     updateCustList();
+    return;
   }
+  if(t && t.id==='feedSearch'){ ui.nq = t.value; updateFeedSearch(); }   /* v8.36 */
 });
 document.addEventListener('change', function(e){
   var t = e.target;
@@ -7783,9 +8170,15 @@ document.addEventListener('submit', function(e){
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape'){
     if($('lightbox').classList.contains('on')){ closeLB(); }
+    else if(e.target && e.target.id==='feedSearch'){ closeFeedSearch(); }   /* v8.36: 검색 바 닫기 */
     else if(ui.resvMemo){ ui.resvMemo = null; render(); }
     else if(ui.memoEdit){ ui.memoEdit = null; render(); }
     else if(sheetSpec){ closeSheet(); }
+    return;
+  }
+  if(e.target && e.target.id==='feedSearch' && e.key==='Enter'){
+    e.preventDefault();
+    try{ e.target.blur(); }catch(err){}   /* 검색은 이미 적용됨 — 키보드만 접어 결과를 보여 준다 */
     return;
   }
   if(e.target && e.target.getAttribute && e.target.getAttribute('data-memo') && e.key==='Enter'){
